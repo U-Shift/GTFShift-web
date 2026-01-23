@@ -1,1 +1,46 @@
 body {margin: 0;}
+
+.leaflet-popup-content p {
+    margin: 0;
+    color: #363636;
+}
+
+.leaflet-touch .leaflet-bar a {
+    padding: 0;
+    border-radius: 8px !important;
+}
+
+#logo {
+    position: absolute;
+    bottom: 5%;
+    left: 2.5%;
+    width: 20%;
+    z-index: 10001;
+}
+
+@media only screen and (max-width: 992px) {
+    #logo {
+        left: 5%;
+        bottom: 3.5%;
+        width: 40%;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    #logo {
+        width: 50%;
+    }
+}
+
+fieldset, button  {font-size: .8rem!important;}
+h6  {font-size: .9rem!important;}
+h3  {font-size: 1.1rem!important;}
+.small{font-size: .85rem;}
+
+button {
+    padding: 8px !important;
+    font-size: .9rem;
+}
+div[role="group"] {
+    box-shadow: none!important;
+}

@@ -1,21 +1,25 @@
 <script>
   import * as L from 'leaflet';
-  // If you're playing with this in the Svelte REPL, import the CSS using the
-  // syntax in svelte:head instead. For normal development, this is better.
   import 'leaflet/dist/leaflet.css';
-  let map;
 
-  function createMap(container) {
+  import Dashboard from './Dashboard.svelte';
+  import { basemapTheme } from './lib/theme';
+
+  import {MAP_DARK, MAP_LIGHT, MAP_INIT_ZOOM, MAP_INIT_CENTER} from './data';
+
+  let map;
+  let currentTileLayer;
+
+  const createMap = (container) => {
     let m = L.map(container, {
       zoomControl: false
-    }).setView([38.7169, -9.1399], 3);
+    }).setView(MAP_INIT_CENTER, MAP_INIT_ZOOM);
 
-    L.tileLayer(
-      'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+    currentTileLayer = L.tileLayer(
+      MAP_LIGHT,
       {
         attribution: `&copy;<a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>,
           &copy;<a href="https://carto.com/attributions" target="_blank">CARTO</a>`,
-        subdomains: 'abcd',
         maxZoom: 14
       }
     ).addTo(m);
@@ -27,13 +31,20 @@
     return m;
   }
 
-  function mapAction(container) {
+  const mapAction = (container) => {
     map = createMap(container);
     return {
       destroy: () => {
         map.remove();
       },
     };
+  }
+
+  // Subscribe to theme changes and swap tile layer
+  $: if (map && currentTileLayer) {
+    const tileUrl = $basemapTheme === 'dark' ? MAP_DARK : MAP_LIGHT;
+    map.removeLayer(currentTileLayer);
+    currentTileLayer = L.tileLayer(tileUrl).addTo(map);
   }
 </script>
 
@@ -44,6 +55,14 @@
    crossorigin=""/>
 </svelte:head>
 
+
 <main>
-  <div style="height:100vh;width:100vw" use:mapAction></div>
+  <Dashboard map={map} />
+
+  <div id="map" style="height:100vh;width:100vw" use:mapAction></div>
+
+  <div id="logo">
+      <img src="/static/logo_acknowledgement.png" width="100%" style="margin-right: 8px;" />
+  </div>
+
 </main>
