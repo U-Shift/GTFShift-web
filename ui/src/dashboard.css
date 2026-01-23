@@ -18,6 +18,15 @@
     z-index: 10000;
 }
 
+dl {
+    color: #363636;
+}
+
+dl dd {
+    margin-left: 0!important;
+    margin-bottom: 6px;
+}
+
 
 @media only screen and (max-width: 992px) {
     #controls-panel {

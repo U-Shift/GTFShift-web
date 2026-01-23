@@ -8,14 +8,14 @@
   import {MAP_DARK, MAP_LIGHT, MAP_INIT_ZOOM, MAP_INIT_CENTER} from './data';
 
   let map;
-  let currentTileLayer;
+  let tileLayer;
 
   const createMap = (container) => {
     let m = L.map(container, {
       zoomControl: false
     }).setView(MAP_INIT_CENTER, MAP_INIT_ZOOM);
 
-    currentTileLayer = L.tileLayer(
+    tileLayer = L.tileLayer(
       MAP_LIGHT,
       {
         attribution: `&copy;<a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>,
@@ -41,10 +41,10 @@
   }
 
   // Subscribe to theme changes and swap tile layer
-  $: if (map && currentTileLayer) {
+  $: if (map && tileLayer) {
     const tileUrl = $basemapTheme === 'dark' ? MAP_DARK : MAP_LIGHT;
-    map.removeLayer(currentTileLayer);
-    currentTileLayer = L.tileLayer(tileUrl).addTo(map);
+    map.removeLayer(tileLayer);
+    tileLayer = L.tileLayer(tileUrl).addTo(map);
   }
 </script>
 

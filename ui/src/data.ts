@@ -9,6 +9,7 @@ export const MAP_INIT_CENTER = [38.7169, -9.1399];
 
 export const DB_REGIONS = [
     {
+        id: 'lisboa_gtfs2026-01-28_run20260123',
         name: 'Carris, Lisbon, PT',
         geojson: BASE_URL + 'static/data/prioritization_lisboa_gtfs2026-01-28_run20260123.geojson',
         date: '2026-01-28'

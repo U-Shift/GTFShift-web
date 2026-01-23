@@ -1,4 +1,10 @@
-body {margin: 0;}
+body {
+    margin: 0;
+}
+
+html {
+    font-size: 18px!important;
+}
 
 .leaflet-popup-content p {
     margin: 0;
@@ -32,9 +38,7 @@ body {margin: 0;}
     }
 }
 
-fieldset, button  {font-size: .8rem!important;}
-h6  {font-size: .9rem!important;}
-h3  {font-size: 1.1rem!important;}
+
 .small{font-size: .85rem;}
 
 button {
