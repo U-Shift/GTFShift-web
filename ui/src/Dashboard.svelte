@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import { basemapTheme } from "./lib/theme";
 
     import { DB_REGIONS } from "./data";
@@ -6,6 +6,7 @@
     export let map;
 
     let currentLayer = null;
+    let loading: string | undefined = undefined;
 
     const toggleTheme = () => {
         basemapTheme.update((t) => (t === "light" ? "dark" : "light"));
@@ -18,6 +19,9 @@
 
         const region = DB_REGIONS.find((r) => r.name === regionName);
         if (!region || !map) return;
+
+        loading = "data for " + regionName;
+
 
         // Remove previous layer
         if (currentLayer) {
@@ -105,6 +109,8 @@
             map.fitBounds(currentLayer.getBounds());
         } catch (error) {
             console.error("Error loading GeoJSON:", error);
+        } finally {
+            loading = undefined;
         }
     };
 </script>
@@ -128,14 +134,21 @@
             GTFShift
         </h3>
         <p>Bus lane prioritization tool</p>
+        {#if loading}
+            <span aria-busy="true">Loading {loading}...</span>
+        {/if}
     </div>
 
+    <hr />
+
     <div class="container-fluid">
+        <h5>Data source</h5>
         <select
             name="region"
             aria-label="Select region"
             required
             on:change={handleRegionChange}
+            disabled={loading !== undefined}
         >
             <option selected disabled value=""> Select region </option>
             {#each DB_REGIONS as region}
