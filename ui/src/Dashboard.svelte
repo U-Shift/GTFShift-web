@@ -223,7 +223,7 @@
     </div>
     {/if}
 
-    {#if region !== undefined && display_tab !== undefined}
+    {#if region !== undefined && geoData}
         <div class="container-fluid text-left">
             <h5 style="margin-bottom: 0.5rem;">{region.name}</h5>
             <p class="small text-secondary mb-0">
@@ -321,6 +321,18 @@
     <hr />
 
     <div class="container-fluid" role="group">
+        {#if region && region.geojson && geoData}
+        <button class="secondary outline small" id="clear-region"
+            on:click={() => region = undefined}
+        >
+            <i class="fa-solid fa-arrow-left"></i> Go back
+        </button>
+        <button class="secondary outline small" id="download-data"
+            on:click={ () => window.open(region.geojson, '_blank') }
+        >
+            <i class="fa-solid fa-download"></i> Raw data
+        </button>
+        {/if}
         <button
             class="secondary outline small"
             id="toggle-color"
@@ -330,7 +342,6 @@
                 ? '<i class="fa-solid fa-circle-half-stroke"></i> Dark mode'
                 : '<i class="fa-solid fa-circle-half-stroke"></i> Light mode'}
         </button>
-        <button class="secondary outline small" id="toggle-detail"></button>
     </div>
 </main>
 
