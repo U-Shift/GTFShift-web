@@ -7,6 +7,14 @@ export const MAP_LIGHT: string = 'https://{s}.basemaps.cartocdn.com/light_nolabe
 export const MAP_INIT_ZOOM: number = 3; // 3
 export const MAP_INIT_CENTER: [number, number] = [38.7169, -9.1399];
 
+export const COLOR_YELLOW: string = '#DAD887';
+export const COLOR_TEAL: string = '#3BC1A8';
+export const COLOR_RED: string = '#F63049';
+export const COLOR_GRAY: string = '#e6e6e6';
+
+export const COLOR_GRADIENT: string[] = ["#ffffe5","#f7fcc4","#e4f4ac","#c7e89b","#a2d88a","#78c578","#4eaf63","#2f944e","#15793f","#036034","#004529"];
+// From https://observablehq.com/@d3/color-schemes
+
 export type DATA_REGION = { id: string; name: string; geojson: string; date: string };
 
 export const DB_REGIONS: DATA_REGION[] = [

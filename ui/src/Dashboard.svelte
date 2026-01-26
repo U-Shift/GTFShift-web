@@ -5,7 +5,14 @@
 
     import { basemapTheme } from "./lib/theme";
 
-    import { DB_REGIONS } from "./data";
+    import {
+        DB_REGIONS,
+        COLOR_YELLOW,
+        COLOR_TEAL,
+        COLOR_RED,
+        COLOR_GRAY,
+        COLOR_GRADIENT,
+    } from "./data";
     import type { DATA_REGION } from "./data";
 
     // Map
@@ -75,6 +82,24 @@
             (display_tab as DisplayOptions) === DisplayOptions.PRIORIZATION
         ) {
             render_bus_lane_prioritization();
+        } else if (
+            geoData &&
+            display_tab !== undefined &&
+            (display_tab as DisplayOptions) === DisplayOptions.BUS_LANES
+        ) {
+            render_bus_lane();
+        } else if (
+            geoData &&
+            display_tab !== undefined &&
+            (display_tab as DisplayOptions) === DisplayOptions.FREQUENCY
+        ) {
+            render_transit_frequency();
+        } else if (
+            geoData &&
+            display_tab !== undefined &&
+            (display_tab as DisplayOptions) === DisplayOptions.N_LANES
+        ) {
+            render_nr_lanes();
         } else {
             console.warn("Display option not implemented yet");
         }
@@ -87,6 +112,27 @@
             }
         };
     });
+
+    const feature_popUp = (feature: any, layer: L.Layer) => {
+        let properties = feature.properties;
+        layer.bindPopup(`
+            <h6>Way ${properties.way_osm_id}</h6>
+            <dl>
+                <dt>Bus services/hour</dt>
+                <dd><b>${properties.frequency}</b></dd>
+                <dt>Is bus lane?</dt>
+                <dd><b>${properties.is_bus_lane ? "Yes" : "No"}</b></dd>
+                <dt>Total lanes</dt>
+                <dd><b>${properties.n_lanes ?? "N/A"}</b></dd>
+                <dt>Nr directions</dt>
+                <dd><b>${properties.n_directions ?? "N/A"}</b></dd>
+                <dt>Lanes in direction</dt>
+                <dd><b>${properties.n_lanes_direction ?? "N/A"}</b></dd>
+                <dt>OSM Way <i class="fa-solid fa-arrow-up-right-from-square"></i></dt>
+                <dd><a href="https://www.openstreetmap.org/way/${properties.way_osm_id}" target="_blank">${properties.way_osm_id}</a></dd>
+            </dl>
+        `);
+    };
 
     const render_bus_lane_prioritization = () => {
         if (!map || !geoData) return;
@@ -117,7 +163,7 @@
                             criteria_n_lanes_direction)
                 ) {
                     return {
-                        color: "#DAD887",
+                        color: COLOR_YELLOW,
                         weight: 2.5,
                     };
                 } else if (
@@ -127,7 +173,7 @@
                     properties.n_lanes_direction >= criteria_n_lanes_direction
                 ) {
                     return {
-                        color: "#3BC1A8",
+                        color: COLOR_TEAL,
                         weight: 2.5,
                     };
                 } else if (
@@ -137,37 +183,17 @@
                     properties.n_lanes_direction >= criteria_n_lanes_direction
                 ) {
                     return {
-                        color: "#F63049",
+                        color: COLOR_RED,
                         weight: 2.5,
                     };
                 }
 
                 return {
-                    color: "#e6e6e6",
+                    color: COLOR_GRAY,
                     weight: 1.5,
                 };
             },
-            onEachFeature: function (feature, layer) {
-                let properties = feature.properties;
-                // console.log(date, hour, operator, properties);
-                layer.bindPopup(`
-                        <h6>Way ${properties.way_osm_id}</h6>
-                        <dl>
-                            <dt>Bus services/hour</dt>
-                            <dd><b>${properties.frequency}</b></dd>
-                            <dt>Is bus lane?</dt>
-                            <dd><b>${properties.is_bus_lane ? "Yes" : "No"}</b></dd>
-                            <dt>Total lanes</dt>
-                            <dd><b>${properties.n_lanes ?? "N/A"}</b></dd>
-                            <dt>Nr directions</dt>
-                            <dd><b>${properties.n_directions ?? "N/A"}</b></dd>
-                            <dt>Lanes in direction</dt>
-                            <dd><b>${properties.n_lanes_direction ?? "N/A"}</b></dd>
-                            <dt>OSM Way <i class="fa-solid fa-arrow-up-right-from-square"></i></dt>
-                            <dd><a href="https://www.openstreetmap.org/way/${properties.way_osm_id}" target="_blank">${properties.way_osm_id}</a></dd>
-                        </dl>
-                    `);
-            },
+            onEachFeature: feature_popUp,
         }).addTo(map);
 
         // Assign to state without tracking (prevents infinite loop)
@@ -178,6 +204,116 @@
         // Zoom to layer
         map.fitBounds(newLayer.getBounds());
     };
+
+    const render_bus_lane = () => {
+        if (!map || !geoData) return;
+
+        // Filter for bus lanes
+        const filteredFeatures = geoData.features.filter(
+            (feature) => feature.properties.is_bus_lane,
+        );
+        // Make sure feature.properties.way_osm_id is unique (they repeat each hour)
+        const uniqueFeatures = [];
+        const seenWayIds = new Set();
+        for (const feature of filteredFeatures) {
+            if (!seenWayIds.has(feature.properties.way_osm_id)) {
+                uniqueFeatures.push(feature);
+                seenWayIds.add(feature.properties.way_osm_id);
+            }
+        }
+        // Create and add new layer to map (untrack to prevent triggering effect)
+        const newLayer = L.geoJSON(uniqueFeatures, {
+            style: {
+                color: COLOR_TEAL,
+                weight: 2.5,
+            },
+            onEachFeature: feature_popUp,
+        }).addTo(map);
+
+        // Assign to state without tracking (prevents infinite loop)
+        untrack(() => {
+            currentLayer = newLayer;
+        });
+
+        // Zoom to layer
+        map.fitBounds(newLayer.getBounds());
+    };
+
+    const render_transit_frequency = () => {
+        if (!map || !geoData) return;
+
+        // Filter for hour==criteria_hour (create a copy, don't mutate original)
+        const filteredFeatures = geoData.features.filter(
+            (feature) =>
+                feature.properties.hour === criteria_hour &&
+                feature.properties.frequency,
+        );
+
+        // Create and add new layer to map (untrack to prevent triggering effect)
+        const newLayer = L.geoJSON(filteredFeatures, {
+            style: (feature) => {
+                let properties = feature.properties;
+                let freq = properties.frequency || 0;
+                let colorIndex = Math.min(
+                    COLOR_GRADIENT.length - 1,
+                    Math.floor(freq / 5),
+                );
+                return {
+                    color: COLOR_GRADIENT[colorIndex],
+                    weight: 2.5,
+                };
+            },
+            onEachFeature: feature_popUp,
+        }).addTo(map);
+
+        // Assign to state without tracking (prevents infinite loop)
+        untrack(() => {
+            currentLayer = newLayer;
+        });
+
+        // Zoom to layer
+        map.fitBounds(newLayer.getBounds());
+    };
+
+    const render_nr_lanes = () => {
+        if (!map || !geoData) return;
+
+        // Make sure feature.properties.way_osm_id is unique (they repeat each hour)
+        const uniqueFeatures = [];
+        const seenWayIds = new Set();
+        for (const feature of geoData.features) {
+            if (!seenWayIds.has(feature.properties.way_osm_id)) {
+                uniqueFeatures.push(feature);
+                seenWayIds.add(feature.properties.way_osm_id);
+            }
+        }
+
+        // Create and add new layer to map (untrack to prevent triggering effect)
+        const newLayer = L.geoJSON(uniqueFeatures, {
+            style: (feature) => {
+                let properties = feature.properties;
+                let n_lanes_direction = properties.n_lanes_direction || 0;
+                let colorIndex = Math.min(
+                    COLOR_GRADIENT.length - 1,
+                    Math.floor(n_lanes_direction / 2),
+                );
+                return {
+                    color: COLOR_GRADIENT[colorIndex],
+                    weight: 2.5,
+                };
+            },
+            onEachFeature: feature_popUp,
+        }).addTo(map);
+
+        // Assign to state without tracking (prevents infinite loop)
+        untrack(() => {
+            currentLayer = newLayer;
+        });
+
+        // Zoom to layer
+        map.fitBounds(newLayer.getBounds());
+    };
+
 </script>
 
 <svelte:head>
@@ -238,9 +374,23 @@
             <p class="small text-secondary">
                 Explore the different layers below
             </p>
-            <details name="example" open>
-                <summary>Bus lane prioritization</summary>
-                <div class="small">
+            <details
+                name={DisplayOptions.PRIORIZATION}
+                open={display_tab === DisplayOptions.PRIORIZATION
+                    ? "true"
+                    : undefined}
+            >
+                <summary
+                    on:click={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        display_tab =
+                            display_tab === DisplayOptions.PRIORIZATION
+                                ? undefined
+                                : DisplayOptions.PRIORIZATION;
+                    }}>Bus lane prioritization</summary
+                >
+                <div class="small text-secondary">
                     <p>
                         Display road segments coloured by bus lane
                         prioritization criteria:
@@ -285,43 +435,110 @@
                 </div>
             </details>
 
-            <details name="example">
-                <summary>Bus lanes</summary>
-                Bus lanes are shown in
-                <span style="color: #3BC1A8; font-weight: bold;">teal</span>.
+            <details
+                name={DisplayOptions.BUS_LANES}
+                open={display_tab === DisplayOptions.BUS_LANES
+                    ? "true"
+                    : undefined}
+            >
+                <summary
+                    on:click={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        display_tab =
+                            display_tab === DisplayOptions.BUS_LANES
+                                ? undefined
+                                : DisplayOptions.BUS_LANES;
+                    }}>Bus lanes</summary
+                >
+                <div class="small">
+                    <p>
+                        Road segments with bus lanes are shown in <span
+                            style="color: {COLOR_TEAL}; font-weight: bold;"
+                            >green</span
+                        >
+                    </p>
+                </div>
             </details>
 
-            <details name="example">
-                <summary>Transit frequency</summary>
-                Lanes with transit frequency are display_tabed, colored by frequency:
-                <ul>
-                    <li>
-                        <span style="color: #DAD887; font-weight: bold;"
-                            >Low frequency</span
-                        >: less than 5 bus services per hour
-                    </li>
-                    <li>
-                        <span style="color: #F63049; font-weight: bold;"
-                            >High frequency</span
-                        >: 5 or more bus services per hour
-                    </li>
-                </ul>
+            <details
+                name={DisplayOptions.FREQUENCY}
+                open={display_tab === DisplayOptions.FREQUENCY
+                    ? "true"
+                    : undefined}
+            >
+                <summary
+                    on:click={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        display_tab =
+                            display_tab === DisplayOptions.FREQUENCY
+                                ? undefined
+                                : DisplayOptions.FREQUENCY;
+                    }}>Transit frequency</summary
+                >
+                <div class="small text-secondary">
+                    <p>
+                        Road segments with bus service are colored by frequency,
+                        from the <span
+                            style="padding: 0 4px; background-color: #000000FB; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
+                            >lowest</span
+                        >
+                        to the
+                        <span
+                            style="color: {COLOR_GRADIENT[
+                                COLOR_GRADIENT.length - 1
+                            ]}; font-weight: bold;">highest</span
+                        >
+                        number of buses per hour, considering:
+                    </p>
+                    <ul>
+                        <li>
+                            Bus frequencies for
+                            <input
+                                type="number"
+                                name="number"
+                                placeholder="Nr"
+                                aria-label="Nr"
+                                style="width: 4rem;"
+                                bind:value={criteria_hour}
+                                min="0"
+                                max="23"
+                            />:00 hour
+                        </li>
+                    </ul>
+                </div>
             </details>
 
-            <details name="example">
-                <summary>Number of lanes</summary>
-                Lanes are styled differently based on the number of lanes in the
-                direction of travel:
-                <ul>
-                    <li>
-                        <span style="font-weight: bold;">Single lane</span>:
-                        only one lane in the direction of travel
-                    </li>
-                    <li>
-                        <span style="font-weight: bold;">Multiple lanes</span>:
-                        more than one lane in the direction of travel
-                    </li>
-                </ul>
+            <details
+                name={DisplayOptions.N_LANES}
+                open={display_tab === DisplayOptions.N_LANES
+                    ? "true"
+                    : undefined}
+            >
+                <summary
+                    on:click={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        display_tab =
+                            display_tab === DisplayOptions.N_LANES
+                                ? undefined
+                                : DisplayOptions.N_LANES;
+                    }}>Number of lanes</summary
+                >
+                <div class="small text-secondary">
+                    Road segments with bus service are colored by number of
+                    lanes, from the <span
+                        style="padding: 0 4px; background-color: #000000FB; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
+                        >lowest</span
+                    >
+                    to the
+                    <span
+                        style="color: {COLOR_GRADIENT[
+                            COLOR_GRADIENT.length - 1
+                        ]}; font-weight: bold;">highest</span
+                    > number of lanes per direction.
+                </div>
             </details>
         </div>
     {/if}
