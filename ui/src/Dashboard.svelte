@@ -481,7 +481,7 @@
                     <p>
                         Road segments with bus service are colored by frequency,
                         from the <span
-                            style="padding: 0 4px; background-color: #000000FB; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
+                            style="padding: 0 4px; background-color: #0000001A; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
                             >lowest</span
                         >
                         to the
@@ -529,7 +529,7 @@
                 <div class="small text-secondary">
                     Road segments with bus service are colored by number of
                     lanes, from the <span
-                        style="padding: 0 4px; background-color: #000000FB; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
+                        style="padding: 0 4px; background-color: #0000001A; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
                         >lowest</span
                     >
                     to the
