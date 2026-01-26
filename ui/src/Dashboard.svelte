@@ -69,7 +69,9 @@
 
         // Render new one
         if (
-            geoData && display_tab!==undefined && criteria_bus_frequency !== undefined &&
+            geoData &&
+            display_tab !== undefined &&
+            criteria_bus_frequency !== undefined &&
             (display_tab as DisplayOptions) === DisplayOptions.PRIORIZATION
         ) {
             render_bus_lane_prioritization();
@@ -91,16 +93,15 @@
 
         // Filter for hour==criteria_hour (create a copy, don't mutate original)
         const filteredFeatures = geoData.features.filter(
-            (feature) => feature.properties.hour === criteria_hour && 
-                (
-                    feature.properties.is_bus_lane || 
-                    (
-                        feature.properties.frequency && feature.properties.n_lanes_direction &&
-                        feature.properties.frequency >= criteria_bus_frequency && 
-                        feature.properties.n_lanes_direction >= criteria_n_lanes_direction
-                    )
-                )
-            ,
+            (feature) =>
+                feature.properties.hour === criteria_hour &&
+                (feature.properties.is_bus_lane ||
+                    (feature.properties.frequency &&
+                        feature.properties.n_lanes_direction &&
+                        feature.properties.frequency >=
+                            criteria_bus_frequency &&
+                        feature.properties.n_lanes_direction >=
+                            criteria_n_lanes_direction)),
         );
 
         // Create and add new layer to map (untrack to prevent triggering effect)
@@ -112,7 +113,8 @@
                     properties.is_bus_lane &&
                     (properties.frequency < criteria_bus_frequency ||
                         properties.n_lanes === undefined ||
-                        properties.n_lanes_direction < criteria_n_lanes_direction)
+                        properties.n_lanes_direction <
+                            criteria_n_lanes_direction)
                 ) {
                     return {
                         color: "#DAD887",
@@ -167,12 +169,12 @@
                     `);
             },
         }).addTo(map);
-        
+
         // Assign to state without tracking (prevents infinite loop)
         untrack(() => {
             currentLayer = newLayer;
         });
-        
+
         // Zoom to layer
         map.fitBounds(newLayer.getBounds());
     };
@@ -181,7 +183,7 @@
 <svelte:head>
     <link
         rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
     />
     <script
         src="https://kit.fontawesome.com/17e93d90c5.js"
@@ -198,29 +200,33 @@
         </h3>
         <p>Bus lane prioritization tool</p>
         {#if loading}
-            <p class="small text-secondary" aria-busy="true">Loading {loading}...</p>
+            <p class="small text-secondary" aria-busy="true">
+                Loading {loading}...
+            </p>
         {/if}
     </div>
 
     {#if region === undefined}
-    <div class="container-fluid text-left">
-        <h5 style="margin-bottom: 0.5rem;">Data source</h5>
-        <p class="small text-secondary">
-            Select the region you want to analyse
-        </p>
-        <select
-            name="region"
-            aria-label="Select region"
-            required
-            on:change={handleRegionChange}
-            disabled={loading !== undefined}
-        >
-            <option selected disabled value=""> Select region </option>
-            {#each DB_REGIONS as region}
-                <option value={region.id}>{region.name} ({region.date})</option>
-            {/each}
-        </select>
-    </div>
+        <div class="container-fluid text-left">
+            <h5 style="margin-bottom: 0.5rem;">Data source</h5>
+            <p class="small text-secondary">
+                Select the region you want to analyse
+            </p>
+            <select
+                name="region"
+                aria-label="Select region"
+                required
+                on:change={handleRegionChange}
+                disabled={loading !== undefined}
+            >
+                <option selected disabled value=""> Select region </option>
+                {#each DB_REGIONS as region}
+                    <option value={region.id}
+                        >{region.name} ({region.date})</option
+                    >
+                {/each}
+            </select>
+        </div>
     {/if}
 
     {#if region !== undefined && geoData}
@@ -234,47 +240,49 @@
             </p>
             <details name="example" open>
                 <summary>Bus lane prioritization</summary>
-                <p>
-                    Display road segments coloured by bus lane prioritization
-                    criteria:
-                </p>
-                <ul>
-                    <li>
-                        Bus frequencies for 
-                        <input
-                            type="number"
-                            name="number"
-                            placeholder="Nr"
-                            aria-label="Nr"
-                            style="width: 5rem;"
-                            bind:value={criteria_hour}
-                            min="0"
-                            max="23"
-                        />:00 hour
-                    </li>
-                    <li>
-                        <input
-                            type="number"
-                            name="number"
-                            placeholder="Nr"
-                            aria-label="Nr"
-                            style="width: 5rem;"
-                            bind:value={criteria_bus_frequency}
-                            min="1"
-                        /> or + buses/hour
-                    </li>
-                    <li>
-                        <input
-                            type="number"
-                            name="number"
-                            placeholder="Nr"
-                            aria-label="Nr"
-                            style="width: 5rem;"
-                            bind:value={criteria_n_lanes_direction}
-                            min="1"
-                        /> or + lanes/direction
-                    </li>
-                </ul>
+                <div class="small">
+                    <p>
+                        Display road segments coloured by bus lane
+                        prioritization criteria:
+                    </p>
+                    <ul>
+                        <li>
+                            Bus frequencies for
+                            <input
+                                type="number"
+                                name="number"
+                                placeholder="Nr"
+                                aria-label="Nr"
+                                style="width: 4rem;"
+                                bind:value={criteria_hour}
+                                min="0"
+                                max="23"
+                            />:00 hour
+                        </li>
+                        <li>
+                            <input
+                                type="number"
+                                name="number"
+                                placeholder="Nr"
+                                aria-label="Nr"
+                                style="width: 4rem;"
+                                bind:value={criteria_bus_frequency}
+                                min="1"
+                            /> or + buses/hour
+                        </li>
+                        <li>
+                            <input
+                                type="number"
+                                name="number"
+                                placeholder="Nr"
+                                aria-label="Nr"
+                                style="width: 4rem;"
+                                bind:value={criteria_n_lanes_direction}
+                                min="1"
+                            /> or + lanes/direction
+                        </li>
+                    </ul>
+                </div>
             </details>
 
             <details name="example">
@@ -322,16 +330,20 @@
 
     <div class="container-fluid" role="group">
         {#if region && region.geojson && geoData}
-        <button class="secondary outline small" id="clear-region"
-            on:click={() => region = undefined}
-        >
-            <i class="fa-solid fa-arrow-left"></i> Go back
-        </button>
-        <button class="secondary outline small" id="download-data"
-            on:click={ () => window.open(region.geojson, '_blank') }
-        >
-            <i class="fa-solid fa-download"></i> Raw data
-        </button>
+            <button
+                class="secondary outline small"
+                id="clear-region"
+                on:click={() => (region = undefined)}
+            >
+                <i class="fa-solid fa-arrow-left"></i> Go back
+            </button>
+            <button
+                class="secondary outline small"
+                id="download-data"
+                on:click={() => window.open(region.geojson, "_blank")}
+            >
+                <i class="fa-solid fa-download"></i> Raw data
+            </button>
         {/if}
         <button
             class="secondary outline small"

@@ -58,3 +58,8 @@ dl dd {
 .text-left {
     text-align: left !important;
 }
+
+input[type=number] {
+    margin: 0!important;
+    height: 2rem!important;
+}
