@@ -54,3 +54,7 @@ dl dd {
 #controls-panel h1 {
     color: #363636 !important;
 }
+
+.text-left {
+    text-align: left !important;
+}

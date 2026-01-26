@@ -39,7 +39,8 @@ html {
 }
 
 
-.small{font-size: .85rem;}
+.small{font-size: .85rem; line-height: 1rem;}
+.mb-0{margin-bottom: 0!important;}
 
 button {
     padding: 8px !important;
@@ -47,4 +48,8 @@ button {
 }
 div[role="group"] {
     box-shadow: none!important;
+}
+
+.text-secondary {
+    color: #6A6A6A !important;
 }
