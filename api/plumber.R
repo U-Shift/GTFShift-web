@@ -15,7 +15,7 @@ library(plumber)
 
 
 #* Prioritize lanes based on GTFS feed and OSM query
-#* @param req The request object containing JSON body with gtfs_url and osm_q
+#* @param req The request object containing JSON body with gtfs_url, osm_q, and optionally date
 #* @param res The response object
 #* @post /prioritize_lanes
 #* @parser json
@@ -26,10 +26,14 @@ function(req, res) {
     body <- req$body
     gtfs_url <- body[["gtfs_url"]]
     osm_q <- body[["osm_q"]]
+    date <- body[["date"]]
     
     message(paste0("[", Sys.time(), "] Starting prioritize_lanes request"))
     message(paste0("[", Sys.time(), "] GTFS URL: ", gtfs_url))
     message(paste0("[", Sys.time(), "] OSM query features: ", length(osm_q)))
+    if (!is.null(date)) {
+      message(paste0("[", Sys.time(), "] Date: ", date))
+    }
     
     # Load GTFS feed
     message(paste0("[", Sys.time(), "] Loading GTFS feed..."))
@@ -84,7 +88,11 @@ function(req, res) {
     
     # Prioritize lanes
     message(paste0("[", Sys.time(), "] Running prioritize_lanes..."))
-    lanes <- GTFShift::prioritize_lanes(gtfs, osm_query)
+    if (!is.null(date)) {
+      lanes <- GTFShift::prioritize_lanes(gtfs, osm_query, date = date)
+    } else {
+      lanes <- GTFShift::prioritize_lanes(gtfs, osm_query)
+    }
     message(paste0("[", Sys.time(), "] Prioritize_lanes completed successfully"))
     
     # Return as GeoJSON
