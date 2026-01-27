@@ -605,11 +605,11 @@
 
 <div id="caption" class="overflow-auto">
     {#if display_tab === DisplayOptions.PRIORITIZATION}
-        <p><span class="caption-square" style="background-color: {COLOR_YELLOW}"></span>Bus lane with -{criteria_bus_frequency} bus/h OR - {criteria_n_lanes_direction} lane/dir</p>
-        <p><span class="caption-square" style="background-color: {COLOR_TEAL}"></span>Bus lane with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction} lane/dir</p>
-        <p><span class="caption-square" style="background-color: {COLOR_RED}"></span>NO bus lane with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction} lane/dir</p>
+        <p><span class="caption-square" style="background-color: {COLOR_YELLOW}"></span><b>Bus lane</b> with -{criteria_bus_frequency} bus/h OR - {criteria_n_lanes_direction} lane/dir</p>
+        <p><span class="caption-square" style="background-color: {COLOR_TEAL}"></span><b>Bus lane</b> with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction} lane/dir</p>
+        <p><span class="caption-square" style="background-color: {COLOR_RED}"></span><b>NO bus lane</b> with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction} lane/dir</p>
     {:else if display_tab === DisplayOptions.BUS_LANES}
-        <p><span class="caption-square" style="background-color: {COLOR_TEAL}"></span>Bus lane with existing bus service</p>
+        <p><span class="caption-square" style="background-color: {COLOR_TEAL}"></span><b>Bus lane</b> with existing bus service</p>
     {:else if display_tab === DisplayOptions.FREQUENCY}
         <div style="margin-bottom: 1rem;">
             <p style="margin-bottom: 0.5rem;"><b>Transit frequency</b> (buses/hour, at {criteria_hour}:00)</p>

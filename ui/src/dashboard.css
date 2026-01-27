@@ -16,6 +16,10 @@
     align-items: flex-start;
 
     z-index: 10000;
+
+    background-image: url('/static/logo/background_blur.png');
+    background-size: auto 11vw;
+    background-position: 15vw -5vh;
 }
 #controls-panel #form {
     padding-bottom: 1rem;
@@ -36,6 +40,8 @@ dl dd {
         width: 45%;
         left: 5%;
         top: 2.5%;
+        background-size: auto 18vw;
+        background-position: 28vw -5vh;
     }
     #controls-panel h3 {
         margin-right: 50px!important;
@@ -51,6 +57,8 @@ dl dd {
         left: 2.5%;
         top: 1%;
         max-height: 90vh;
+        background-size: auto 30vw;
+        background-position: 65vw -5vh;
     }
 }
 
