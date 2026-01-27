@@ -1,5 +1,6 @@
 body {
     margin: 0;
+    color: #363636;
 }
 
 html {
@@ -44,12 +45,19 @@ html {
 
 button {
     padding: 8px !important;
-    font-size: .9rem;
+    font-size: .9rem!important;
+    line-height: 1rem!important;
 }
 div[role="group"] {
     box-shadow: none!important;
 }
 
+.text-primary {
+    color: #363636 !important;
+}
 .text-secondary {
-    color: #6A6A6A !important;
+    color: #6a6a6a !important;
+}
+.text-tertiary {
+    color: #a6a6a6 !important;
 }

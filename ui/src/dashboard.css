@@ -80,9 +80,12 @@ details[open] {
     padding-left: 0.5rem;
     margin-bottom: 0.5rem;
 }
+details summary {
+    color: #6a6a6a!important;
+}
 details[open] summary {
     font-weight: bold;
-    color: #5c6370!important;
+    color: #363636!important;
 }
 
 

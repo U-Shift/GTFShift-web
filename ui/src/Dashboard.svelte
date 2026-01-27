@@ -351,11 +351,12 @@
 <div id="controls-panel" class="overflow-auto">
     <div class="container-fluid" style="text-align: left;">
         <h3
-            style="margin: 0; margin-bottom: 0.5rem; color: #363636; text-align: left;"
+            style="margin: 0; margin-bottom: 0.1rem; color: #363636; text-align: left;"
+            class="text-primary"
         >
             GTFShift
         </h3>
-        <p>Bus lane prioritization tool</p>
+        <p class="text-primary">Bus lane prioritization tool</p>
         {#if loading}
             <p class="small text-secondary" aria-busy="true">
                 Loading {loading}...
@@ -365,8 +366,8 @@
 
     {#if region === undefined}
         <div class="container-fluid text-left">
-            <h5 style="margin-bottom: 0.5rem;">Data source</h5>
-            <p class="small text-secondary">
+            <h5 style="margin-bottom: 0.1rem;" class="text-primary">Data source</h5>
+            <p class="small text-primary">
                 Select the region you want to analyse
             </p>
             <select
@@ -388,12 +389,12 @@
 
     {#if region !== undefined && geoData && !display_hide_form}
         <div class="container-fluid text-left" id="form">
-            <h5 style="margin-bottom: 0.5rem;">{region.name}</h5>
-            <p class="small text-secondary mb-0">
+            <h5 style="margin-bottom: 0.1rem;" class="text-primary">{region.name}</h5>
+            <p class="small text-tertiary mb-0">
                 Data for {region.date}
             </p>
             
-            <p class="small text-secondary">
+            <p class="small text-primary">
                 Explore the different layers below
             </p>
             <details
@@ -412,7 +413,7 @@
                                 : DisplayOptions.PRIORITIZATION;
                     }}>Bus lane prioritization</summary
                 >
-                <div class="small text-secondary">
+                <div class="small text-primary">
                     <p>
                         Display road segments coloured by bus lane
                         prioritization criteria:
@@ -568,14 +569,14 @@
     <div class="container-fluid" role="group">
         {#if region && region.geojson && geoData}
             <button
-                class="secondary outline small"
+                class="secondary outline"
                 id="clear-region"
                 on:click={() => (region = undefined)}
             >
                 <i class="fa-solid fa-arrow-left"></i> Change source
             </button>
             <button 
-                class="secondary outline small"
+                class="secondary outline"
                 id="toggle-form"
                 on:click={() => (display_hide_form = !display_hide_form)}
             >
@@ -584,7 +585,7 @@
                     : '<i class="fa-solid fa-sliders"></i> Layers'}
             </button>
             <button
-                class="secondary outline small"
+                class="secondary outline"
                 id="download-data"
                 on:click={() => window.open(region.geojson, "_blank")}
             >
@@ -592,7 +593,7 @@
             </button>
         {/if}
         <button
-            class="secondary outline small"
+            class="secondary outline"
             id="toggle-color"
             on:click={toggleTheme}
         >
