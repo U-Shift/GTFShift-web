@@ -32,10 +32,14 @@
     }
 
     let region: DATA_REGION | undefined = $state(undefined);
+    
     let display_tab: DisplayOptions | undefined = $state(undefined);
+    let display_hide_form: boolean = $state(false);
+
     let criteria_hour: number = $state(8);
     let criteria_bus_frequency: number = $state(5);
     let criteria_n_lanes_direction: number = $state(2);
+    
     let display_data_min: number | undefined = $state(undefined);
     let display_data_max: number | undefined = $state(undefined);
 
@@ -55,6 +59,7 @@
         if (!region || !map) return;
 
         display_tab = undefined;
+        geoData = null;
         loading = "data for " + region.name;
 
         try {
@@ -381,12 +386,13 @@
         </div>
     {/if}
 
-    {#if region !== undefined && geoData}
-        <div class="container-fluid text-left">
+    {#if region !== undefined && geoData && !display_hide_form}
+        <div class="container-fluid text-left" id="form">
             <h5 style="margin-bottom: 0.5rem;">{region.name}</h5>
             <p class="small text-secondary mb-0">
                 Data for {region.date}
             </p>
+            
             <p class="small text-secondary">
                 Explore the different layers below
             </p>
@@ -559,8 +565,6 @@
         </div>
     {/if}
 
-    <hr />
-
     <div class="container-fluid" role="group">
         {#if region && region.geojson && geoData}
             <button
@@ -568,7 +572,16 @@
                 id="clear-region"
                 on:click={() => (region = undefined)}
             >
-                <i class="fa-solid fa-arrow-left"></i> Go back
+                <i class="fa-solid fa-arrow-left"></i> Change source
+            </button>
+            <button 
+                class="secondary outline small"
+                id="toggle-form"
+                on:click={() => (display_hide_form = !display_hide_form)}
+            >
+                {@html !display_hide_form
+                    ? '<i class="fa-solid fa-map"></i> Expand map'
+                    : '<i class="fa-solid fa-sliders"></i> Layers'}
             </button>
             <button
                 class="secondary outline small"

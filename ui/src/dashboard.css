@@ -17,6 +17,9 @@
 
     z-index: 10000;
 }
+#controls-panel #form {
+    padding-bottom: 1rem;
+}
 
 dl {
     color: #363636;
