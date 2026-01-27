@@ -1,0 +1,23 @@
+meta {
+  name: prioritize_lanes (Carris)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{url}}/prioritize_lanes
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "gtfs_url": "https://gateway.carris.pt/gateway/gtfs/api/v2.8/GTFS",
+    "osm_q": [{"key": "route", "value": "bus"}, {"key": "network", "value": "Carris", "key_exact": true}]
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

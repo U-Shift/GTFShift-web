@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "GTFShift",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
