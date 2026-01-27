@@ -36,6 +36,8 @@
     let criteria_hour: number = $state(8);
     let criteria_bus_frequency: number = $state(5);
     let criteria_n_lanes_direction: number = $state(2);
+    let display_data_min: number | undefined = $state(undefined);
+    let display_data_max: number | undefined = $state(undefined);
 
     // Actions
     // > Map
@@ -249,14 +251,21 @@
                 feature.properties.frequency,
         );
 
+        display_data_min = Math.min(
+            ...filteredFeatures.map((f) => f.properties.frequency),
+        );
+        display_data_max = Math.max(
+            ...filteredFeatures.map((f) => f.properties.frequency),
+        );
+
         // Create and add new layer to map (untrack to prevent triggering effect)
         const newLayer = L.geoJSON(filteredFeatures, {
             style: (feature) => {
                 let properties = feature.properties;
                 let freq = properties.frequency || 0;
-                let colorIndex = Math.min(
-                    COLOR_GRADIENT.length - 1,
-                    Math.floor(freq / 5),
+                let colorIndex = Math.min(Math.ceil(
+                    freq * COLOR_GRADIENT.length / (display_data_max as number)), 
+                    COLOR_GRADIENT.length - 1
                 );
                 return {
                     color: COLOR_GRADIENT[colorIndex],
@@ -288,14 +297,21 @@
             }
         }
 
+        display_data_min = Math.max(1, Math.min(
+            ...uniqueFeatures.map((f) => f.properties.n_lanes_direction || 0),
+        ));
+        display_data_max = Math.max(
+            ...uniqueFeatures.map((f) => f.properties.n_lanes_direction || 0),
+        );        
+
         // Create and add new layer to map (untrack to prevent triggering effect)
         const newLayer = L.geoJSON(uniqueFeatures, {
             style: (feature) => {
                 let properties = feature.properties;
                 let n_lanes_direction = properties.n_lanes_direction || 0;
-                let colorIndex = Math.min(
-                    COLOR_GRADIENT.length - 1,
-                    Math.floor(n_lanes_direction / 2),
+                let colorIndex = Math.min(Math.ceil(
+                    n_lanes_direction * COLOR_GRADIENT.length / (display_data_max as number)), 
+                    COLOR_GRADIENT.length - 1
                 );
                 return {
                     color: COLOR_GRADIENT[colorIndex],
@@ -482,13 +498,13 @@
                         Road segments with bus service are colored by frequency,
                         from the <span
                             style="padding: 0 4px; background-color: #0000001A; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
-                            >lowest</span
+                            >lowest ({display_data_min})</span
                         >
                         to the
                         <span
                             style="color: {COLOR_GRADIENT[
                                 COLOR_GRADIENT.length - 1
-                            ]}; font-weight: bold;">highest</span
+                            ]}; font-weight: bold;">highest ({display_data_max})</span
                         >
                         number of buses per hour, considering:
                     </p>
@@ -530,13 +546,13 @@
                     Road segments with bus service are colored by number of
                     lanes, from the <span
                         style="padding: 0 4px; background-color: #0000001A; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
-                        >lowest</span
+                        >lowest ({display_data_min})</span
                     >
                     to the
                     <span
                         style="color: {COLOR_GRADIENT[
                             COLOR_GRADIENT.length - 1
-                        ]}; font-weight: bold;">highest</span
+                        ]}; font-weight: bold;">highest ({display_data_max})</span
                     > number of lanes per direction.
                 </div>
             </details>
