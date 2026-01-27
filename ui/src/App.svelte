@@ -25,7 +25,7 @@
     ).addTo(m);
 
     L.control.zoom({
-        position: 'bottomright'
+        position: 'topright'
     }).addTo(m);
 
     return m;

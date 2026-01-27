@@ -343,7 +343,7 @@
     ></script>
 </svelte:head>
 
-<main id="controls-panel" class="overflow-auto">
+<div id="controls-panel" class="overflow-auto">
     <div class="container-fluid" style="text-align: left;">
         <h3
             style="margin: 0; margin-bottom: 0.5rem; color: #363636; text-align: left;"
@@ -588,7 +588,36 @@
                 : '<i class="fa-solid fa-circle-half-stroke"></i> Light mode'}
         </button>
     </div>
-</main>
+</div>
+
+<div id="caption" class="overflow-auto">
+    {#if display_tab === DisplayOptions.PRIORIZATION}
+        <p><span class="caption-square" style="background-color: {COLOR_YELLOW}"></span>Bus lane with -{criteria_bus_frequency} bus/h OR - {criteria_n_lanes_direction} lane/dir</p>
+        <p><span class="caption-square" style="background-color: {COLOR_TEAL}"></span>Bus lane with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction} lane/dir</p>
+        <p><span class="caption-square" style="background-color: {COLOR_RED}"></span>NO bus lane with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction} lane/dir</p>
+    {:else if display_tab === DisplayOptions.BUS_LANES}
+        <p><span class="caption-square" style="background-color: {COLOR_TEAL}"></span>Bus lane with existing bus service</p>
+    {:else if display_tab === DisplayOptions.FREQUENCY}
+        <div style="margin-bottom: 1rem;">
+            <p style="margin-bottom: 0.5rem;"><b>Transit frequency</b> (buses/hour, at {criteria_hour}:00)</p>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span style="min-width: 40px; text-align: right; font-size: 0.85rem;">{display_data_min}</span>
+                <div style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map((c) => c).join(', ')}); border-radius: 4px; border: 1px solid #ccc;"></div>
+                <span style="min-width: 40px; text-align: left; font-size: 0.85rem;">{display_data_max}</span>
+            </div>
+        </div>
+        
+    {:else if display_tab === DisplayOptions.N_LANES}
+       <div style="margin-bottom: 1rem;">
+            <p style="margin-bottom: 0.5rem;"><b>Number of lanes per direction</b></p>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span style="min-width: 40px; text-align: right; font-size: 0.85rem;">{display_data_min}</span>
+                <div style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map((c) => c).join(', ')}); border-radius: 4px; border: 1px solid #ccc;"></div>
+                <span style="min-width: 40px; text-align: left; font-size: 0.85rem;">{display_data_max}</span>
+            </div>
+        </div>
+    {/if}
+</div>
 
 <style>
     @import "./dashboard.css";

@@ -73,3 +73,55 @@ details[open] summary {
     font-weight: bold;
     color: #5c6370!important;
 }
+
+
+/** Caption Box **/
+#caption {
+    position: absolute;
+    bottom: 2.5%;
+    right: 2.5%;
+    max-width: 25%;
+    height: auto;
+    text-align: right;
+    vertical-align: middle;
+
+    text-align: center;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    z-index: 10000;
+    font-size: 0.8rem;
+    color: #363636;
+    display: flex;
+    align-items: flex-end;
+}
+@media only screen and (max-width: 992px) {
+    #caption {
+        max-width: 45%;
+        right: 5%;
+    }
+}
+@media only screen and (max-width: 768px) {
+    #caption {
+        max-width: 95%;
+        top: unset;
+        bottom: 7.5%;
+        right: 1%;
+    }
+}
+#caption p {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 0.3em 0.5em;
+    margin-bottom: 0.5em;
+}
+#caption .caption-square {
+    vertical-align: -0.1em;
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    border-radius: 4px;
+    margin-right: 0.5em;
+}
