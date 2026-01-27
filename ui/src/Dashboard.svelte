@@ -25,7 +25,7 @@
 
     // Dashboard state
     enum DisplayOptions {
-        PRIORIZATION,
+        PRIORITIZATION,
         BUS_LANES,
         FREQUENCY,
         N_LANES,
@@ -62,7 +62,7 @@
             const response = await fetch(region.geojson);
             geoData = await response.json();
             // Update display_tab option to trigger rendering
-            display_tab = DisplayOptions.PRIORIZATION;
+            display_tab = DisplayOptions.PRIORITIZATION;
 
             console.log("Loaded GeoJSON for region:", region.id);
         } catch (error) {
@@ -81,7 +81,7 @@
             geoData &&
             display_tab !== undefined &&
             criteria_bus_frequency !== undefined &&
-            (display_tab as DisplayOptions) === DisplayOptions.PRIORIZATION
+            (display_tab as DisplayOptions) === DisplayOptions.PRIORITIZATION
         ) {
             render_bus_lane_prioritization();
         } else if (
@@ -391,8 +391,8 @@
                 Explore the different layers below
             </p>
             <details
-                name={DisplayOptions.PRIORIZATION}
-                open={display_tab === DisplayOptions.PRIORIZATION
+                name={DisplayOptions.PRIORITIZATION}
+                open={display_tab === DisplayOptions.PRIORITIZATION
                     ? "true"
                     : undefined}
             >
@@ -401,9 +401,9 @@
                         e.preventDefault();
                         e.stopPropagation();
                         display_tab =
-                            display_tab === DisplayOptions.PRIORIZATION
+                            display_tab === DisplayOptions.PRIORITIZATION
                                 ? undefined
-                                : DisplayOptions.PRIORIZATION;
+                                : DisplayOptions.PRIORITIZATION;
                     }}>Bus lane prioritization</summary
                 >
                 <div class="small text-secondary">
@@ -591,7 +591,7 @@
 </div>
 
 <div id="caption" class="overflow-auto">
-    {#if display_tab === DisplayOptions.PRIORIZATION}
+    {#if display_tab === DisplayOptions.PRIORITIZATION}
         <p><span class="caption-square" style="background-color: {COLOR_YELLOW}"></span>Bus lane with -{criteria_bus_frequency} bus/h OR - {criteria_n_lanes_direction} lane/dir</p>
         <p><span class="caption-square" style="background-color: {COLOR_TEAL}"></span>Bus lane with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction} lane/dir</p>
         <p><span class="caption-square" style="background-color: {COLOR_RED}"></span>NO bus lane with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction} lane/dir</p>
