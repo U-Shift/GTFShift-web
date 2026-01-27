@@ -5,6 +5,8 @@
 
     import { basemapTheme } from "./lib/theme";
 
+    import ModalAbout from "./modals/ModalAbout.svelte";
+
     import {
         DB_REGIONS,
         COLOR_YELLOW,
@@ -32,16 +34,18 @@
     }
 
     let region: DATA_REGION | undefined = $state(undefined);
-    
+
     let display_tab: DisplayOptions | undefined = $state(undefined);
     let display_hide_form: boolean = $state(false);
 
     let criteria_hour: number = $state(8);
     let criteria_bus_frequency: number = $state(5);
     let criteria_n_lanes_direction: number = $state(2);
-    
+
     let display_data_min: number | undefined = $state(undefined);
     let display_data_max: number | undefined = $state(undefined);
+
+    let modal_about_open: boolean = $state(false);
 
     // Actions
     // > Map
@@ -268,9 +272,12 @@
             style: (feature) => {
                 let properties = feature.properties;
                 let freq = properties.frequency || 0;
-                let colorIndex = Math.min(Math.ceil(
-                    freq * COLOR_GRADIENT.length / (display_data_max as number)), 
-                    COLOR_GRADIENT.length - 1
+                let colorIndex = Math.min(
+                    Math.ceil(
+                        (freq * COLOR_GRADIENT.length) /
+                            (display_data_max as number),
+                    ),
+                    COLOR_GRADIENT.length - 1,
                 );
                 return {
                     color: COLOR_GRADIENT[colorIndex],
@@ -302,21 +309,29 @@
             }
         }
 
-        display_data_min = Math.max(1, Math.min(
-            ...uniqueFeatures.map((f) => f.properties.n_lanes_direction || 0),
-        ));
+        display_data_min = Math.max(
+            1,
+            Math.min(
+                ...uniqueFeatures.map(
+                    (f) => f.properties.n_lanes_direction || 0,
+                ),
+            ),
+        );
         display_data_max = Math.max(
             ...uniqueFeatures.map((f) => f.properties.n_lanes_direction || 0),
-        );        
+        );
 
         // Create and add new layer to map (untrack to prevent triggering effect)
         const newLayer = L.geoJSON(uniqueFeatures, {
             style: (feature) => {
                 let properties = feature.properties;
                 let n_lanes_direction = properties.n_lanes_direction || 0;
-                let colorIndex = Math.min(Math.ceil(
-                    n_lanes_direction * COLOR_GRADIENT.length / (display_data_max as number)), 
-                    COLOR_GRADIENT.length - 1
+                let colorIndex = Math.min(
+                    Math.ceil(
+                        (n_lanes_direction * COLOR_GRADIENT.length) /
+                            (display_data_max as number),
+                    ),
+                    COLOR_GRADIENT.length - 1,
                 );
                 return {
                     color: COLOR_GRADIENT[colorIndex],
@@ -334,7 +349,6 @@
         // Zoom to layer
         map.fitBounds(newLayer.getBounds());
     };
-
 </script>
 
 <svelte:head>
@@ -350,12 +364,26 @@
 
 <div id="controls-panel" class="overflow-auto">
     <div class="container-fluid" style="text-align: left;">
-        <h3
-            style="margin: 0; margin-bottom: 0.1rem; color: #363636; text-align: left;"
-            class="text-primary"
-        >
-            GTFShift
-        </h3>
+        <div style="display: flex; flex-direction: row; flex-wrap: nowrap;">
+            <h3
+                style="margin: 0; margin-bottom: 0.1rem; color: #363636; text-align: left;"
+                class="text-primary"
+            >
+                GTFShift
+            </h3>
+            <small style="vertical-align: bottom; margin-left: 0.5rem;">
+                <a
+                    href="#"
+                    class="text-secondary"
+                    on:click={(e) => {
+                        e.preventDefault();
+                        modal_about_open = !modal_about_open;
+                    }}
+                >
+                    <i class="fas fa-info-circle"></i>
+                </a>
+            </small>
+        </div>
         <p class="text-primary">Bus lane prioritization tool</p>
         {#if loading}
             <p class="small text-secondary" aria-busy="true">
@@ -366,7 +394,9 @@
 
     {#if region === undefined}
         <div class="container-fluid text-left">
-            <h5 style="margin-bottom: 0.1rem;" class="text-primary">Data source</h5>
+            <h5 style="margin-bottom: 0.1rem;" class="text-primary">
+                Data source
+            </h5>
             <p class="small text-primary">
                 Select the region you want to analyse
             </p>
@@ -389,14 +419,14 @@
 
     {#if region !== undefined && geoData && !display_hide_form}
         <div class="container-fluid text-left" id="form">
-            <h5 style="margin-bottom: 0.1rem;" class="text-primary">{region.name}</h5>
+            <h5 style="margin-bottom: 0.1rem;" class="text-primary">
+                {region.name}
+            </h5>
             <p class="small text-tertiary mb-0">
                 Data for {region.date}
             </p>
-            
-            <p class="small text-primary">
-                Explore the different layers below
-            </p>
+
+            <p class="small text-primary">Explore the different layers below</p>
             <details
                 name={DisplayOptions.PRIORITIZATION}
                 open={display_tab === DisplayOptions.PRIORITIZATION
@@ -511,7 +541,8 @@
                         <span
                             style="color: {COLOR_GRADIENT[
                                 COLOR_GRADIENT.length - 1
-                            ]}; font-weight: bold;">highest ({display_data_max})</span
+                            ]}; font-weight: bold;"
+                            >highest ({display_data_max})</span
                         >
                         number of buses per hour, considering:
                     </p>
@@ -559,7 +590,8 @@
                     <span
                         style="color: {COLOR_GRADIENT[
                             COLOR_GRADIENT.length - 1
-                        ]}; font-weight: bold;">highest ({display_data_max})</span
+                        ]}; font-weight: bold;"
+                        >highest ({display_data_max})</span
                     > number of lanes per direction.
                 </div>
             </details>
@@ -575,7 +607,7 @@
             >
                 <i class="fa-solid fa-arrow-left"></i> Change source
             </button>
-            <button 
+            <button
                 class="secondary outline"
                 id="toggle-form"
                 on:click={() => (display_hide_form = !display_hide_form)}
@@ -606,32 +638,74 @@
 
 <div id="caption" class="overflow-auto">
     {#if display_tab === DisplayOptions.PRIORITIZATION}
-        <p><span class="caption-square" style="background-color: {COLOR_YELLOW}"></span><b>Bus lane</b> with -{criteria_bus_frequency} bus/h OR - {criteria_n_lanes_direction} lane/dir</p>
-        <p><span class="caption-square" style="background-color: {COLOR_TEAL}"></span><b>Bus lane</b> with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction} lane/dir</p>
-        <p><span class="caption-square" style="background-color: {COLOR_RED}"></span><b>NO bus lane</b> with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction} lane/dir</p>
+        <p>
+            <span
+                class="caption-square"
+                style="background-color: {COLOR_YELLOW}"
+            ></span><b>Bus lane</b> with -{criteria_bus_frequency} bus/h OR - {criteria_n_lanes_direction}
+            lane/dir
+        </p>
+        <p>
+            <span class="caption-square" style="background-color: {COLOR_TEAL}"
+            ></span><b>Bus lane</b> with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction}
+            lane/dir
+        </p>
+        <p>
+            <span class="caption-square" style="background-color: {COLOR_RED}"
+            ></span><b>NO bus lane</b> with +{criteria_bus_frequency} bus/h AND +
+            {criteria_n_lanes_direction} lane/dir
+        </p>
     {:else if display_tab === DisplayOptions.BUS_LANES}
-        <p><span class="caption-square" style="background-color: {COLOR_TEAL}"></span><b>Bus lane</b> with existing bus service</p>
+        <p>
+            <span class="caption-square" style="background-color: {COLOR_TEAL}"
+            ></span><b>Bus lane</b> with existing bus service
+        </p>
     {:else if display_tab === DisplayOptions.FREQUENCY}
         <div style="margin-bottom: 1rem;">
-            <p style="margin-bottom: 0.5rem;"><b>Transit frequency</b> (buses/hour, at {criteria_hour}:00)</p>
+            <p style="margin-bottom: 0.5rem;">
+                <b>Transit frequency</b> (buses/hour, at {criteria_hour}:00)
+            </p>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <span style="min-width: 40px; text-align: right; font-size: 0.85rem;">{display_data_min}</span>
-                <div style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map((c) => c).join(', ')}); border-radius: 4px; border: 1px solid #ccc;"></div>
-                <span style="min-width: 40px; text-align: left; font-size: 0.85rem;">{display_data_max}</span>
+                <span
+                    style="min-width: 40px; text-align: right; font-size: 0.85rem;"
+                    >{display_data_min}</span
+                >
+                <div
+                    style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map(
+                        (c) => c,
+                    ).join(', ')}); border-radius: 4px; border: 1px solid #ccc;"
+                ></div>
+                <span
+                    style="min-width: 40px; text-align: left; font-size: 0.85rem;"
+                    >{display_data_max}</span
+                >
             </div>
         </div>
-        
     {:else if display_tab === DisplayOptions.N_LANES}
-       <div style="margin-bottom: 1rem;">
-            <p style="margin-bottom: 0.5rem;"><b>Number of lanes per direction</b></p>
+        <div style="margin-bottom: 1rem;">
+            <p style="margin-bottom: 0.5rem;">
+                <b>Number of lanes per direction</b>
+            </p>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <span style="min-width: 40px; text-align: right; font-size: 0.85rem;">{display_data_min}</span>
-                <div style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map((c) => c).join(', ')}); border-radius: 4px; border: 1px solid #ccc;"></div>
-                <span style="min-width: 40px; text-align: left; font-size: 0.85rem;">{display_data_max}</span>
+                <span
+                    style="min-width: 40px; text-align: right; font-size: 0.85rem;"
+                    >{display_data_min}</span
+                >
+                <div
+                    style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map(
+                        (c) => c,
+                    ).join(', ')}); border-radius: 4px; border: 1px solid #ccc;"
+                ></div>
+                <span
+                    style="min-width: 40px; text-align: left; font-size: 0.85rem;"
+                    >{display_data_max}</span
+                >
             </div>
         </div>
     {/if}
 </div>
+
+<ModalAbout bind:open={modal_about_open} />
 
 <style>
     @import "./dashboard.css";
