@@ -603,7 +603,13 @@
             <button
                 class="secondary outline"
                 id="clear-region"
-                on:click={() => (region = undefined)}
+                on:click={() => {
+                    region = undefined;
+                    if (currentLayer) {
+                        map.removeLayer(currentLayer);
+                        currentLayer = null;
+                    }
+                }}
             >
                 <i class="fa-solid fa-arrow-left"></i> Change source
             </button>
