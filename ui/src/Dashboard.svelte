@@ -398,7 +398,10 @@
                 Data source
             </h5>
             <p class="small text-primary">
-                Select the region you want to analyse
+                Select a precomputed region 
+            </p>
+            <p class="small text-secondary" style="margin: 0;">
+                Region
             </p>
             <select
                 name="region"
@@ -414,6 +417,34 @@
                     >
                 {/each}
             </select>
+            <div style="display: flex; flex-direction: row;">
+                <hr style="width: auto; flex-grow: 1; margin: 0.75em 0;"/>
+                <p class="or" style="margin: 0 1em; text-align: center;">OR</p>
+                <hr style="width: auto; flex-grow: 1; margin: 0.75em 0;"/>
+            </div>
+            <p class="small text-primary">
+                Use <a href="https://u-shift.github.io/GTFShift/index.html" target="_blank">GTFShift API</a> to compute data for a given GTFS
+            </p>
+            <p class="small text-secondary" style="margin: 0;">
+                GTFS URL
+            </p>
+            <input type="text" name="GTFS URL" placeholder="GTFS URL" aria-label="GTFS URL" />
+            <p class="small text-secondary" style="margin: 0;">
+                Overpass query
+            </p>
+            <fieldset role="group" style="margin: 0;">
+                <input type="text" name="OSM key" placeholder="OSM key" aria-label="OSM key" />
+                <input type="text" name="OSM value" placeholder="OSM value" aria-label="OSM value" />
+            </fieldset>
+            <fieldset role="group">
+                <input type="text" name="OSM key" placeholder="OSM key" aria-label="OSM key" />
+                <input type="text" name="OSM value" placeholder="OSM value" aria-label="OSM value" />
+            </fieldset>
+            <p class="small text-secondary" style="margin: 0;">
+                Reference date
+            </p>
+            <input type="date" name="date" aria-label="Date" placeholder="YYYY-MM-DD" lang="en-GB" />
+            
         </div>
     {/if}
 
@@ -648,18 +679,18 @@
             <span
                 class="caption-square"
                 style="background-color: {COLOR_YELLOW}"
-            ></span><b>Bus lane</b> with -{criteria_bus_frequency} bus/h OR - {criteria_n_lanes_direction}
+            ></span><b>Bus lane</b> with -{criteria_bus_frequency} bus/h OR -{criteria_n_lanes_direction}
             lane/dir
         </p>
         <p>
             <span class="caption-square" style="background-color: {COLOR_TEAL}"
-            ></span><b>Bus lane</b> with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction}
+            ></span><b>Bus lane</b> with {criteria_bus_frequency}or+ bus/h AND {criteria_n_lanes_direction}or+
             lane/dir
         </p>
         <p>
             <span class="caption-square" style="background-color: {COLOR_RED}"
-            ></span><b>NO bus lane</b> with +{criteria_bus_frequency} bus/h AND +
-            {criteria_n_lanes_direction} lane/dir
+            ></span><b>NO bus lane</b> with {criteria_bus_frequency}or+  bus/h AND
+            {criteria_n_lanes_direction}or+ lane/dir
         </p>
     {:else if display_tab === DisplayOptions.BUS_LANES}
         <p>
