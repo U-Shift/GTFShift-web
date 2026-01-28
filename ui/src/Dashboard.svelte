@@ -648,18 +648,18 @@
             <span
                 class="caption-square"
                 style="background-color: {COLOR_YELLOW}"
-            ></span><b>Bus lane</b> with -{criteria_bus_frequency} bus/h OR - {criteria_n_lanes_direction}
+            ></span><b>Bus lane</b> with - {criteria_bus_frequency} bus/h OR - {criteria_n_lanes_direction}
             lane/dir
         </p>
         <p>
             <span class="caption-square" style="background-color: {COLOR_TEAL}"
-            ></span><b>Bus lane</b> with +{criteria_bus_frequency} bus/h AND + {criteria_n_lanes_direction}
+            ></span><b>Bus lane</b> with {criteria_bus_frequency} or + bus/h AND {criteria_n_lanes_direction} or +
             lane/dir
         </p>
         <p>
             <span class="caption-square" style="background-color: {COLOR_RED}"
-            ></span><b>NO bus lane</b> with +{criteria_bus_frequency} bus/h AND +
-            {criteria_n_lanes_direction} lane/dir
+            ></span><b>NO bus lane</b> with {criteria_bus_frequency} or + bus/h AND
+            {criteria_n_lanes_direction} or + lane/dir
         </p>
     {:else if display_tab === DisplayOptions.BUS_LANES}
         <p>
