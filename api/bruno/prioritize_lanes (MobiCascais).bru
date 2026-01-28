@@ -1,0 +1,24 @@
+meta {
+  name: prioritize_lanes (MobiCascais)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{url}}/prioritize_lanes
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "gtfs_url": "https://drive.google.com/uc?export=download&id=13ucYiAJRtu-gXsLa02qKJrGOgDjbnUWX",
+    "osm_q": [{"key": "route", "value": "bus"}, {"key": "network", "value": "MobiCascais", "key_exact": true}],
+    "date": "2026-01-28"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

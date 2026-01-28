@@ -1,6 +1,7 @@
 
 
-export const BASE_URL: string = 'http://localhost:5173/';
+export const BASE_URL: string = 'http://localhost:5173';
+export const API_URL: string = 'http://127.0.0.1:16361';
 
 export const MAP_DARK: string = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png';
 export const MAP_LIGHT: string = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
@@ -21,7 +22,13 @@ export const DB_REGIONS: DATA_REGION[] = [
     {
         id: 'lisboa_gtfs2026-01-28_run20260123',
         name: 'Carris, Lisbon, PT',
-        geojson: BASE_URL + 'static/data/prioritization_lisboa_gtfs2026-01-28_run20260123.geojson',
+        geojson: BASE_URL + '/static/data/prioritization_lisboa_gtfs2026-01-28_run20260123.geojson',
+        date: '2026-01-28'
+    },
+    {
+        id: 'prioritization_cascais_gtfs2026-01-28_run20260127',
+        name: 'MobiCascais, Cascais, PT',
+        geojson: BASE_URL + '/static/data/prioritization_cascais_gtfs2026-01-28_run20260127.geojson',
         date: '2026-01-28'
     }
 ]

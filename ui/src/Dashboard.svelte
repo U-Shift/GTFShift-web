@@ -6,6 +6,7 @@
     import { basemapTheme } from "./lib/theme";
 
     import ModalAbout from "./modals/ModalAbout.svelte";
+    import FormAPIQuery from "./forms/FormAPIQuery.svelte";
 
     import {
         DB_REGIONS,
@@ -14,6 +15,7 @@
         COLOR_RED,
         COLOR_GRAY,
         COLOR_GRADIENT,
+        API_URL
     } from "./data";
     import type { DATA_REGION } from "./data";
 
@@ -48,6 +50,14 @@
     let modal_about_open: boolean = $state(false);
 
     // Actions
+    // > API
+    const handleAPIResponse = async (geojsonData: any) => {
+        // TODO! Define region from response metadata?
+        geoData = geojsonData;
+        display_tab = DisplayOptions.PRIORITIZATION;
+        console.log("API data loaded successfully");
+    };
+
     // > Map
     const toggleTheme = () => {
         basemapTheme.update((t) => (t === "light" ? "dark" : "light"));
@@ -417,34 +427,17 @@
                     >
                 {/each}
             </select>
-            <div style="display: flex; flex-direction: row;">
+            <div style="display: flex; flex-direction: row; margin-bottom: 1rem;">
                 <hr style="width: auto; flex-grow: 1; margin: 0.75em 0;"/>
                 <p class="or" style="margin: 0 1em; text-align: center;">OR</p>
                 <hr style="width: auto; flex-grow: 1; margin: 0.75em 0;"/>
             </div>
-            <p class="small text-primary">
-                Use <a href="https://u-shift.github.io/GTFShift/index.html" target="_blank">GTFShift API</a> to compute data for a given GTFS
-            </p>
-            <p class="small text-secondary" style="margin: 0;">
-                GTFS URL
-            </p>
-            <input type="text" name="GTFS URL" placeholder="GTFS URL" aria-label="GTFS URL" />
-            <p class="small text-secondary" style="margin: 0;">
-                Overpass query
-            </p>
-            <fieldset role="group" style="margin: 0;">
-                <input type="text" name="OSM key" placeholder="OSM key" aria-label="OSM key" />
-                <input type="text" name="OSM value" placeholder="OSM value" aria-label="OSM value" />
-            </fieldset>
-            <fieldset role="group">
-                <input type="text" name="OSM key" placeholder="OSM key" aria-label="OSM key" />
-                <input type="text" name="OSM value" placeholder="OSM value" aria-label="OSM value" />
-            </fieldset>
-            <p class="small text-secondary" style="margin: 0;">
-                Reference date
-            </p>
-            <input type="date" name="date" aria-label="Date" placeholder="YYYY-MM-DD" lang="en-GB" />
-            
+            <FormAPIQuery
+                onSubmit={handleAPIResponse}
+                onLoading={(isLoading) => {
+                    loading = isLoading ? "data from API" : undefined;
+                }}
+            />
         </div>
     {/if}
 
