@@ -2,8 +2,9 @@
     import { untrack } from "svelte";
 
     import * as L from "leaflet";
+    import type { FeatureCollection, Feature } from "geojson";
 
-    import { basemapTheme } from "./lib/theme";
+    import { basemapTheme } from "./lib/theme";;
 
     import ModalAbout from "./modals/ModalAbout.svelte";
     import LayerBusLanePrioritization from "./layers/LayerBusLanePrioritization.svelte";
@@ -24,10 +25,11 @@
     import LayerRTSpeed from "./layers/LayerRTSpeed.svelte";
     import DataCensusTable from "./components/DataCensusTable.svelte";
     import { dataCensus, type DataCensus } from "./lib/layerUtils";
+    import ModalData from "./modals/ModalData.svelte";
 
     // Map
     let { map }: { map: L.Map } = $props();
-    let geoData: any = $state(null);
+    let geoData: FeatureCollection | null = $state(null);
 
     // User feedback
     let loading: string | undefined = $state(undefined);
@@ -56,6 +58,7 @@
     
     let action_hide_form: boolean = $state(false); 
     let action_modal_about_open: boolean = $state(false);
+    let action_modal_data_open: boolean = $state(false);
 
     // Layer callback handler
     const handleLayerCreate = (layer: L.Layer, census: DataCensus | undefined) => {
@@ -84,20 +87,21 @@
         try {
             // Fetch and load GeoJSON
             const response = await fetch(region.geojson);
-            geoData = await response.json();
+            geoData = await response.json() as FeatureCollection;
 
             display_rt = geoData.features.some(
-                (feature) => feature.properties.speed_avg,
+                (feature:Feature) => feature.properties?.speed_avg,
             );
 
             // Set criteria base values
+            action_modal_data_open = false;
             criteria_hour = 8;
             criteria_n_lanes_direction = 2;
             // frequency and avg_speed will be set to P75 values
             let query = geoData.features.filter(
                     (feature) =>
-                        feature.properties.hour === criteria_hour &&
-                        feature.properties.frequency,
+                        feature.properties?.hour === criteria_hour &&
+                        feature.properties?.frequency,
                 );
             criteria_bus_frequency = Math.floor((dataCensus(
                 query,
@@ -153,6 +157,8 @@
                         e.preventDefault();
                         action_modal_about_open = !action_modal_about_open;
                     }}
+                    data-tooltip="About"
+                    data-placement="right"
                 >
                     <i class="fas fa-info-circle"></i>
                 </a>
@@ -198,11 +204,23 @@
             </h5>
             <p class="small text-tertiary mb-0">
                 Data for {region.date}
+                <a
+                    href="#"
+                    class="text-secondary"
+                    on:click={(e) => {
+                        e.preventDefault();
+                        action_modal_data_open = !action_modal_data_open;
+                    }}
+                    data-tooltip="Attribute table"
+                    data-placement="bottom"
+                >
+                    <i class="fas fa-table"></i>
+                </a>
             </p>
 
             <p class="small text-primary">Explore the different layers below</p>
             <details
-                name={DisplayOptions.PRIORITIZATION}
+                name={DisplayOptions.PRIORITIZATION.toString()}
                 open={display_tab === DisplayOptions.PRIORITIZATION
                     ? "true"
                     : undefined}
@@ -591,6 +609,15 @@
 {/if}
 
 <ModalAbout bind:open={action_modal_about_open} />
+
+{#if geoData}
+<ModalData 
+    open={action_modal_data_open} 
+    geoData={geoData} 
+    hour={criteria_hour}    
+    rt_data={display_rt}
+/>
+{/if}
 
 <style>
     @import "./dashboard.css";

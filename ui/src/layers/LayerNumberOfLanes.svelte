@@ -11,7 +11,7 @@
     }: {
         map: L.Map;
         geoData: any;
-        onLayerCreate: (layer: L.Layer, census: DataCensus) => void;
+        onLayerCreate: (layer: L.Layer, census: DataCensus | undefined) => void;
     } = $props();
 
     let currentLayer: L.Layer | null = $state(null);
