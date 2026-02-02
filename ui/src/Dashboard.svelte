@@ -18,8 +18,10 @@
         COLOR_RED,
         COLOR_GRAY,
         COLOR_GRADIENT,
+        COLOR_GRADIENT_RED
     } from "./data";
     import type { DATA_REGION } from "./data";
+    import LayerRTSpeed from "./layers/LayerRTSpeed.svelte";
 
     // Map
     let { map }: { map: L.Map } = $props();
@@ -34,6 +36,7 @@
         BUS_LANES,
         FREQUENCY,
         N_LANES,
+        RT_SPEED
     }
 
     let region: DATA_REGION | undefined = $state(undefined);
@@ -55,11 +58,6 @@
     const handleLayerCreate = (layer: L.Layer, min: number | undefined, max: number | undefined) => {
         tab_data_min = min;
         tab_data_max = max;
-    };
-
-    // Clear current layer from map
-    const clearLayer = () => {
-        // Layer components handle cleanup via effects
     };
 
     // Actions
@@ -87,6 +85,9 @@
             geoData = await response.json();
             // Update display_tab option to trigger rendering
             display_tab = DisplayOptions.PRIORITIZATION;
+            display_rt = geoData.features.some(
+                (feature) => feature.properties.speed_avg,
+            );
 
             console.log("Loaded GeoJSON for region:", region.id);
         } catch (error) {
@@ -283,7 +284,7 @@
                     <p>
                         Road segments with bus service are colored by frequency,
                         from the <span
-                            style="padding: 0 4px; background-color: #0000001A; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
+                            style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
                             >lowest ({tab_data_min})</span
                         >
                         to the
@@ -332,7 +333,7 @@
                 <div class="small text-secondary">
                     Road segments with bus service are colored by number of
                     lanes, from the <span
-                        style="padding: 0 4px; background-color: #0000001A; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
+                        style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
                         >lowest ({tab_data_min})</span
                     >
                     to the
@@ -344,6 +345,40 @@
                     > number of lanes per direction.
                 </div>
             </details>
+
+            {#if display_rt}
+            <details
+                name={DisplayOptions.RT_SPEED}
+                open={display_tab === DisplayOptions.RT_SPEED
+                    ? "true"
+                    : undefined}
+            >
+                <summary
+                    on:click={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        display_tab =
+                            display_tab === DisplayOptions.RT_SPEED
+                                ? undefined
+                                : DisplayOptions.RT_SPEED;
+                    }}>Commercial speed</summary
+                >
+                <div class="small text-secondary">
+                    Road segments with bus service are colored by the average commercial speed measured 
+                    , from the <span
+                        style="color: {COLOR_GRADIENT_RED.toReversed()[0]}; font-weight: bold;"
+                        >lowest ({tab_data_min?.toFixed(2)})</span
+                    >
+                    to the
+                    <span
+                        style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT_RED.toReversed()[
+                            COLOR_GRADIENT_RED.length - 1
+                        ]}; font-weight: bold;border-radius: 4px;"
+                        >highest ({tab_data_max?.toFixed(2)})</span
+                    > values (km/h).
+                </div>
+            </details>
+            {/if}
         </div>
     {/if}
 
@@ -453,6 +488,27 @@
                 >
             </div>
         </div>
+    {:else if display_tab === DisplayOptions.RT_SPEED}
+        <div style="margin-bottom: 1rem;">
+            <p style="margin-bottom: 0.5rem;">
+                <b>Commercial speed</b> (km/h)
+            </p>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span
+                    style="min-width: 40px; text-align: right; font-size: 0.85rem;"
+                    >{tab_data_min && Math.round(tab_data_min)}</span
+                >
+                <div
+                    style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT_RED.toReversed().map(
+                        (c) => c,
+                    ).join(', ')}); border-radius: 4px; border: 1px solid #ccc;"
+                ></div>
+                <span
+                    style="min-width: 40px; text-align: left; font-size: 0.85rem;"
+                    >{tab_data_max && Math.round(tab_data_max)}</span
+                >
+            </div>
+        </div>
     {/if}
 </div>
 
@@ -477,6 +533,8 @@
         />
     {:else if display_tab === DisplayOptions.N_LANES}
         <LayerNumberOfLanes {map} {geoData} onLayerCreate={handleLayerCreate} />
+    {:else if display_tab === DisplayOptions.RT_SPEED}
+        <LayerRTSpeed {map} {geoData} onLayerCreate={handleLayerCreate} />
     {/if}
 {/if}
 

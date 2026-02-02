@@ -5,6 +5,9 @@ import * as L from "leaflet";
  */
 export const createFeaturePopup = (feature: any, layer: L.Layer) => {
     let properties = feature.properties;
+
+    let rt_str = properties.speed_avg ? `<dt>RT Speed</dt><dd><b>${properties.speed_avg.toFixed(1)} km/h</b></dd>` : '';
+
     layer.bindPopup(`
         <h6>Way ${properties.way_osm_id}</h6>
         <dl>
@@ -18,6 +21,7 @@ export const createFeaturePopup = (feature: any, layer: L.Layer) => {
             <dd><b>${properties.n_directions ?? "N/A"}</b></dd>
             <dt>Lanes in direction</dt>
             <dd><b>${properties.n_lanes_direction ?? "N/A"}</b></dd>
+            ${rt_str}
             <dt>OSM Way <i class="fa-solid fa-arrow-up-right-from-square"></i></dt>
             <dd><a href="https://www.openstreetmap.org/way/${properties.way_osm_id}" target="_blank">${properties.way_osm_id}</a></dd>
         </dl>
