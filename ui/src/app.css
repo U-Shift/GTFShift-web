@@ -65,3 +65,10 @@ div[role="group"] {
 .text-white {
     color: #ffffff !important;
 }
+
+/** Modal size increase **/
+@media (min-width: 768px) {
+  dialog.large > article {
+    max-width: 95vw!important;
+  }
+}

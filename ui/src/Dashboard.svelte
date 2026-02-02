@@ -26,6 +26,7 @@
     import DataCensusTable from "./components/DataCensusTable.svelte";
     import { dataCensus, type DataCensus } from "./lib/layerUtils";
     import ModalData from "./modals/ModalData.svelte";
+    import ModalDetails from "./modals/ModalDetails.svelte";
 
     // Map
     let { map }: { map: L.Map } = $props();
@@ -59,6 +60,7 @@
     let action_hide_form: boolean = $state(false); 
     let action_modal_about_open: boolean = $state(false);
     let action_modal_data_open: boolean = $state(false);
+    let action_modal_details_open: boolean = $state(false);
 
     // Layer callback handler
     const handleLayerCreate = (layer: L.Layer, census: DataCensus | undefined) => {
@@ -95,6 +97,7 @@
 
             // Set criteria base values
             action_modal_data_open = false;
+            action_modal_details_open = false;
             criteria_hour = 8;
             criteria_n_lanes_direction = 2;
             // frequency and avg_speed will be set to P75 values
@@ -215,6 +218,18 @@
                     data-placement="bottom"
                 >
                     <i class="fas fa-table"></i>
+                </a>
+                <a
+                    href="#"
+                    class="text-secondary"
+                    on:click={(e) => {
+                        e.preventDefault();
+                        action_modal_details_open = !action_modal_details_open;
+                    }}
+                    data-tooltip="Details"
+                    data-placement="bottom"
+                >
+                    <i class="fas fa-code"></i>
                 </a>
             </p>
 
@@ -617,7 +632,13 @@
     hour={criteria_hour}    
     rt_data={display_rt}
 />
+<ModalDetails 
+    open={action_modal_details_open} 
+    geoData={geoData} 
+    rt_data={display_rt}
+/>
 {/if}
+
 
 <style>
     @import "./dashboard.css";

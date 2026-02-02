@@ -2,7 +2,7 @@
     import { untrack } from "svelte";
     import type { Feature, FeatureCollection } from "geojson";
     import { TableHandler, Datatable, ThSort } from "@vincjo/datatables";
-    import ModalAbout from "./ModalAbout.svelte";
+
 
     let {
         open,
@@ -47,6 +47,18 @@
         });
     });
 </script>
+
+<style>
+    .svelte-simple-datatable button {
+        white-space: nowrap !important;
+    }
+
+    @media (min-width: 768px) {
+        dialog > article {
+            max-width: 95vw!important;
+        }
+    }
+</style>
 
 <main>
     <dialog {open} id="modal-about" class={open ? "" : "hidden"}>
@@ -141,8 +153,3 @@
     </dialog>
 </main>
 
-<style>
-    .svelte-simple-datatable button {
-        white-space: nowrap !important;
-    }
-</style>
