@@ -6,6 +6,10 @@
     import { basemapTheme } from "./lib/theme";
 
     import ModalAbout from "./modals/ModalAbout.svelte";
+    import LayerBusLanePrioritization from "./layers/LayerBusLanePrioritization.svelte";
+    import LayerBusLanes from "./layers/LayerBusLanes.svelte";
+    import LayerTransitFrequency from "./layers/LayerTransitFrequency.svelte";
+    import LayerNumberOfLanes from "./layers/LayerNumberOfLanes.svelte";
 
     import {
         DB_REGIONS,
@@ -19,7 +23,6 @@
 
     // Map
     let { map }: { map: L.Map } = $props();
-    let currentLayer: L.Layer | null = $state(null);
     let geoData: any = $state(null);
 
     // User feedback
@@ -46,6 +49,17 @@
     let display_data_max: number | undefined = $state(undefined);
 
     let modal_about_open: boolean = $state(false);
+
+    // Layer callback handler
+    const handleLayerCreate = (layer: L.Layer, min: number | undefined, max: number | undefined) => {
+        display_data_min = min;
+        display_data_max = max;
+    };
+
+    // Clear current layer from map
+    const clearLayer = () => {
+        // Layer components handle cleanup via effects
+    };
 
     // Actions
     // > Map
@@ -81,274 +95,8 @@
         }
     };
 
-    // Display
-    $effect(() => {
-        console.log("Display criteria changed, updating layer...");
-
-        // Render new one
-        if (
-            geoData &&
-            display_tab !== undefined &&
-            criteria_bus_frequency !== undefined &&
-            (display_tab as DisplayOptions) === DisplayOptions.PRIORITIZATION
-        ) {
-            render_bus_lane_prioritization();
-        } else if (
-            geoData &&
-            display_tab !== undefined &&
-            (display_tab as DisplayOptions) === DisplayOptions.BUS_LANES
-        ) {
-            render_bus_lane();
-        } else if (
-            geoData &&
-            display_tab !== undefined &&
-            (display_tab as DisplayOptions) === DisplayOptions.FREQUENCY
-        ) {
-            render_transit_frequency();
-        } else if (
-            geoData &&
-            display_tab !== undefined &&
-            (display_tab as DisplayOptions) === DisplayOptions.N_LANES
-        ) {
-            render_nr_lanes();
-        } else {
-            console.warn("Display option not implemented yet");
-        }
-
-        // Clean up (before next effect run)
-        return () => {
-            if (currentLayer) {
-                map.removeLayer(currentLayer);
-                currentLayer = null;
-            }
-        };
-    });
-
-    const feature_popUp = (feature: any, layer: L.Layer) => {
-        let properties = feature.properties;
-        layer.bindPopup(`
-            <h6>Way ${properties.way_osm_id}</h6>
-            <dl>
-                <dt>Bus services/hour</dt>
-                <dd><b>${properties.frequency}</b></dd>
-                <dt>Is bus lane?</dt>
-                <dd><b>${properties.is_bus_lane ? "Yes" : "No"}</b></dd>
-                <dt>Total lanes</dt>
-                <dd><b>${properties.n_lanes ?? "N/A"}</b></dd>
-                <dt>Nr directions</dt>
-                <dd><b>${properties.n_directions ?? "N/A"}</b></dd>
-                <dt>Lanes in direction</dt>
-                <dd><b>${properties.n_lanes_direction ?? "N/A"}</b></dd>
-                <dt>OSM Way <i class="fa-solid fa-arrow-up-right-from-square"></i></dt>
-                <dd><a href="https://www.openstreetmap.org/way/${properties.way_osm_id}" target="_blank">${properties.way_osm_id}</a></dd>
-            </dl>
-        `);
-    };
-
-    const render_bus_lane_prioritization = () => {
-        if (!map || !geoData) return;
-
-        // Filter for hour==criteria_hour (create a copy, don't mutate original)
-        const filteredFeatures = geoData.features.filter(
-            (feature) =>
-                feature.properties.hour === criteria_hour &&
-                (feature.properties.is_bus_lane ||
-                    (feature.properties.frequency &&
-                        feature.properties.n_lanes_direction &&
-                        feature.properties.frequency >=
-                            criteria_bus_frequency &&
-                        feature.properties.n_lanes_direction >=
-                            criteria_n_lanes_direction)),
-        );
-
-        // Create and add new layer to map (untrack to prevent triggering effect)
-        const newLayer = L.geoJSON(filteredFeatures, {
-            style: (feature) => {
-                let properties = feature.properties;
-
-                if (
-                    properties.is_bus_lane &&
-                    (properties.frequency < criteria_bus_frequency ||
-                        properties.n_lanes === undefined ||
-                        properties.n_lanes_direction <
-                            criteria_n_lanes_direction)
-                ) {
-                    return {
-                        color: COLOR_YELLOW,
-                        weight: 2.5,
-                    };
-                } else if (
-                    properties.is_bus_lane &&
-                    properties.frequency >= criteria_bus_frequency &&
-                    properties.n_lanes !== undefined &&
-                    properties.n_lanes_direction >= criteria_n_lanes_direction
-                ) {
-                    return {
-                        color: COLOR_TEAL,
-                        weight: 2.5,
-                    };
-                } else if (
-                    !properties.is_bus_lane &&
-                    properties.frequency >= criteria_bus_frequency &&
-                    properties.n_lanes !== undefined &&
-                    properties.n_lanes_direction >= criteria_n_lanes_direction
-                ) {
-                    return {
-                        color: COLOR_RED,
-                        weight: 2.5,
-                    };
-                }
-
-                return {
-                    color: COLOR_GRAY,
-                    weight: 1.5,
-                };
-            },
-            onEachFeature: feature_popUp,
-        }).addTo(map);
-
-        // Assign to state without tracking (prevents infinite loop)
-        untrack(() => {
-            currentLayer = newLayer;
-        });
-
-        // Zoom to layer
-        map.fitBounds(newLayer.getBounds());
-    };
-
-    const render_bus_lane = () => {
-        if (!map || !geoData) return;
-
-        // Filter for bus lanes
-        const filteredFeatures = geoData.features.filter(
-            (feature) => feature.properties.is_bus_lane,
-        );
-        // Make sure feature.properties.way_osm_id is unique (they repeat each hour)
-        const uniqueFeatures = [];
-        const seenWayIds = new Set();
-        for (const feature of filteredFeatures) {
-            if (!seenWayIds.has(feature.properties.way_osm_id)) {
-                uniqueFeatures.push(feature);
-                seenWayIds.add(feature.properties.way_osm_id);
-            }
-        }
-        // Create and add new layer to map (untrack to prevent triggering effect)
-        const newLayer = L.geoJSON(uniqueFeatures, {
-            style: {
-                color: COLOR_TEAL,
-                weight: 2.5,
-            },
-            onEachFeature: feature_popUp,
-        }).addTo(map);
-
-        // Assign to state without tracking (prevents infinite loop)
-        untrack(() => {
-            currentLayer = newLayer;
-        });
-
-        // Zoom to layer
-        map.fitBounds(newLayer.getBounds());
-    };
-
-    const render_transit_frequency = () => {
-        if (!map || !geoData) return;
-
-        // Filter for hour==criteria_hour (create a copy, don't mutate original)
-        const filteredFeatures = geoData.features.filter(
-            (feature) =>
-                feature.properties.hour === criteria_hour &&
-                feature.properties.frequency,
-        );
-
-        display_data_min = Math.min(
-            ...filteredFeatures.map((f) => f.properties.frequency),
-        );
-        display_data_max = Math.max(
-            ...filteredFeatures.map((f) => f.properties.frequency),
-        );
-
-        // Create and add new layer to map (untrack to prevent triggering effect)
-        const newLayer = L.geoJSON(filteredFeatures, {
-            style: (feature) => {
-                let properties = feature.properties;
-                let freq = properties.frequency || 0;
-                let colorIndex = Math.min(
-                    Math.ceil(
-                        (freq * COLOR_GRADIENT.length) /
-                            (display_data_max as number),
-                    ),
-                    COLOR_GRADIENT.length - 1,
-                );
-                return {
-                    color: COLOR_GRADIENT[colorIndex],
-                    weight: 2.5,
-                };
-            },
-            onEachFeature: feature_popUp,
-        }).addTo(map);
-
-        // Assign to state without tracking (prevents infinite loop)
-        untrack(() => {
-            currentLayer = newLayer;
-        });
-
-        // Zoom to layer
-        map.fitBounds(newLayer.getBounds());
-    };
-
-    const render_nr_lanes = () => {
-        if (!map || !geoData) return;
-
-        // Make sure feature.properties.way_osm_id is unique (they repeat each hour)
-        const uniqueFeatures = [];
-        const seenWayIds = new Set();
-        for (const feature of geoData.features) {
-            if (!seenWayIds.has(feature.properties.way_osm_id)) {
-                uniqueFeatures.push(feature);
-                seenWayIds.add(feature.properties.way_osm_id);
-            }
-        }
-
-        display_data_min = Math.max(
-            1,
-            Math.min(
-                ...uniqueFeatures.map(
-                    (f) => f.properties.n_lanes_direction || 0,
-                ),
-            ),
-        );
-        display_data_max = Math.max(
-            ...uniqueFeatures.map((f) => f.properties.n_lanes_direction || 0),
-        );
-
-        // Create and add new layer to map (untrack to prevent triggering effect)
-        const newLayer = L.geoJSON(uniqueFeatures, {
-            style: (feature) => {
-                let properties = feature.properties;
-                let n_lanes_direction = properties.n_lanes_direction || 0;
-                let colorIndex = Math.min(
-                    Math.ceil(
-                        (n_lanes_direction * COLOR_GRADIENT.length) /
-                            (display_data_max as number),
-                    ),
-                    COLOR_GRADIENT.length - 1,
-                );
-                return {
-                    color: COLOR_GRADIENT[colorIndex],
-                    weight: 2.5,
-                };
-            },
-            onEachFeature: feature_popUp,
-        }).addTo(map);
-
-        // Assign to state without tracking (prevents infinite loop)
-        untrack(() => {
-            currentLayer = newLayer;
-        });
-
-        // Zoom to layer
-        map.fitBounds(newLayer.getBounds());
-    };
+    // Display - Layer components now handle rendering via effects
+    // No longer need the centralized $effect and render_* functions
 </script>
 
 <svelte:head>
@@ -605,10 +353,6 @@
                 id="clear-region"
                 on:click={() => {
                     region = undefined;
-                    if (currentLayer) {
-                        map.removeLayer(currentLayer);
-                        currentLayer = null;
-                    }
                 }}
             >
                 <i class="fa-solid fa-arrow-left"></i> Change source
@@ -710,6 +454,30 @@
         </div>
     {/if}
 </div>
+
+{#if region && geoData && display_tab !== undefined && map}
+    {#if display_tab === DisplayOptions.PRIORITIZATION}
+        <LayerBusLanePrioritization
+            {map}
+            {geoData}
+            criteriaHour={criteria_hour}
+            criteriaBusFrequency={criteria_bus_frequency}
+            criteriaNLanesDirection={criteria_n_lanes_direction}
+            onLayerCreate={handleLayerCreate}
+        />
+    {:else if display_tab === DisplayOptions.BUS_LANES}
+        <LayerBusLanes {map} {geoData} onLayerCreate={handleLayerCreate} />
+    {:else if display_tab === DisplayOptions.FREQUENCY}
+        <LayerTransitFrequency
+            {map}
+            {geoData}
+            criteriaHour={criteria_hour}
+            onLayerCreate={handleLayerCreate}
+        />
+    {:else if display_tab === DisplayOptions.N_LANES}
+        <LayerNumberOfLanes {map} {geoData} onLayerCreate={handleLayerCreate} />
+    {/if}
+{/if}
 
 <ModalAbout bind:open={modal_about_open} />
 
