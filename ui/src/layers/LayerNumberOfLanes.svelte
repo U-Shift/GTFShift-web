@@ -2,16 +2,16 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT } from "../data";
-    import { createFeaturePopup, deduplicateByWayId, calculateMinMax } from "../lib/layerUtils";
+    import { createFeaturePopup, deduplicateByWayId, dataCensus, type DataCensus } from "../lib/layerUtils";
 
     let {
         map,
         geoData,
-        onLayerCreate = (layer, min, max) => {},
+        onLayerCreate = (layer, census) => {},
     }: {
         map: L.Map;
         geoData: any;
-        onLayerCreate: (layer: L.Layer, min: number, max: number) => void;
+        onLayerCreate: (layer: L.Layer, census: DataCensus) => void;
     } = $props();
 
     let currentLayer: L.Layer | null = $state(null);
@@ -23,10 +23,9 @@
         const uniqueFeatures = deduplicateByWayId(geoData.features);
 
         // Calculate min and max
-        const { min: dataMin, max: dataMax } = calculateMinMax(
+        const census = dataCensus(
             uniqueFeatures,
-            "n_lanes_direction",
-            1
+            "n_lanes_direction"
         );
 
         // Create and add new layer to map
@@ -36,7 +35,7 @@
                 let n_lanes_direction = properties.n_lanes_direction || 0;
                 let colorIndex = Math.min(
                     Math.ceil(
-                        (n_lanes_direction * COLOR_GRADIENT.length) / dataMax,
+                        (n_lanes_direction * COLOR_GRADIENT.length) / (census.max ?? 1),
                     ),
                     COLOR_GRADIENT.length - 1,
                 );
@@ -51,7 +50,7 @@
         // Update parent state
         untrack(() => {
             currentLayer = newLayer;
-            onLayerCreate(newLayer, dataMin, dataMax);
+            onLayerCreate(newLayer, census);
         });
 
         // Zoom to layer

@@ -2,7 +2,7 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT } from "../data";
-    import { createFeaturePopup, calculateMinMax } from "../lib/layerUtils";
+    import { createFeaturePopup, dataCensus, type DataCensus } from "../lib/layerUtils";
 
     let {
         map,
@@ -29,10 +29,9 @@
         );
 
         // Calculate min and max
-        const { min: dataMin, max: dataMax } = calculateMinMax(
+        const census = dataCensus(
             filteredFeatures,
-            "frequency",
-            0
+            "frequency"
         );
 
         // Create and add new layer to map
@@ -42,7 +41,7 @@
                 let freq = properties.frequency || 0;
                 let colorIndex = Math.min(
                     Math.ceil(
-                        (freq * COLOR_GRADIENT.length) / dataMax,
+                        (freq * COLOR_GRADIENT.length) / (census.max ?? 1),
                     ),
                     COLOR_GRADIENT.length - 1,
                 );
@@ -57,7 +56,7 @@
         // Update parent state
         untrack(() => {
             currentLayer = newLayer;
-            onLayerCreate(newLayer, dataMin, dataMax);
+            onLayerCreate(newLayer, census);
         });
 
         // Zoom to layer

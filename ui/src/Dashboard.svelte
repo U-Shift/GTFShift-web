@@ -18,10 +18,12 @@
         COLOR_RED,
         COLOR_GRAY,
         COLOR_GRADIENT,
-        COLOR_GRADIENT_RED
+        COLOR_GRADIENT_RED,
     } from "./data";
     import type { DATA_REGION } from "./data";
     import LayerRTSpeed from "./layers/LayerRTSpeed.svelte";
+    import DataCensusTable from "./layers/DataCensusTable.svelte";
+    import type { DataCensus } from "./lib/layerUtils";
 
     // Map
     let { map }: { map: L.Map } = $props();
@@ -38,14 +40,14 @@
         N_LANES,
         RT_SPEED
     }
+   
 
     let region: DATA_REGION | undefined = $state(undefined);
 
     let display_tab: DisplayOptions | undefined = $state(undefined);
     let display_rt: boolean = $state(false); // true if region has rt-data (optional)
     
-    let tab_data_min: number | undefined = $state(undefined);
-    let tab_data_max: number | undefined = $state(undefined);
+    let tab_census: DataCensus | undefined = $state(undefined);
 
     let criteria_hour: number = $state(8);
     let criteria_bus_frequency: number = $state(5);
@@ -55,9 +57,8 @@
     let action_modal_about_open: boolean = $state(false);
 
     // Layer callback handler
-    const handleLayerCreate = (layer: L.Layer, min: number | undefined, max: number | undefined) => {
-        tab_data_min = min;
-        tab_data_max = max;
+    const handleLayerCreate = (layer: L.Layer, census: DataCensus | undefined) => {
+        tab_census = census;
     };
 
     // Actions
@@ -285,14 +286,14 @@
                         Road segments with bus service are colored by frequency,
                         from the <span
                             style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
-                            >lowest ({tab_data_min})</span
+                            >lowest ({tab_census?.min})</span
                         >
                         to the
                         <span
                             style="color: {COLOR_GRADIENT[
                                 COLOR_GRADIENT.length - 1
                             ]}; font-weight: bold;"
-                            >highest ({tab_data_max})</span
+                            >highest ({tab_census?.max})</span
                         >
                         number of buses per hour, considering:
                     </p>
@@ -312,6 +313,10 @@
                         </li>
                     </ul>
                 </div>
+
+                {#if tab_census}
+                    <DataCensusTable census={tab_census} />
+                {/if}
             </details>
 
             <details
@@ -334,16 +339,20 @@
                     Road segments with bus service are colored by number of
                     lanes, from the <span
                         style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
-                        >lowest ({tab_data_min})</span
+                        >lowest ({tab_census?.min})</span
                     >
                     to the
                     <span
                         style="color: {COLOR_GRADIENT[
                             COLOR_GRADIENT.length - 1
                         ]}; font-weight: bold;"
-                        >highest ({tab_data_max})</span
+                        >highest ({tab_census?.max})</span
                     > number of lanes per direction.
                 </div>
+
+                {#if tab_census}
+                    <DataCensusTable census={tab_census} />
+                {/if}
             </details>
 
             {#if display_rt}
@@ -367,16 +376,20 @@
                     Road segments with bus service are colored by the average commercial speed measured 
                     , from the <span
                         style="color: {COLOR_GRADIENT_RED.toReversed()[0]}; font-weight: bold;"
-                        >lowest ({tab_data_min?.toFixed(2)})</span
+                        >lowest ({tab_census?.min?.toFixed(2)})</span
                     >
                     to the
                     <span
                         style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT_RED.toReversed()[
                             COLOR_GRADIENT_RED.length - 1
                         ]}; font-weight: bold;border-radius: 4px;"
-                        >highest ({tab_data_max?.toFixed(2)})</span
+                        >highest ({tab_census?.max?.toFixed(2)})</span
                     > values (km/h).
                 </div>
+
+                {#if tab_census}
+                    <DataCensusTable census={tab_census} />
+                {/if}
             </details>
             {/if}
         </div>
@@ -454,7 +467,7 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <span
                     style="min-width: 40px; text-align: right; font-size: 0.85rem;"
-                    >{tab_data_min}</span
+                    >{tab_census?.min}</span
                 >
                 <div
                     style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map(
@@ -463,7 +476,7 @@
                 ></div>
                 <span
                     style="min-width: 40px; text-align: left; font-size: 0.85rem;"
-                    >{tab_data_max}</span
+                    >{tab_census?.max}</span
                 >
             </div>
         </div>
@@ -475,7 +488,7 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <span
                     style="min-width: 40px; text-align: right; font-size: 0.85rem;"
-                    >{tab_data_min}</span
+                    >{tab_census?.min}</span
                 >
                 <div
                     style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map(
@@ -484,7 +497,7 @@
                 ></div>
                 <span
                     style="min-width: 40px; text-align: left; font-size: 0.85rem;"
-                    >{tab_data_max}</span
+                    >{tab_census?.max}</span
                 >
             </div>
         </div>
@@ -496,7 +509,7 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <span
                     style="min-width: 40px; text-align: right; font-size: 0.85rem;"
-                    >{tab_data_min && Math.round(tab_data_min)}</span
+                    >{tab_census?.min && Math.round(tab_census.min)}</span
                 >
                 <div
                     style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT_RED.toReversed().map(
@@ -505,7 +518,7 @@
                 ></div>
                 <span
                     style="min-width: 40px; text-align: left; font-size: 0.85rem;"
-                    >{tab_data_max && Math.round(tab_data_max)}</span
+                    >{tab_census?.max && Math.round(tab_census.max)}</span
                 >
             </div>
         </div>

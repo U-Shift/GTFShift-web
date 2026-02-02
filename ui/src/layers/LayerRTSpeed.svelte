@@ -2,7 +2,7 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT_RED } from "../data";
-    import { createFeaturePopup, deduplicateByWayId, calculateMinMax } from "../lib/layerUtils";
+    import { createFeaturePopup, deduplicateByWayId, dataCensus, type DataCensus } from "../lib/layerUtils";
 
     let {
         map,
@@ -23,10 +23,9 @@
         const uniqueFeatures = deduplicateByWayId(geoData.features);
 
         // Calculate min and max
-        const { min: dataMin, max: dataMax } = calculateMinMax(
+        const census = dataCensus(
             uniqueFeatures,
-            "speed_avg",
-            1
+            "speed_avg"
         );
 
         // Create and add new layer to map
@@ -36,7 +35,7 @@
                 let speed_avg = properties.speed_avg || 0;
                 let colorIndex = Math.min(
                     Math.ceil(
-                        (speed_avg * COLOR_GRADIENT_RED.length) / dataMax,
+                        (speed_avg * COLOR_GRADIENT_RED.length) / (census.max ?? 1),
                     ),
                     COLOR_GRADIENT_RED.length - 1,
                 );
@@ -51,7 +50,7 @@
         // Update parent state
         untrack(() => {
             currentLayer = newLayer;
-            onLayerCreate(newLayer, dataMin, dataMax);
+            onLayerCreate(newLayer, census);
         });
 
         // Zoom to layer

@@ -90,7 +90,7 @@
         // Update parent state
         untrack(() => {
             currentLayer = newLayer;
-            onLayerCreate(newLayer, undefined, undefined);
+            onLayerCreate(newLayer, undefined);
         });
 
         // Zoom to layer
