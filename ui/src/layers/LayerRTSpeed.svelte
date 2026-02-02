@@ -1,7 +1,7 @@
 <script lang="ts">
     import { untrack } from "svelte";
     import * as L from "leaflet";
-    import { COLOR_GRADIENT_RED } from "../data";
+    import { COLOR_GRADIENT_RED, COLOR_GRAY } from "../data";
     import { createFeaturePopup, deduplicateByWayId, dataCensus, type DataCensus } from "../lib/layerUtils";
 
     let {
@@ -32,15 +32,15 @@
         const newLayer = L.geoJSON(uniqueFeatures, {
             style: (feature) => {
                 let properties = feature.properties;
-                let speed_avg = properties.speed_avg || 0;
-                let colorIndex = Math.min(
+                let speed_avg = properties.speed_avg || undefined;
+                let colorIndex = speed_avg!==undefined ? Math.min(
                     Math.ceil(
                         (speed_avg * COLOR_GRADIENT_RED.length) / (census.max ?? 1),
                     ),
                     COLOR_GRADIENT_RED.length - 1,
-                );
+                ) : undefined;
                 return {
-                    color: COLOR_GRADIENT_RED.toReversed()[colorIndex],
+                    color: colorIndex!==undefined ?COLOR_GRADIENT_RED.toReversed()[colorIndex] : COLOR_GRAY,
                     weight: 2.5,
                 };
             },
