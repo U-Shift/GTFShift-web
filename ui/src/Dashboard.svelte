@@ -39,21 +39,22 @@
     let region: DATA_REGION | undefined = $state(undefined);
 
     let display_tab: DisplayOptions | undefined = $state(undefined);
-    let display_hide_form: boolean = $state(false);
+    let display_rt: boolean = $state(false); // true if region has rt-data (optional)
+    
+    let tab_data_min: number | undefined = $state(undefined);
+    let tab_data_max: number | undefined = $state(undefined);
 
     let criteria_hour: number = $state(8);
     let criteria_bus_frequency: number = $state(5);
     let criteria_n_lanes_direction: number = $state(2);
-
-    let display_data_min: number | undefined = $state(undefined);
-    let display_data_max: number | undefined = $state(undefined);
-
-    let modal_about_open: boolean = $state(false);
+    
+    let action_hide_form: boolean = $state(false); 
+    let action_modal_about_open: boolean = $state(false);
 
     // Layer callback handler
     const handleLayerCreate = (layer: L.Layer, min: number | undefined, max: number | undefined) => {
-        display_data_min = min;
-        display_data_max = max;
+        tab_data_min = min;
+        tab_data_max = max;
     };
 
     // Clear current layer from map
@@ -125,7 +126,7 @@
                     class="text-secondary"
                     on:click={(e) => {
                         e.preventDefault();
-                        modal_about_open = !modal_about_open;
+                        action_modal_about_open = !action_modal_about_open;
                     }}
                 >
                     <i class="fas fa-info-circle"></i>
@@ -165,7 +166,7 @@
         </div>
     {/if}
 
-    {#if region !== undefined && geoData && !display_hide_form}
+    {#if region !== undefined && geoData && !action_hide_form}
         <div class="container-fluid text-left" id="form">
             <h5 style="margin-bottom: 0.1rem;" class="text-primary">
                 {region.name}
@@ -283,14 +284,14 @@
                         Road segments with bus service are colored by frequency,
                         from the <span
                             style="padding: 0 4px; background-color: #0000001A; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
-                            >lowest ({display_data_min})</span
+                            >lowest ({tab_data_min})</span
                         >
                         to the
                         <span
                             style="color: {COLOR_GRADIENT[
                                 COLOR_GRADIENT.length - 1
                             ]}; font-weight: bold;"
-                            >highest ({display_data_max})</span
+                            >highest ({tab_data_max})</span
                         >
                         number of buses per hour, considering:
                     </p>
@@ -332,14 +333,14 @@
                     Road segments with bus service are colored by number of
                     lanes, from the <span
                         style="padding: 0 4px; background-color: #0000001A; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
-                        >lowest ({display_data_min})</span
+                        >lowest ({tab_data_min})</span
                     >
                     to the
                     <span
                         style="color: {COLOR_GRADIENT[
                             COLOR_GRADIENT.length - 1
                         ]}; font-weight: bold;"
-                        >highest ({display_data_max})</span
+                        >highest ({tab_data_max})</span
                     > number of lanes per direction.
                 </div>
             </details>
@@ -360,9 +361,9 @@
             <button
                 class="secondary outline"
                 id="toggle-form"
-                on:click={() => (display_hide_form = !display_hide_form)}
+                on:click={() => (action_hide_form = !action_hide_form)}
             >
-                {@html !display_hide_form
+                {@html !action_hide_form
                     ? '<i class="fa-solid fa-map"></i> Expand map'
                     : '<i class="fa-solid fa-sliders"></i> Layers'}
             </button>
@@ -418,7 +419,7 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <span
                     style="min-width: 40px; text-align: right; font-size: 0.85rem;"
-                    >{display_data_min}</span
+                    >{tab_data_min}</span
                 >
                 <div
                     style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map(
@@ -427,7 +428,7 @@
                 ></div>
                 <span
                     style="min-width: 40px; text-align: left; font-size: 0.85rem;"
-                    >{display_data_max}</span
+                    >{tab_data_max}</span
                 >
             </div>
         </div>
@@ -439,7 +440,7 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <span
                     style="min-width: 40px; text-align: right; font-size: 0.85rem;"
-                    >{display_data_min}</span
+                    >{tab_data_min}</span
                 >
                 <div
                     style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map(
@@ -448,7 +449,7 @@
                 ></div>
                 <span
                     style="min-width: 40px; text-align: left; font-size: 0.85rem;"
-                    >{display_data_max}</span
+                    >{tab_data_max}</span
                 >
             </div>
         </div>
@@ -479,7 +480,7 @@
     {/if}
 {/if}
 
-<ModalAbout bind:open={modal_about_open} />
+<ModalAbout bind:open={action_modal_about_open} />
 
 <style>
     @import "./dashboard.css";
