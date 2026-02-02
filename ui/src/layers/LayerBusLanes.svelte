@@ -2,16 +2,16 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_TEAL } from "../data";
-    import { createFeaturePopup, deduplicateByWayId } from "../lib/layerUtils";
+    import { createFeaturePopup, deduplicateByWayId, type DataCensus } from "../lib/layerUtils";
 
     let {
         map,
         geoData,
-        onLayerCreate = (layer, min, max) => {},
+        onLayerCreate = (layer, census) => {},
     }: {
         map: L.Map;
         geoData: any;
-        onLayerCreate: (layer: L.Layer, min: number | undefined, max: number | undefined) => void;
+        onLayerCreate: (layer: L.Layer, census: DataCensus | undefined) => void;
     } = $props();
 
     let currentLayer: L.Layer | null = $state(null);

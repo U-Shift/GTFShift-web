@@ -23,7 +23,7 @@
     import type { DATA_REGION } from "./data";
     import LayerRTSpeed from "./layers/LayerRTSpeed.svelte";
     import DataCensusTable from "./components/DataCensusTable.svelte";
-    import type { DataCensus } from "./lib/layerUtils";
+    import { dataCensus, type DataCensus } from "./lib/layerUtils";
 
     // Map
     let { map }: { map: L.Map } = $props();
@@ -50,8 +50,9 @@
     let tab_census: DataCensus | undefined = $state(undefined);
 
     let criteria_hour: number = $state(8);
-    let criteria_bus_frequency: number = $state(5);
+    let criteria_bus_frequency: number = $state(0);
     let criteria_n_lanes_direction: number = $state(2);
+    let criteria_avg_speed: number | undefined = $state(undefined);
     
     let action_hide_form: boolean = $state(false); 
     let action_modal_about_open: boolean = $state(false);
@@ -84,11 +85,33 @@
             // Fetch and load GeoJSON
             const response = await fetch(region.geojson);
             geoData = await response.json();
-            // Update display_tab option to trigger rendering
-            display_tab = DisplayOptions.PRIORITIZATION;
+
             display_rt = geoData.features.some(
                 (feature) => feature.properties.speed_avg,
             );
+
+            // Set criteria base values
+            criteria_hour = 8;
+            criteria_n_lanes_direction = 2;
+            // frequency and avg_speed will be set to P75 values
+            let query = geoData.features.filter(
+                    (feature) =>
+                        feature.properties.hour === criteria_hour &&
+                        feature.properties.frequency,
+                );
+            criteria_bus_frequency = Math.floor((dataCensus(
+                query,
+                "frequency"
+            ) as DataCensus).median as number);
+            criteria_avg_speed = display_rt ? Math.floor((dataCensus(
+                query,
+                "speed_avg"
+            ) as DataCensus).median as number) : undefined;
+
+
+            // Update display_tab option to trigger rendering
+            display_tab = DisplayOptions.PRIORITIZATION;
+            
 
             console.log("Loaded GeoJSON for region:", region.id);
         } catch (error) {
@@ -207,19 +230,16 @@
                                 name="number"
                                 placeholder="Nr"
                                 aria-label="Nr"
-                                style="width: 4rem;"
+                                style="width: 5rem;"
                                 bind:value={criteria_hour}
                                 min="0"
                                 max="23"
-                            />:00 hour
-                        </li>
-                        <li>
-                            <input
+                            />:00 hour with <input
                                 type="number"
                                 name="number"
                                 placeholder="Nr"
                                 aria-label="Nr"
-                                style="width: 4rem;"
+                                style="width: 5rem;"
                                 bind:value={criteria_bus_frequency}
                                 min="1"
                             /> or + buses/hour
@@ -230,11 +250,24 @@
                                 name="number"
                                 placeholder="Nr"
                                 aria-label="Nr"
-                                style="width: 4rem;"
+                                style="width: 5rem;"
                                 bind:value={criteria_n_lanes_direction}
                                 min="1"
                             /> or + lanes/direction
                         </li>
+                        {#if display_rt}
+                        <li>
+                            <input 
+                                type="number"
+                                name="number"
+                                placeholder="Nr"
+                                aria-label="Nr"
+                                style="width: 5rem;"
+                                bind:value={criteria_avg_speed}
+                                min="0"
+                            /> or - km/h average commercial speed
+                        </li>
+                        {/if}
                     </ul>
                 </div>
             </details>
@@ -305,7 +338,7 @@
                                 name="number"
                                 placeholder="Nr"
                                 aria-label="Nr"
-                                style="width: 4rem;"
+                                style="width: 5rem;"
                                 bind:value={criteria_hour}
                                 min="0"
                                 max="23"
@@ -441,18 +474,23 @@
             <span
                 class="caption-square"
                 style="background-color: {COLOR_YELLOW}"
-            ></span><b>Bus lane</b> with - {criteria_bus_frequency} bus/h OR - {criteria_n_lanes_direction}
-            lane/dir
+            ></span><b>Bus lane</b> with 
+                - {criteria_bus_frequency} bus/h 
+                OR - {criteria_n_lanes_direction} lane/dir
+                {#if display_rt}OR - {criteria_avg_speed} km/h avg. speed{/if}
         </p>
         <p>
             <span class="caption-square" style="background-color: {COLOR_TEAL}"
-            ></span><b>Bus lane</b> with {criteria_bus_frequency} or + bus/h AND {criteria_n_lanes_direction} or +
-            lane/dir
+            ></span><b>Bus lane</b> with 
+                + {criteria_bus_frequency} bus/h 
+                AND + {criteria_n_lanes_direction} lane/dir
+                {#if display_rt}AND + {criteria_avg_speed} km/h avg. speed{/if}
         </p>
         <p>
             <span class="caption-square" style="background-color: {COLOR_RED}"
-            ></span><b>NO bus lane</b> with {criteria_bus_frequency} or + bus/h AND
-            {criteria_n_lanes_direction} or + lane/dir
+            ></span><b>NO bus lane</b> with + {criteria_bus_frequency} bus/h AND
+            + {criteria_n_lanes_direction} lane/dir
+            {#if display_rt} AND - {criteria_avg_speed} km/h avg. speed{/if}
         </p>
     {:else if display_tab === DisplayOptions.BUS_LANES}
         <p>
@@ -533,6 +571,7 @@
             criteriaHour={criteria_hour}
             criteriaBusFrequency={criteria_bus_frequency}
             criteriaNLanesDirection={criteria_n_lanes_direction}
+            criteriaAvgSpeed={criteria_avg_speed}
             onLayerCreate={handleLayerCreate}
         />
     {:else if display_tab === DisplayOptions.BUS_LANES}

@@ -7,11 +7,11 @@
     let {
         map,
         geoData,
-        onLayerCreate = (layer, min, max) => {},
+        onLayerCreate = (layer, census) => {},
     }: {
         map: L.Map;
         geoData: any;
-        onLayerCreate: (layer: L.Layer, min: number, max: number) => void;
+        onLayerCreate: (layer: L.Layer, census: DataCensus | undefined) => void;
     } = $props();
 
     let currentLayer: L.Layer | null = $state(null);
