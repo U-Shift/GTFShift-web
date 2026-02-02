@@ -22,7 +22,7 @@
     } from "./data";
     import type { DATA_REGION } from "./data";
     import LayerRTSpeed from "./layers/LayerRTSpeed.svelte";
-    import DataCensusTable from "./layers/DataCensusTable.svelte";
+    import DataCensusTable from "./components/DataCensusTable.svelte";
     import type { DataCensus } from "./lib/layerUtils";
 
     // Map
