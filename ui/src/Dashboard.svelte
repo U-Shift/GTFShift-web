@@ -18,7 +18,6 @@
         COLOR_YELLOW,
         COLOR_TEAL,
         COLOR_RED,
-        COLOR_GRAY,
         COLOR_GRADIENT,
         COLOR_GRADIENT_RED,
     } from "./data";
@@ -211,6 +210,7 @@
                 <a
                     href="#"
                     class="text-secondary"
+                    style="margin-left: 1rem; margin-right: 0.3rem;"
                     on:click={(e) => {
                         e.preventDefault();
                         action_modal_data_open = !action_modal_data_open;
@@ -223,6 +223,7 @@
                 <a
                     href="#"
                     class="text-secondary"
+                    style="margin-right: 0.3rem;"
                     on:click={(e) => {
                         e.preventDefault();
                         action_modal_details_open = !action_modal_details_open;
@@ -231,6 +232,15 @@
                     data-placement="bottom"
                 >
                     <i class="fas fa-code"></i>
+                </a>
+                <a 
+                    href={region.geojson} 
+                    target="_blank"
+                    class="text-secondary"
+                    data-tooltip="Download raw data"
+                    data-placement="bottom"
+                >
+                    <i class="fas fa-download"></i>
                 </a>
             </p>
 
@@ -481,13 +491,6 @@
                 {@html !action_hide_form
                     ? '<i class="fa-solid fa-map"></i> Expand map'
                     : '<i class="fa-solid fa-sliders"></i> Layers'}
-            </button>
-            <button
-                class="secondary outline"
-                id="download-data"
-                on:click={() => window.open(region.geojson, "_blank")}
-            >
-                <i class="fa-solid fa-download"></i> Raw data
             </button>
         {/if}
         <button
