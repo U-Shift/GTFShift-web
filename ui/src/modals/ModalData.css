@@ -1,0 +1,4 @@
+.svelte-simple-datatable button {
+    white-space: nowrap !important;
+    width: auto !important;
+}

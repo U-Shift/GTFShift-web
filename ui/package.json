@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@types/geojson": "^7946.0.16",
+    "highlight.js": "^11.11.1",
     "leaflet": "^1.9.4",
     "leaflet-ajax": "^2.1.0"
   }

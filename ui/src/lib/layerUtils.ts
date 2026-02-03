@@ -22,6 +22,8 @@ export const createFeaturePopup = (feature: any, layer: L.Layer) => {
             <dt>Lanes in direction</dt>
             <dd><b>${properties.n_lanes_direction ?? "N/A"}</b></dd>
             ${rt_str}
+            <dt>Routes</dt>
+            <dd><b>${properties.route_names}</b></dd>
             <dt>OSM Way <i class="fa-solid fa-arrow-up-right-from-square"></i></dt>
             <dd><a href="https://www.openstreetmap.org/way/${properties.way_osm_id}" target="_blank">${properties.way_osm_id}</a></dd>
         </dl>

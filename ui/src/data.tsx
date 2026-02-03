@@ -20,15 +20,9 @@ export type DATA_REGION = { id: string; name: string; geojson: string; date: str
 
 export const DB_REGIONS: DATA_REGION[] = [
     {
-        id: 'lisboa_gtfs2026-01-28_run20260123',
-        name: 'Carris, Lisbon, PT',
-        geojson: BASE_URL + 'static/data/prioritization_lisboa_gtfs2026-01-28_run20260123.geojson',
-        date: '2026-01-28'
-    },
-    {
-        id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260202',
+        id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260203',
         name: 'Carris, Lisbon, PT (Real-time)',
-        geojson: BASE_URL + 'static/data/prioritization_lisboa_rt_gtfs2026-02-04_run20260202.geojson',
+        geojson: BASE_URL + 'static/data/prioritization_lisboa_rt_gtfs2026-02-04_run20260203_with_metadata.geojson',
         date: '2026-02-04'
     }
 ]

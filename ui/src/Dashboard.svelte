@@ -3,6 +3,7 @@
 
     import * as L from "leaflet";
     import type { FeatureCollection, Feature } from "geojson";
+    import type { GeoPrioritization } from "./types/GeoPrioritization";
 
     import { basemapTheme } from "./lib/theme";;
 
@@ -30,7 +31,7 @@
 
     // Map
     let { map }: { map: L.Map } = $props();
-    let geoData: FeatureCollection | null = $state(null);
+    let geoData: GeoPrioritization | null = $state(null);
 
     // User feedback
     let loading: string | undefined = $state(undefined);
@@ -89,7 +90,7 @@
         try {
             // Fetch and load GeoJSON
             const response = await fetch(region.geojson);
-            geoData = await response.json() as FeatureCollection;
+            geoData = await response.json() as GeoPrioritization;
 
             display_rt = geoData.features.some(
                 (feature:Feature) => feature.properties?.speed_avg,
@@ -462,7 +463,7 @@
     {/if}
 
     <div class="container-fluid" role="group">
-        {#if region && region.geojson && geoData}
+        {#if region && region.geojson && geoData && geoData.metadata}
             <button
                 class="secondary outline"
                 id="clear-region"
@@ -625,7 +626,7 @@
 
 <ModalAbout bind:open={action_modal_about_open} />
 
-{#if geoData}
+{#if geoData && geoData.metadata!==undefined}
 <ModalData 
     open={action_modal_data_open} 
     geoData={geoData} 

@@ -1,4 +1,6 @@
 <script lang="ts">
+    import './ModalData.css';
+    
     import { untrack } from "svelte";
     import type { Feature, FeatureCollection } from "geojson";
     import { TableHandler, Datatable, ThSort } from "@vincjo/datatables";
@@ -109,7 +111,7 @@
                                         >Speed Count</ThSort
                                     >
                                 {/if}
-                                <ThSort {table} field="routes">Routes</ThSort>
+                                <ThSort {table} field="route_names">Routes</ThSort>
                             </tr>
                         </thead>
                         <tbody>
@@ -133,7 +135,7 @@
                                         <td>{row.speed_p75?.toFixed(2)}</td>
                                         <td>{row.speed_count}</td>
                                     {/if}
-                                    <td>{row.routes}</td>
+                                    <td>{row.route_names}</td>
                                 </tr>
                             {/each}
                         </tbody>
