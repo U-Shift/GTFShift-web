@@ -72,6 +72,7 @@
                     >
                 </h4>
             </header>
+            <main>
             {#if table}
                 <Datatable basic {table}>
                     <table>
@@ -142,6 +143,7 @@
                     </table>
                 </Datatable>
             {/if}
+            </main>
 
             <footer>
                 <div role="group">

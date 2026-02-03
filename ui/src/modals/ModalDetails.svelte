@@ -44,8 +44,9 @@
                     >
                 </h4>
             </header>
+            <main>
 
-            <h6>Technical sheet</h6>
+            <h6>Technical specifications</h6>
             {#if geoData}
             <table>
                 <tbody>
@@ -143,6 +144,8 @@ lane_prioritization <- GTFShift::rt_extend_prioritization(
                 }
             </code></pre>
             {/if}
+
+            </main>
 
             <footer>
                 <div role="group">

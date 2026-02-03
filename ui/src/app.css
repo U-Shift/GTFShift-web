@@ -66,7 +66,22 @@ div[role="group"] {
     color: #ffffff !important;
 }
 
-/** Modal size increase **/
+/** Modal **/
+
+dialog{
+    z-index: 1000;
+}
+dialog article {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+dialog article main {
+    overflow: auto;
+}
+
+
+
 @media (min-width: 768px) {
   dialog.large > article {
     max-width: 95vw!important;

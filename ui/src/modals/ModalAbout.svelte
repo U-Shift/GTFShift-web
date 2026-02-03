@@ -10,7 +10,8 @@
                     <strong><i class="fas fa-info-circle"></i> About</strong>
                 </h4>
             </header>
-
+            
+            <main>
             <p>
                 ...
             </p>
@@ -34,6 +35,7 @@
                 href="https://github.com/U-Shift/GTFShift-web/"
                 target="_blank"><i class="fa fa-github"></i> GTFShift web app GitHub project</a
             ></p>
+            </main>
 
             <footer>
                 <div role="group">
