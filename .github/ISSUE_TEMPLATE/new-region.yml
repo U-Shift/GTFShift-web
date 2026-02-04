@@ -15,7 +15,7 @@ body:
     attributes:
       label: Region Name
       description: Name of the region you'd like to add
-      placeholder: "e.g., São Paulo, Barcelona"
+      placeholder: "e.g., Porto, Portugal"
     validations:
       required: true
   - type: markdown

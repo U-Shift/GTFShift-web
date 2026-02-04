@@ -35,9 +35,8 @@
                 </p>
                 <div class="grid">
                     <a
-                        href="https://github.com/U-Shift/GTFShift-web/issues/new?template=new-region.md"
+                        href="https://github.com/U-Shift/GTFShift-web/issues/new?template=new-region.yml"
                         target="_blank"
-                            
                     >
                         <button class="outline secondary" style="width: 100%;">
                             <i class="fa fa-globe"></i> Suggest a new region
@@ -65,7 +64,7 @@
                 <p style="margin-top: 1rem;">
                     Developed by <a
                         href="https://ushift.tecnico.ulisboa.pt"
-                        target="_blank">U-shift</a
+                        target="_blank">U-Shift</a
                     >, a research group from Instituto Superior Técnico, Lisboa,
                     Portugal.
                 </p>
