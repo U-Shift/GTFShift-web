@@ -1,17 +1,18 @@
 <script lang="ts">
-    import { untrack } from "svelte";
-
     import * as L from "leaflet";
-    import type { FeatureCollection, Feature } from "geojson";
+    import type { Feature } from "geojson";
     import type { GeoPrioritization } from "./types/GeoPrioritization";
-
-    import { basemapTheme } from "./lib/theme";;
-
+    import type { DataRegion } from "./types/DataRegion";
+    
     import ModalAbout from "./modals/ModalAbout.svelte";
     import LayerBusLanePrioritization from "./layers/LayerBusLanePrioritization.svelte";
     import LayerBusLanes from "./layers/LayerBusLanes.svelte";
     import LayerTransitFrequency from "./layers/LayerTransitFrequency.svelte";
     import LayerNumberOfLanes from "./layers/LayerNumberOfLanes.svelte";
+    import LayerRTSpeed from "./layers/LayerRTSpeed.svelte";
+    import DataCensusTable from "./components/DataCensusTable.svelte";
+    import ModalData from "./modals/ModalData.svelte";
+    import ModalDetails from "./modals/ModalDetails.svelte";
 
     import {
         DB_REGIONS,
@@ -21,14 +22,10 @@
         COLOR_GRADIENT,
         COLOR_GRADIENT_RED,
     } from "./data";
-    import type { DATA_REGION } from "./data";
-    import LayerRTSpeed from "./layers/LayerRTSpeed.svelte";
-    import DataCensusTable from "./components/DataCensusTable.svelte";
-    import ModalData from "./modals/ModalData.svelte";
-    import ModalDetails from "./modals/ModalDetails.svelte";
+
 
     // Map
-    let { map }: { map: L.Map } = $props();
+    let { map, light_mode = $bindable() }: { map: L.Map, light_mode: boolean } = $props();
     let geoData: GeoPrioritization | null = $state(null);
 
     // User feedback
@@ -41,10 +38,9 @@
         FREQUENCY,
         N_LANES,
         RT_SPEED
-    }
-   
+    }   
 
-    let region: DATA_REGION | undefined = $state(undefined);
+    let region: DataRegion | undefined = $state(undefined);
 
     let display_tab: DisplayOptions | undefined = $state(undefined);
     let display_rt: boolean = $state(false); // true if region has rt-data (optional)
@@ -59,24 +55,15 @@
     let action_modal_data_open: boolean = $state(false);
     let action_modal_details_open: boolean = $state(false);
 
-    // Layer callback handler
-    const handleLayerCreate = (layer: L.Layer) => {
-        // pass
-    };
+    // Action handlers 
+    const handleLayerCreate = (layer: L.Layer) => {};
 
-    // Actions
-    // > Map
-    const toggleTheme = () => {
-        basemapTheme.update((t) => (t === "light" ? "dark" : "light"));
-    };
-
-    // > Data source
     const handleRegionChange = async (event: Event) => {
         const regionId = (event.target as HTMLSelectElement).value;
 
         if (!regionId) return;
 
-        region = DB_REGIONS.find((r: DATA_REGION) => r.id === regionId);
+        region = DB_REGIONS.find((r: DataRegion) => r.id === regionId);
         if (!region || !map) return;
 
         display_tab = undefined;
@@ -110,9 +97,6 @@
             loading = undefined;
         }
     };
-
-    // Display - Layer components now handle rendering via effects
-    // No longer need the centralized $effect and render_* functions
 </script>
 
 <svelte:head>
@@ -127,6 +111,7 @@
 </svelte:head>
 
 <div id="controls-panel" class="overflow-auto">
+    <!-- Title -->
     <div class="container-fluid" style="text-align: left;">
         <div style="display: flex; flex-direction: row; flex-wrap: nowrap;">
             <h3
@@ -158,6 +143,7 @@
         {/if}
     </div>
 
+    <!-- Form 1: Select region -->
     {#if region === undefined}
         <div class="container-fluid text-left">
             <h5 style="margin-bottom: 0.1rem;" class="text-primary">
@@ -183,6 +169,7 @@
         </div>
     {/if}
 
+    <!-- Form 2: Region display options -->
     {#if region !== undefined && geoData && !action_hide_form}
         <div class="container-fluid text-left" id="form">
             <h5 style="margin-bottom: 0.1rem;" class="text-primary">
@@ -455,6 +442,7 @@
         </div>
     {/if}
 
+    <!-- Control buttons -->
     <div class="container-fluid" role="group">
         {#if region && region.geojson && geoData && geoData.metadata}
             <button
@@ -462,6 +450,7 @@
                 id="clear-region"
                 on:click={() => {
                     region = undefined;
+                    display_tab = undefined;
                 }}
             >
                 <i class="fa-solid fa-arrow-left"></i> Change source
@@ -479,15 +468,16 @@
         <button
             class="secondary outline"
             id="toggle-color"
-            on:click={toggleTheme}
+            on:click={() => {light_mode = !light_mode}}
         >
-            {@html $basemapTheme === "light"
+            {@html light_mode
                 ? '<i class="fa-solid fa-circle-half-stroke"></i> Dark mode'
                 : '<i class="fa-solid fa-circle-half-stroke"></i> Light mode'}
         </button>
     </div>
 </div>
 
+<!-- Map caption -->
 <div id="caption" class="overflow-auto">
     {#if display_tab === DisplayOptions.PRIORITIZATION}
         <p>
@@ -583,6 +573,7 @@
     {/if}
 </div>
 
+<!-- Map layers -->
 {#if region && geoData && display_tab !== undefined && map}
     {#if display_tab === DisplayOptions.PRIORITIZATION}
         <LayerBusLanePrioritization
@@ -610,6 +601,7 @@
     {/if}
 {/if}
 
+<!-- Modals -->
 <ModalAbout bind:open={action_modal_about_open} />
 
 {#if geoData && geoData.metadata!==undefined}

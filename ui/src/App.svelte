@@ -1,16 +1,17 @@
-<script>
+<script lang="ts">
+  import { untrack } from "svelte";
   import * as L from 'leaflet';
   import 'leaflet/dist/leaflet.css';
 
   import Dashboard from './Dashboard.svelte';
-  import { basemapTheme } from './lib/theme';
 
   import {MAP_DARK, MAP_LIGHT, MAP_INIT_ZOOM, MAP_INIT_CENTER} from './data';
 
-  let map;
-  let tileLayer;
+  let map: L.Map = $state(null);
+  let tileLayer: L.TileLayer = $state(null);
+  let light_mode = $state(true);
 
-  const createMap = (container) => {
+  const createMap = (container: HTMLElement) => {
     let m = L.map(container, {
       zoomControl: false
     }).setView(MAP_INIT_CENTER, MAP_INIT_ZOOM);
@@ -31,7 +32,7 @@
     return m;
   }
 
-  const mapAction = (container) => {
+  const mapAction = (container: HTMLElement) => {
     map = createMap(container);
     return {
       destroy: () => {
@@ -41,11 +42,15 @@
   }
 
   // Subscribe to theme changes and swap tile layer
-  $: if (map && tileLayer) {
-    const tileUrl = $basemapTheme === 'dark' ? MAP_DARK : MAP_LIGHT;
-    map.removeLayer(tileLayer);
-    tileLayer = L.tileLayer(tileUrl).addTo(map);
-  }
+  $effect(() => {
+    const tileUrl = light_mode ? MAP_LIGHT : MAP_DARK;
+    untrack(() => {
+        if (map && tileLayer) {
+          map.removeLayer(tileLayer);
+          tileLayer = L.tileLayer(tileUrl).addTo(map);
+        }
+      });
+  });
 </script>
 
 <svelte:head>
@@ -57,12 +62,12 @@
 
 
 <main>
-  <Dashboard map={map} />
+  <Dashboard {map} bind:light_mode />
 
   <div id="map" style="height:100vh;width:100vw" use:mapAction></div>
 
   <div id="logo">
-      <img src="/static/logo_acknowledgement.png" width="100%" style="margin-right: 8px;" />
+      <img src="/static/logo_acknowledgement.png" width="100%" style="margin-right: 8px;" alt="U-shift research group, Instituto Superiro Técnico, University of Lisbon, Portugal" />
   </div>
 
 </main>
