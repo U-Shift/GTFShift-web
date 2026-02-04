@@ -4,9 +4,9 @@ Web interactive dashboard for GTFShift R package.
 
 ## Web app
 
-[![](/figures/screenshot.png)](https://ushift.pt/apps/gtfshift)
+[![](/figures/screenshot.png)](https://ushift.pt/apps/gtfshift){target="_blank"}
 
-https://ushift.pt/apps/gtfshift
+[ushift.pt/apps/gtfshift](https://ushift.pt/apps/gtfshift){target="_blank"}
 
 ## About 
 
