@@ -3,6 +3,7 @@
     import * as L from "leaflet";
     import { COLOR_YELLOW, COLOR_TEAL, COLOR_RED } from "../data";
     import { createFeaturePopup } from "../lib/layerUtils";
+    import type { Feature } from "geojson";
 
     let {
         map,
@@ -29,28 +30,28 @@
 
         // Filter for hour==criteriaHour
         const filteredFeatures = geoData.features.filter(
-            (feature) =>
-                feature.properties.hour === criteriaHour &&
-                (feature.properties.is_bus_lane ||
+            (feature: Feature | undefined) =>
+                feature?.properties?.hour === criteriaHour &&
+                (feature?.properties?.is_bus_lane ||
                     (
-                        feature.properties.frequency &&
-                        feature.properties.frequency >= criteriaBusFrequency &&
-                        feature.properties.n_lanes_direction &&
-                        feature.properties.n_lanes_direction >=
+                        feature?.properties?.frequency &&
+                        feature?.properties?.frequency >= criteriaBusFrequency &&
+                        feature?.properties?.n_lanes_direction &&
+                        feature?.properties?.n_lanes_direction >=
                             criteriaNLanesDirection &&
                         (criteriaAvgSpeed===undefined ||
-                            (feature.properties.speed_avg !== undefined &&
-                                feature.properties.speed_avg <=
+                            (feature?.properties?.speed_avg !== undefined &&
+                                feature?.properties?.speed_avg <=
                                     criteriaAvgSpeed)))
                 ),
         );
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(filteredFeatures, {
-            style: (feature) => {
-                let properties = feature.properties;
+            style: (feature: Feature | undefined) => {
+                let properties = feature?.properties;
 
-                if (properties.is_bus_lane) {
+                if (properties?.is_bus_lane) {
                     if (
                         properties.frequency >= criteriaBusFrequency &&
                         properties.n_lanes !== undefined &&

@@ -7,8 +7,8 @@
 
   import {MAP_DARK, MAP_LIGHT, MAP_INIT_ZOOM, MAP_INIT_CENTER} from './data';
 
-  let map: L.Map = $state(null);
-  let tileLayer: L.TileLayer = $state(null);
+  let map: L.Map | null = $state(null);
+  let tileLayer: L.TileLayer | null = $state(null);
   let light_mode = $state(true);
 
   const createMap = (container: HTMLElement) => {
@@ -36,7 +36,7 @@
     map = createMap(container);
     return {
       destroy: () => {
-        map.remove();
+        map?.remove();
       },
     };
   }
@@ -62,7 +62,9 @@
 
 
 <main>
+  {#if map}
   <Dashboard {map} bind:light_mode />
+  {/if}
 
   <div id="map" style="height:100vh;width:100vw" use:mapAction></div>
 

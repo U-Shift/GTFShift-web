@@ -41,7 +41,7 @@
                 <div role="group">
                     <button
                         class="secondary outline modal-close"
-                        on:click={() => (open = false)}>Go back</button
+                        onclick={() => (open = false)}>Go back</button
                     >
                 </div>
             </footer>

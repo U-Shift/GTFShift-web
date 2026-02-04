@@ -25,15 +25,15 @@
 
         // Filter for hour==criteriaHour and has frequency
         const filteredFeatures = geoData.features.filter(
-            (feature:Feature) =>
-                feature.properties?.hour === criteriaHour &&
-                feature.properties?.frequency,
+            (feature: Feature | undefined) =>
+                feature?.properties?.hour === criteriaHour &&
+                feature?.properties?.frequency,
         );
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(filteredFeatures, {
-            style: (feature: Feature) => {
-                let properties = feature.properties;
+            style: (feature: Feature | undefined) => {
+                let properties = feature?.properties;
                 let freq = properties?.frequency || 0;
                 let colorIndex = Math.min(
                     Math.ceil(

@@ -23,7 +23,6 @@
         COLOR_GRADIENT_RED,
     } from "./data";
 
-
     // Map
     let { map, light_mode = $bindable() }: { map: L.Map, light_mode: boolean } = $props();
     let geoData: GeoPrioritization | null = $state(null);
@@ -124,12 +123,13 @@
                 <a
                     href="#"
                     class="text-secondary"
-                    on:click={(e) => {
+                    onclick={(e) => {
                         e.preventDefault();
                         action_modal_about_open = !action_modal_about_open;
                     }}
                     data-tooltip="About"
                     data-placement="right"
+                    aria-label="About"
                 >
                     <i class="fas fa-info-circle"></i>
                 </a>
@@ -156,7 +156,7 @@
                 name="region"
                 aria-label="Select region"
                 required
-                on:change={handleRegionChange}
+                onchange={handleRegionChange}
                 disabled={loading !== undefined}
             >
                 <option selected disabled value=""> Select region </option>
@@ -181,12 +181,13 @@
                     href="#"
                     class="text-secondary"
                     style="margin-left: 1rem; margin-right: 0.3rem;"
-                    on:click={(e) => {
+                    onclick={(e) => {
                         e.preventDefault();
                         action_modal_data_open = !action_modal_data_open;
                     }}
                     data-tooltip="Attribute table"
                     data-placement="bottom"
+                    aria-label="Attribute table"
                 >
                     <i class="fas fa-table"></i>
                 </a>
@@ -194,12 +195,13 @@
                     href="#"
                     class="text-secondary"
                     style="margin-right: 0.3rem;"
-                    on:click={(e) => {
+                    onclick={(e) => {
                         e.preventDefault();
                         action_modal_details_open = !action_modal_details_open;
                     }}
                     data-tooltip="Details"
                     data-placement="bottom"
+                    aria-label="Details"
                 >
                     <i class="fas fa-code"></i>
                 </a>
@@ -209,6 +211,7 @@
                     class="text-secondary"
                     data-tooltip="Download raw data"
                     data-placement="bottom"
+                    aria-label="Download raw data"
                 >
                     <i class="fas fa-download"></i>
                 </a>
@@ -217,12 +220,10 @@
             <p class="small text-primary">Explore the different layers below</p>
             <details
                 name={DisplayOptions.PRIORITIZATION.toString()}
-                open={display_tab === DisplayOptions.PRIORITIZATION
-                    ? "true"
-                    : undefined}
+                open={display_tab === DisplayOptions.PRIORITIZATION ? true : undefined}
             >
                 <summary
-                    on:click={(e) => {
+                    onclick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         display_tab =
@@ -287,13 +288,11 @@
             </details>
 
             <details
-                name={DisplayOptions.BUS_LANES}
-                open={display_tab === DisplayOptions.BUS_LANES
-                    ? "true"
-                    : undefined}
+                name={DisplayOptions.BUS_LANES.toString()}
+                open={display_tab === DisplayOptions.BUS_LANES ? true : undefined}
             >
                 <summary
-                    on:click={(e) => {
+                    onclick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         display_tab =
@@ -313,13 +312,11 @@
             </details>
 
             <details
-                name={DisplayOptions.FREQUENCY}
-                open={display_tab === DisplayOptions.FREQUENCY
-                    ? "true"
-                    : undefined}
+                name={DisplayOptions.FREQUENCY.toString()}
+                open={display_tab === DisplayOptions.FREQUENCY ? true : undefined}
             >
                 <summary
-                    on:click={(e) => {
+                    onclick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         display_tab =
@@ -367,13 +364,11 @@
             </details>
 
             <details
-                name={DisplayOptions.N_LANES}
-                open={display_tab === DisplayOptions.N_LANES
-                    ? "true"
-                    : undefined}
+                name={DisplayOptions.N_LANES.toString()}
+                open={display_tab === DisplayOptions.N_LANES ? true : undefined}
             >
                 <summary
-                    on:click={(e) => {
+                    onclick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         display_tab =
@@ -404,13 +399,11 @@
 
             {#if display_rt}
             <details
-                name={DisplayOptions.RT_SPEED}
-                open={display_tab === DisplayOptions.RT_SPEED
-                    ? "true"
-                    : undefined}
+                name={DisplayOptions.RT_SPEED.toString()}
+                open={display_tab === DisplayOptions.RT_SPEED ? true: undefined}
             >
                 <summary
-                    on:click={(e) => {
+                    onclick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         display_tab =
@@ -422,12 +415,12 @@
                 <div class="small text-secondary">
                     Road segments with bus service are colored by the average commercial speed measured 
                     , from the <span
-                        style="color: {COLOR_GRADIENT_RED.toReversed()[0]}; font-weight: bold;"
+                        style="color: {COLOR_GRADIENT_RED.slice().reverse()[0]}; font-weight: bold;"
                         >lowest ({geoData.metadata.data_census.speed_avg?.min?.toFixed(2)})</span
                     >
                     to the
                     <span
-                        style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT_RED.toReversed()[
+                        style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT_RED.slice().reverse()[
                             COLOR_GRADIENT_RED.length - 1
                         ]}; font-weight: bold;border-radius: 4px;"
                         >highest ({geoData.metadata.data_census.speed_avg?.max?.toFixed(2)})</span
@@ -448,7 +441,7 @@
             <button
                 class="secondary outline"
                 id="clear-region"
-                on:click={() => {
+                onclick={() => {
                     region = undefined;
                     display_tab = undefined;
                 }}
@@ -458,7 +451,7 @@
             <button
                 class="secondary outline"
                 id="toggle-form"
-                on:click={() => (action_hide_form = !action_hide_form)}
+                onclick={() => (action_hide_form = !action_hide_form)}
             >
                 {@html !action_hide_form
                     ? '<i class="fa-solid fa-map"></i> Expand map'
@@ -468,7 +461,7 @@
         <button
             class="secondary outline"
             id="toggle-color"
-            on:click={() => {light_mode = !light_mode}}
+            onclick={() => {light_mode = !light_mode}}
         >
             {@html light_mode
                 ? '<i class="fa-solid fa-circle-half-stroke"></i> Dark mode'
@@ -560,7 +553,7 @@
                     >{geoData?.metadata.data_census.speed_avg?.min && Math.floor(geoData.metadata.data_census.speed_avg.min)}</span
                 >
                 <div
-                    style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT_RED.toReversed().map(
+                    style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT_RED.slice().reverse().map(
                         (c) => c,
                     ).join(', ')}); border-radius: 4px; border: 1px solid #ccc;"
                 ></div>

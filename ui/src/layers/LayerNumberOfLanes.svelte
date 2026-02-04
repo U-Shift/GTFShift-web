@@ -26,8 +26,8 @@
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(uniqueFeatures, {
-            style: (feature: Feature) => {
-                let properties = feature.properties;
+            style: (feature: Feature | undefined) => {
+                let properties = feature?.properties;
                 let n_lanes_direction = properties?.n_lanes_direction || 0;
                 let colorIndex = Math.min(
                     Math.ceil(

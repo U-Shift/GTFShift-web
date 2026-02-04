@@ -26,8 +26,8 @@
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(uniqueFeatures, {
-            style: (feature: Feature) => {
-                let properties = feature.properties;
+            style: (feature: Feature | undefined) => {
+                let properties = feature?.properties;
                 let speed_avg = properties?.speed_avg || undefined;
                 let colorIndex = speed_avg!==undefined ? Math.min(
                     Math.ceil(
@@ -36,7 +36,7 @@
                     COLOR_GRADIENT_RED.length - 1,
                 ) : undefined;
                 return {
-                    color: colorIndex!==undefined ?COLOR_GRADIENT_RED.toReversed()[colorIndex] : COLOR_GRAY,
+                    color: colorIndex!==undefined ?COLOR_GRADIENT_RED.slice().reverse()[colorIndex] : COLOR_GRAY,
                     weight: 2.5,
                 };
             },

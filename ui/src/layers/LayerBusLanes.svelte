@@ -3,6 +3,7 @@
     import * as L from "leaflet";
     import { COLOR_TEAL } from "../data";
     import { createFeaturePopup, deduplicateByWayId } from "../lib/layerUtils";
+    import type { Feature } from "geojson";
 
     let {
         map,
@@ -21,7 +22,7 @@
 
         // Filter for bus lanes
         const filteredFeatures = geoData.features.filter(
-            (feature) => feature.properties.is_bus_lane,
+            (feature: Feature | undefined) => feature?.properties?.is_bus_lane,
         );
 
         // Deduplicate by way_osm_id
