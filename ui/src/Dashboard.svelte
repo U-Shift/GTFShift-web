@@ -235,7 +235,7 @@
                 <div class="small text-primary">
                     <p>
                         Display road segments coloured by bus lane
-                        prioritization criteria:
+                        prioritization criteria: <span data-tooltip="Frequency and speed initially set to median values"><i class="fa fa-circle-info"></i></span>
                     </p>
                     <ul>
                         <li>
@@ -480,20 +480,20 @@
             ></span><b>Bus lane</b> with 
                 - {criteria_bus_frequency} bus/h 
                 OR - {criteria_n_lanes_direction} lane/dir
-                {#if display_rt}OR - {criteria_avg_speed} km/h avg. speed{/if}
+                {#if display_rt}OR {criteria_avg_speed} or - km/h avg. speed{/if}
         </p>
         <p>
             <span class="caption-square" style="background-color: {COLOR_TEAL}"
             ></span><b>Bus lane</b> with 
-                + {criteria_bus_frequency} bus/h 
-                AND + {criteria_n_lanes_direction} lane/dir
+                + {criteria_bus_frequency-1} bus/h 
+                AND + {criteria_n_lanes_direction-1} lane/dir
                 {#if display_rt}AND + {criteria_avg_speed} km/h avg. speed{/if}
         </p>
         <p>
             <span class="caption-square" style="background-color: {COLOR_RED}"
-            ></span><b>NO bus lane</b> with + {criteria_bus_frequency} bus/h AND
-            + {criteria_n_lanes_direction} lane/dir
-            {#if display_rt} AND - {criteria_avg_speed} km/h avg. speed{/if}
+            ></span><b>NO bus lane</b> with + {criteria_bus_frequency-1} bus/h AND
+            + {criteria_n_lanes_direction-1} lane/dir
+            {#if display_rt} AND {criteria_avg_speed} or - km/h avg. speed{/if}
         </p>
     {:else if display_tab === DisplayOptions.BUS_LANES}
         <p>
