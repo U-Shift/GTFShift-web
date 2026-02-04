@@ -1,6 +1,6 @@
 import type { FeatureCollection } from "geojson";
 
-interface StatisticsBundle {
+export interface StatisticsBundle {
     min: number;
     max: number;
     p25: number;

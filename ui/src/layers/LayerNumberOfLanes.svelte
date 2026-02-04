@@ -2,16 +2,18 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT } from "../data";
-    import { createFeaturePopup, deduplicateByWayId, dataCensus, type DataCensus } from "../lib/layerUtils";
+    import { createFeaturePopup, deduplicateByWayId } from "../lib/layerUtils";
+    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { Feature } from "geojson";
 
     let {
         map,
         geoData,
-        onLayerCreate = (layer, census) => {},
+        onLayerCreate = (layer) => {},
     }: {
         map: L.Map;
-        geoData: any;
-        onLayerCreate: (layer: L.Layer, census: DataCensus | undefined) => void;
+        geoData: GeoPrioritization;
+        onLayerCreate: (layer: L.Layer) => void;
     } = $props();
 
     let currentLayer: L.Layer | null = $state(null);
@@ -22,20 +24,14 @@
         // Deduplicate by way_osm_id
         const uniqueFeatures = deduplicateByWayId(geoData.features);
 
-        // Calculate min and max
-        const census = dataCensus(
-            uniqueFeatures,
-            "n_lanes_direction"
-        );
-
         // Create and add new layer to map
         const newLayer = L.geoJSON(uniqueFeatures, {
-            style: (feature) => {
+            style: (feature: Feature) => {
                 let properties = feature.properties;
-                let n_lanes_direction = properties.n_lanes_direction || 0;
+                let n_lanes_direction = properties?.n_lanes_direction || 0;
                 let colorIndex = Math.min(
                     Math.ceil(
-                        (n_lanes_direction * COLOR_GRADIENT.length) / (census.max ?? 1),
+                        (n_lanes_direction * COLOR_GRADIENT.length) / geoData.metadata.data_census.lanes.max,
                     ),
                     COLOR_GRADIENT.length - 1,
                 );
@@ -50,7 +46,7 @@
         // Update parent state
         untrack(() => {
             currentLayer = newLayer;
-            onLayerCreate(newLayer, census);
+            onLayerCreate(newLayer);
         });
 
         // Zoom to layer

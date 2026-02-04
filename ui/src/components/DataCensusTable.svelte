@@ -1,10 +1,11 @@
 <script lang="ts">
-    import type { DataCensus } from "../lib/layerUtils";
+    import type { StatisticsBundle } from "../types/GeoPrioritization";
+
 
     let {
         census,
     }: {
-        census: DataCensus;
+        census: StatisticsBundle;
     } = $props();
 </script>
 

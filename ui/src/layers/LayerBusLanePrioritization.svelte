@@ -2,7 +2,7 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_YELLOW, COLOR_TEAL, COLOR_RED } from "../data";
-    import { createFeaturePopup, type DataCensus } from "../lib/layerUtils";
+    import { createFeaturePopup } from "../lib/layerUtils";
 
     let {
         map,
@@ -11,7 +11,7 @@
         criteriaBusFrequency = 5,
         criteriaNLanesDirection = 2,
         criteriaAvgSpeed = undefined,
-        onLayerCreate = (layer, census) => {},
+        onLayerCreate = (layer) => {},
     }: {
         map: L.Map;
         geoData: any;
@@ -19,7 +19,7 @@
         criteriaBusFrequency: number;
         criteriaNLanesDirection: number;
         criteriaAvgSpeed: number | undefined;
-        onLayerCreate: (layer: L.Layer, census: DataCensus | undefined) => void;
+        onLayerCreate: (layer: L.Layer) => void;
     } = $props();
 
     let currentLayer: L.Layer | null = $state(null);
@@ -84,7 +84,7 @@
         // Update parent state
         untrack(() => {
             currentLayer = newLayer;
-            onLayerCreate(newLayer, undefined);
+            onLayerCreate(newLayer);
         });
 
         // Zoom to layer

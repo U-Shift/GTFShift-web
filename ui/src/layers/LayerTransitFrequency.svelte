@@ -2,18 +2,20 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT } from "../data";
-    import { createFeaturePopup, dataCensus, type DataCensus } from "../lib/layerUtils";
+    import { createFeaturePopup } from "../lib/layerUtils";
+    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { Feature } from "geojson";
 
     let {
         map,
         geoData,
         criteriaHour = 8,
-        onLayerCreate = (layer, census) => {},
+        onLayerCreate = (layer) => {},
     }: {
         map: L.Map;
-        geoData: any;
+        geoData: GeoPrioritization;
         criteriaHour: number;
-        onLayerCreate: (layer: L.Layer, census: DataCensus | undefined) => void;
+        onLayerCreate: (layer: L.Layer) => void;
     } = $props();
 
     let currentLayer: L.Layer | null = $state(null);
@@ -23,25 +25,19 @@
 
         // Filter for hour==criteriaHour and has frequency
         const filteredFeatures = geoData.features.filter(
-            (feature) =>
-                feature.properties.hour === criteriaHour &&
-                feature.properties.frequency,
-        );
-
-        // Calculate min and max
-        const census = dataCensus(
-            filteredFeatures,
-            "frequency"
+            (feature:Feature) =>
+                feature.properties?.hour === criteriaHour &&
+                feature.properties?.frequency,
         );
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(filteredFeatures, {
-            style: (feature) => {
+            style: (feature: Feature) => {
                 let properties = feature.properties;
-                let freq = properties.frequency || 0;
+                let freq = properties?.frequency || 0;
                 let colorIndex = Math.min(
                     Math.ceil(
-                        (freq * COLOR_GRADIENT.length) / (census.max ?? 1),
+                        (freq * COLOR_GRADIENT.length) / (geoData.metadata.data_census.frequency_hour[criteriaHour]?.max || 1),
                     ),
                     COLOR_GRADIENT.length - 1,
                 );
@@ -56,7 +52,7 @@
         // Update parent state
         untrack(() => {
             currentLayer = newLayer;
-            onLayerCreate(newLayer, census);
+            onLayerCreate(newLayer);
         });
 
         // Zoom to layer
