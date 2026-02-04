@@ -17,7 +17,7 @@
 
     z-index: 997;
 
-    background-image: url('/static/logo/background_blur.png');
+    background-image: url('../static/logo/background_blur.png');
     background-size: auto 11vw;
     background-position: 15vw -5vh;
 }

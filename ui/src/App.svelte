@@ -69,7 +69,7 @@
   <div id="map" style="height:100vh;width:100vw" use:mapAction></div>
 
   <div id="logo">
-      <img src="/static/logo_acknowledgement.png" width="100%" style="margin-right: 8px;" alt="U-shift research group, Instituto Superiro Técnico, University of Lisbon, Portugal" />
+      <img src="static/logo_acknowledgement.png" width="100%" style="margin-right: 8px;" alt="U-shift research group, Instituto Superiro Técnico, University of Lisbon, Portugal" />
   </div>
 
 </main>

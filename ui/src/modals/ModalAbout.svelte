@@ -70,7 +70,7 @@
                 </p>
 
                 <a href="https://ushift.tecnico.ulisboa.pt" target="_blank" style="margin-top: 1rem;">
-                    <img src="/static/logo_acknowledgement.png" 
+                    <img src="static/logo_acknowledgement.png" 
                         width="90%" 
                         alt="U-shift research group, Instituto Superiro Técnico, University of Lisbon, Portugal"
                     />

@@ -21,7 +21,7 @@ export const DB_REGIONS: DataRegion[] = [
     {
         id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260203_extended_with_metadata',
         name: 'Carris, Lisbon, PT',
-        geojson: BASE_URL + 'static/data/prioritization_lisboa_rt_gtfs2026-02-04_run20260203_extended_with_metadata.geojson',
+        geojson: './data/prioritization_lisboa_rt_gtfs2026-02-04_run20260203_extended_with_metadata.geojson',
         date: 'Feb 2026'
     }
 ]
