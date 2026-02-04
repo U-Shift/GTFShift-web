@@ -130,11 +130,11 @@
                                     <td>{row.n_directions}</td>
                                     <td>{row.n_lanes_direction}</td>
                                     {#if rt_data}
-                                        <td>{row.speed_avg?.toFixed(2)}</td>
-                                        <td>{row.speed_p25?.toFixed(2)}</td>
-                                        <td>{row.speed_median?.toFixed(2)}</td>
-                                        <td>{row.speed_p75?.toFixed(2)}</td>
-                                        <td>{row.speed_count}</td>
+                                        <td>{row.speed_avg && !isNaN(row.speed_avg) ? row.speed_avg?.toFixed(2) : "-"}</td>
+                                        <td>{row.speed_p25 && !isNaN(row.speed_p25) ? row.speed_p25?.toFixed(2) : "-"}</td>
+                                        <td>{row.speed_median && !isNaN(row.speed_median) ? row.speed_median?.toFixed(2) : "-"}</td>
+                                        <td>{row.speed_p75 && !isNaN(row.speed_p75) ? row.speed_p75?.toFixed(2) : "-"}</td>
+                                        <td>{row.speed_count && !isNaN(row.speed_count) ? row.speed_count : "-"}</td>  
                                     {/if}
                                     <td>{row.route_names}</td>
                                 </tr>

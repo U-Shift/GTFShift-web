@@ -6,7 +6,7 @@ import * as L from "leaflet";
 export const createFeaturePopup = (feature: any, layer: L.Layer) => {
     let properties = feature.properties;
 
-    let rt_str = properties.speed_avg ? `<dt>Average commercial speed</dt><dd><b>${properties.speed_avg.toFixed(1)} km/h</b></dd>` : '';
+    let rt_str = properties.speed_avg && !isNaN(properties.speed_avg) ? `<dt>Average commercial speed</dt><dd><b>${properties.speed_avg.toFixed(1)} km/h</b></dd>` : '';
 
     layer.bindPopup(`
         <h6>Way ${properties.way_osm_id}</h6>

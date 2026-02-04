@@ -24,7 +24,6 @@
     import type { DATA_REGION } from "./data";
     import LayerRTSpeed from "./layers/LayerRTSpeed.svelte";
     import DataCensusTable from "./components/DataCensusTable.svelte";
-    import { dataCensus, type DataCensus } from "./lib/layerUtils";
     import ModalData from "./modals/ModalData.svelte";
     import ModalDetails from "./modals/ModalDetails.svelte";
 
@@ -50,8 +49,6 @@
     let display_tab: DisplayOptions | undefined = $state(undefined);
     let display_rt: boolean = $state(false); // true if region has rt-data (optional)
     
-    let tab_census: DataCensus | undefined = $state(undefined);
-
     let criteria_hour: number = $state(8);
     let criteria_bus_frequency: number = $state(0);
     let criteria_n_lanes_direction: number = $state(2);
@@ -63,8 +60,8 @@
     let action_modal_details_open: boolean = $state(false);
 
     // Layer callback handler
-    const handleLayerCreate = (layer: L.Layer, census: DataCensus | undefined) => {
-        tab_census = census;
+    const handleLayerCreate = (layer: L.Layer) => {
+        // pass
     };
 
     // Actions
@@ -100,25 +97,11 @@
             action_modal_details_open = false;
             criteria_hour = 8;
             criteria_n_lanes_direction = 2;
-            // frequency and avg_speed will be set to P75 values
-            let query = geoData.features.filter(
-                    (feature) =>
-                        feature.properties?.hour === criteria_hour &&
-                        feature.properties?.frequency,
-                );
-            criteria_bus_frequency = Math.floor((dataCensus(
-                query,
-                "frequency"
-            ) as DataCensus).median as number);
-            criteria_avg_speed = display_rt ? Math.floor((dataCensus(
-                query,
-                "speed_avg"
-            ) as DataCensus).median as number) : undefined;
-
+            criteria_bus_frequency = geoData.metadata.data_census.frequency.median;
+            criteria_avg_speed = Math.floor(geoData.metadata.data_census.speed_avg?.median ?? 0);
 
             // Update display_tab option to trigger rendering
-            display_tab = DisplayOptions.PRIORITIZATION;
-            
+            display_tab = DisplayOptions.PRIORITIZATION;            
 
             console.log("Loaded GeoJSON for region:", region.id);
         } catch (error) {
@@ -363,14 +346,14 @@
                         Road segments with bus service are colored by frequency,
                         from the <span
                             style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
-                            >lowest ({tab_census?.min})</span
+                            >lowest ({geoData.metadata.data_census.frequency_hour[criteria_hour].min})</span
                         >
                         to the
                         <span
                             style="color: {COLOR_GRADIENT[
                                 COLOR_GRADIENT.length - 1
                             ]}; font-weight: bold;"
-                            >highest ({tab_census?.max})</span
+                            >highest ({geoData.metadata.data_census.frequency_hour[criteria_hour].max})</span
                         >
                         number of buses per hour, considering:
                     </p>
@@ -391,8 +374,8 @@
                     </ul>
                 </div>
 
-                {#if tab_census}
-                    <DataCensusTable census={tab_census} />
+                {#if geoData.metadata.data_census.frequency_hour[criteria_hour]}
+                    <DataCensusTable census={geoData.metadata.data_census.frequency_hour[criteria_hour]} />
                 {/if}
             </details>
 
@@ -416,19 +399,19 @@
                     Road segments with bus service are colored by number of
                     lanes, from the <span
                         style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
-                        >lowest ({tab_census?.min})</span
+                        >lowest ({geoData.metadata.data_census.lanes.min})</span
                     >
                     to the
                     <span
                         style="color: {COLOR_GRADIENT[
                             COLOR_GRADIENT.length - 1
                         ]}; font-weight: bold;"
-                        >highest ({tab_census?.max})</span
+                        >highest ({geoData.metadata.data_census.lanes.max})</span
                     > number of lanes per direction.
                 </div>
 
-                {#if tab_census}
-                    <DataCensusTable census={tab_census} />
+                {#if geoData.metadata.data_census.lanes}
+                    <DataCensusTable census={geoData.metadata.data_census.lanes} />
                 {/if}
             </details>
 
@@ -453,19 +436,19 @@
                     Road segments with bus service are colored by the average commercial speed measured 
                     , from the <span
                         style="color: {COLOR_GRADIENT_RED.toReversed()[0]}; font-weight: bold;"
-                        >lowest ({tab_census?.min?.toFixed(2)})</span
+                        >lowest ({geoData.metadata.data_census.speed_avg?.min?.toFixed(2)})</span
                     >
                     to the
                     <span
                         style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT_RED.toReversed()[
                             COLOR_GRADIENT_RED.length - 1
                         ]}; font-weight: bold;border-radius: 4px;"
-                        >highest ({tab_census?.max?.toFixed(2)})</span
+                        >highest ({geoData.metadata.data_census.speed_avg?.max?.toFixed(2)})</span
                     > values (km/h).
                 </div>
 
-                {#if tab_census}
-                    <DataCensusTable census={tab_census} />
+                {#if geoData.metadata.data_census.speed_avg}
+                    <DataCensusTable census={geoData.metadata.data_census.speed_avg} />
                 {/if}
             </details>
             {/if}
@@ -542,7 +525,7 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <span
                     style="min-width: 40px; text-align: right; font-size: 0.85rem;"
-                    >{tab_census?.min}</span
+                    >{geoData?.metadata.data_census.frequency_hour[criteria_hour]?.min}</span
                 >
                 <div
                     style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map(
@@ -551,7 +534,7 @@
                 ></div>
                 <span
                     style="min-width: 40px; text-align: left; font-size: 0.85rem;"
-                    >{tab_census?.max}</span
+                    >{geoData?.metadata.data_census.frequency_hour[criteria_hour]?.max}</span
                 >
             </div>
         </div>
@@ -563,7 +546,7 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <span
                     style="min-width: 40px; text-align: right; font-size: 0.85rem;"
-                    >{tab_census?.min}</span
+                    >{geoData?.metadata.data_census.lanes?.min}</span
                 >
                 <div
                     style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map(
@@ -572,7 +555,7 @@
                 ></div>
                 <span
                     style="min-width: 40px; text-align: left; font-size: 0.85rem;"
-                    >{tab_census?.max}</span
+                    >{geoData?.metadata.data_census.lanes?.max}</span
                 >
             </div>
         </div>
@@ -584,7 +567,7 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <span
                     style="min-width: 40px; text-align: right; font-size: 0.85rem;"
-                    >{tab_census?.min && Math.round(tab_census.min)}</span
+                    >{geoData?.metadata.data_census.speed_avg?.min && Math.floor(geoData.metadata.data_census.speed_avg.min)}</span
                 >
                 <div
                     style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT_RED.toReversed().map(
@@ -593,7 +576,7 @@
                 ></div>
                 <span
                     style="min-width: 40px; text-align: left; font-size: 0.85rem;"
-                    >{tab_census?.max && Math.round(tab_census.max)}</span
+                    >{geoData?.metadata.data_census.speed_avg?.max && Math.ceil(geoData.metadata.data_census.speed_avg.max)}</span
                 >
             </div>
         </div>
@@ -639,7 +622,6 @@
 <ModalDetails 
     open={action_modal_details_open} 
     geoData={geoData} 
-    rt_data={display_rt}
 />
 {/if}
 

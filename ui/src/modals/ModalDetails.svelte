@@ -13,11 +13,9 @@
     let {
         open,
         geoData,
-        rt_data,
     }: {
         open: boolean;
         geoData: GeoPrioritization | null;
-        rt_data: boolean;
     } = $props();
 </script>
 
@@ -51,44 +49,46 @@
             <table>
                 <tbody>
                     <tr>
-                        <th>City</th>
+                        <th>Region</th>
                         <td><kbd>{geoData.metadata.region}</kbd></td>
                     </tr>
                     <tr>
                         <th>GTFS file</th>
-                        <td><kbd><a href={geoData.metadata.gtfs_source} target="_blank">{geoData.metadata.gtfs_source.split("/").pop()}</a></kbd></td>
+                        <td><kbd><a href={geoData.metadata.gtfs.url} target="_blank">{geoData.metadata.gtfs.url.split("/").pop()}</a></kbd></td>
                     </tr>
                     <tr>
                         <th>Transit services for day¹</th>
-                        <td><kbd>{geoData.metadata.gtfs_date}</kbd></td>
+                        <td><kbd>{geoData.metadata.gtfs.date}</kbd></td>
                     </tr>
                     <tr>
                         <th>Routes considered²</th>
-                        <td><kbd>{geoData.metadata.routes_covered} of {geoData.metadata.routes_total} ({((geoData.metadata.routes_covered / geoData.metadata.routes_total) * 100).toFixed(2)}%)</kbd></td>
+                        <td><kbd>{geoData.metadata.prioritization.routes_covered} of {geoData.metadata.prioritization.routes_total} ({((geoData.metadata.prioritization.routes_covered / geoData.metadata.prioritization.routes_total) * 100).toFixed(2)}%)</kbd></td>
                     </tr>
                     <tr>
                         <th>Routes missing²</th>
-                        <td>{@html geoData.metadata.routes_missing.split(";").map((r) => `<kbd style="background-color: #f3f4f6; color: #646b79;">${r}</kbd>`).join(" ")}</td>
+                        <td>{@html geoData.metadata.prioritization.routes_missing.split(";").map((r) => `<kbd style="background-color: #f3f4f6; color: #646b79;">${r}</kbd>`).join(" ")}</td>
                     </tr>
                     <tr>
                         <th>OSM query</th>
                         <td>{@html geoData.metadata.osm_query.map(q => `<kbd style="background-color: #f3f4f6; color: #646b79;">${q.key}=${q.value}</kbd>`).join(" ")}</td>
                     </tr>
+                    {#if geoData.metadata.rt}
                     <tr>
                         <th>Real-time data</th>
-                        <td><kbd><a href={geoData.metadata.rt_data_url} target="_blank">{geoData.metadata.rt_data_url.split("/").pop()}</a></kbd></td>
+                        <td><kbd><a href={geoData.metadata.rt.url} target="_blank">{geoData.metadata.rt.url.split("/").pop()}</a></kbd></td>
                     </tr>
                     <tr>
                         <th>Real-time data interval</th>
-                        <td><kbd>{geoData.metadata.rt_interval}</kbd></td>
+                        <td><kbd>{geoData.metadata.rt.period}</kbd></td>
                     </tr>
                     <tr>
                         <th>Real-time stop buffer³</th>
-                        <td><kbd>{geoData.metadata.stop_buffer_size_meters} meters</kbd></td>
+                        <td><kbd>{geoData.metadata.rt.stop_buffer_size} meters</kbd></td>
                     </tr>
+                    {/if}
                     <tr>
                         <th>Running environment</th>
-                        <td><kbd>GTFShift {geoData.metadata.gtfshift_version}</kbd> <kbd>{geoData.metadata.r_version}</kbd></td>
+                        <td><kbd>GTFShift {geoData.metadata.environment.GTFShift}</kbd> <kbd>{geoData.metadata.environment.r}</kbd> <kbd>{geoData.metadata.environment.os} {geoData.metadata.environment.os_release}</kbd></td>
                     </tr>
                 </tbody>
             </table>
@@ -121,24 +121,26 @@ library(osmdata)
 library(sf)
 
 # Prioritize based on planned operation and infrastructure characteristics
-gtfs = GTFShift::load_feed(${geoData.metadata.gtfs_source}, create_transfers=FALSE)
+gtfs = GTFShift::load_feed(${geoData.metadata.gtfs.url}, create_transfers=FALSE)
 osm_q = opq(bbox=sf::st_bbox(tidytransit::shapes_as_sf(gtfs$shapes)))  |>
   ${geoData.metadata.osm_query.map(q => `add_osm_feature(key = "${q.key}", value = "${q.value}", key_exact = ${q.key_exact ? "TRUE" : "FALSE"})`).join(" |> \n  ")} |> 
 
 lane_prioritization = prioritize_lanes(gtfs, osm_q)
-
+`
++
+(geoData.metadata.rt ? `
 # Extend with real-time data (filtered to avoid points at bus stops)
-rt_collection <- read.csv(${geoData.metadata.rt_data_url}) |> sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+rt_collection <- read.csv(${geoData.metadata.rt.url}) |> sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
 gtfs_stops = tidytransit::stops_as_sf(gtfs$stops, crs=4326)
-gtfs_stops_buffered = sf::st_buffer(sf::st_transform(gtfs_stops, 3857), ${geoData.metadata.stop_buffer_size_meters}) |> sf::st_transform(4326)
+gtfs_stops_buffered = sf::st_buffer(sf::st_transform(gtfs_stops, 3857), ${geoData.metadata.rt.stop_buffer_size}) |> sf::st_transform(4326)
 rt_collection_filtered = rt_collection[!sf::st_intersects(rt_collection, gtfs_stops_buffered, sparse = FALSE), ]
 
 lane_prioritization <- GTFShift::rt_extend_prioritization(
   lane_prioritization = lane_prioritization,
   rt_collection = rt_collection_filtered
 )
-`,
+` : ""),
                     { language: 'r' }
                     ).value)
                 }
