@@ -1,0 +1,56 @@
+name: Suggest a new region
+description: Add a new public transit region
+title: "Add new region: [Region Name]"
+labels:
+  - data-request
+  - enhancement
+type: task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Region Information
+  - type: input
+    id: region_name
+    attributes:
+      label: Region Name
+      description: Name of the region you'd like to add
+      placeholder: "e.g., São Paulo, Barcelona"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: "## GTFS Data"
+  - type: input
+    id: gtfs_url
+    attributes:
+      label: GTFS URL
+      description: URL to the GTFS feed
+      placeholder: "https://..."
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: "## Real-Time Data"
+  - type: checkboxes
+    id: rt_data_available
+    attributes:
+      label: Does this region have real-time (RT) data available?
+      options:
+        - label: "Yes"
+        - label: "No"
+  - type: input
+    id: rt_urlsuggestion
+    attributes:
+      label: Real-Time Data URL (if applicable)
+      description: URL to the GTFS-RT data feed (protobuf or JSON)
+      placeholder: "https://..."
+  - type: markdown
+    attributes:
+      value: "## Additional Notes"
+  - type: textarea
+    id: additional_notes
+    attributes:
+      label: Additional Notes
+      description: Any additional information that would help us integrate this region?
+      placeholder: "Share any relevant details..."

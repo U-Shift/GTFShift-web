@@ -1,8 +1,9 @@
 ---
 name: Suggest a new region
-description: Request to add a new public transit region to GTFShift
+description: Add a new public transit region
 title: "Add new region: [Region Name]"
-labels: ["data-request"]
+labels: ["data-request", "enhancement"]
+type: "task"
 ---
 
 ## Region Information
