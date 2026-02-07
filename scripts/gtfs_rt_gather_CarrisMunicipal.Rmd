@@ -1,0 +1,317 @@
+---
+title: An R Markdown document converted from "1. GTFS RT aggregation.ipynb"
+output: html_document
+---
+
+# GTFS RT aggregation
+
+```{r}
+# Install geopy using reticulate
+# library(reticulate)
+# py_install("geopy")
+```
+
+
+```{python}
+import os
+import json
+import statistics
+import geopy.distance
+from datetime import datetime
+import csv
+import pytz
+```
+
+## Parameters
+
+**Important!** Before running, make sure to have `stop_times.txt` GTFS file at `stop_times` folder, with both `.txt` and `.csv` extensions!
+
+```{python}
+folder_path = "../dev/web_version/gtfsrt/CarrisMunicipal"
+output_folder = "../dev/web_version/gtfsrt"
+stop_times = "../dev/web_version/gtfsrt/CarrisMunicipal_stop_times.txt"
+
+SPEED_STOPPED = 6 # Only consider updates with <6km/h speed (100 meters difference in 1 min)
+timezone = pytz.timezone("Europe/Lisbon")
+```
+
+## Methods
+
+```{python}
+def process_json(data, filename, RECORDS):
+    """
+    Placeholder function for processing JSON data.
+    Modify this function to include your specific processing logic.
+    """
+    print(f"> Processing {filename}...")
+    # Your processing logic here
+
+    for e in data['entities']:
+        vehicle = e['vehicle']
+        # Add day to trip_id, so that it is unique per day
+        day = filename.split('_')[0]  # Assuming filename format is like '20250401_123_0_6.json'
+        trip_id = f"{day}_{vehicle['trip']['trip_id']}"
+        # Create trip_id if it does not exist yet
+        if trip_id not in RECORDS:
+            RECORDS[trip_id] = {
+                "route_id": vehicle['trip']['route_id'],
+                "updates": []
+            }
+        # Check if last update has same timestamp as previous and if so, ignore...
+        if len(RECORDS[trip_id]['updates']) and  RECORDS[trip_id]['updates'][-1]['timestamp'] == vehicle['timestamp']:
+            continue
+        # Otherwise, register update
+        RECORDS[trip_id]['updates'].append({
+            'latitude': vehicle['position']['latitude'],
+            'longitude': vehicle['position']['longitude'],
+            'timestamp': vehicle['timestamp'],
+            'current_stop_sequence': vehicle['current_stop_sequence']
+        })
+```
+
+```{python}
+def process_trip(RECORDS, HOUR_DATA, trip_stops=None):
+    REMOVE = []
+    for trip, data in RECORDS.items():
+        # print(f"> Analysing {trip}, with {len(data['updates'])} updates...")
+
+        if len(data['updates'])<2:
+            REMOVE.append(trip)
+            continue
+            
+        if not (trip_stops is None): # Discard first and last stops (because usually stopped before or after service)
+            seq_min, seq_max = get_trip_stops(trips_stops, trip[9:]) # trip[9:] to remove day from trip_id
+        else:
+            seq_min, seq_max = [None, None]
+
+        updatesSpeed = []
+        prev = None
+        for u in data['updates']:
+            if prev is None:
+                prev = u
+                continue
+
+            elapsedSeconds = prev['timestamp'] - u['timestamp']
+            if elapsedSeconds<=0:
+                prev = u
+                continue
+    
+            
+            if seq_min!=None and seq_max!=None and (u['current_stop_sequence']<=seq_min or u['current_stop_sequence']>=seq_max):
+                continue
+
+            elapsedHours = elapsedSeconds/(60*60)
+
+            distance = geopy.distance.geodesic(
+                (u['latitude'], u['longitude']),
+                (prev['latitude'], prev['longitude']),
+            ).km
+
+            u['speed'] = distance / elapsedHours
+
+            updatesSpeed.append(u)
+
+            prev = u
+
+        if len(updatesSpeed)<2:
+            REMOVE.append(trip)
+            continue
+
+        # Aggregated stats for hour
+        for u in updatesSpeed:
+            utc_dt = datetime.utcfromtimestamp(u['timestamp'])
+            lisbon_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(timezone)
+            u['hour'] = lisbon_dt.hour
+            if lisbon_dt.hour not in HOUR_DATA: 
+                HOUR_DATA[lisbon_dt.hour] = []
+            HOUR_DATA[lisbon_dt.hour].append(u['speed'])
+        
+        RECORDS[trip]['updatesSpeed'] = updatesSpeed
+
+        speeds = [u['speed'] for u in updatesSpeed]
+
+        RECORDS[trip]['speed_mean'] = statistics.mean(speeds)
+        RECORDS[trip]['speed_min'] = min(speeds)
+        RECORDS[trip]['speed_max'] = max(speeds)
+
+        # print(f">> Average speed of {RECORDS[trip]['speed_mean']}, min of {RECORDS[trip]['speed_min']} and max of {RECORDS[trip]['speed_max']} km/h")
+
+    
+    for r in REMOVE:
+        del RECORDS[r]
+```
+
+## Analysis
+
+### 0. Load stop_times and for each, get min and max stop_sequence
+
+```{python}
+import pandas as pd
+
+def process_stop_times(file_path):
+    # Load stop_times.txt into a DataFrame
+    df = pd.read_csv(file_path)
+    
+    # Ensure stop_sequence is treated as an integer
+    df['stop_sequence'] = df['stop_sequence'].astype(int)
+    
+    # Group by trip_id and find min/max stop_sequence
+    result = df.groupby('trip_id')['stop_sequence'].agg(['min', 'max']).reset_index()
+    
+    return result
+```
+
+```{python}
+trips_stops = process_stop_times(stop_times)
+print(trips_stops)
+# Save to a CSV file if needed
+# output.to_csv("trip_stop_sequences.csv", index=False)
+```
+
+```{python}
+def get_trip_stops(trips_stops, trip_id):
+    filtered = trips_stops[trips_stops['trip_id'] == trip_id]
+
+    if not filtered.empty:
+        min_stop, max_stop = filtered.iloc[0]['min'], filtered.iloc[0]['max']
+        return [int(min_stop), int(max_stop)]
+    else:
+        print("Trip ID not found:", trip_id)
+    return [None, None]
+```
+
+```{python}
+mi, ma = get_trip_stops(trips_stops, "6348_20260101_106_0_8")
+print(mi, ma)
+
+mi, ma = get_trip_stops(trips_stops, "abc")
+print(mi, ma)
+```
+
+### 1. Aggregate JSONs (one per minute) by trip_id, with record of all updates per trip
+
+```{python}
+# main()
+
+# Start by building records database...
+RECORDS = dict()
+"""
+{ 
+    <trip_id>: {
+        route_id: <route_id>
+        updates: [{
+            latitude: <>,
+            longitude: <>,
+            timestamp: <>,
+            current_stop_sequence: <>
+        }*],
+        updatesSpeed: [{
+            <same as previous>, 
+            speed: <km/h>,
+        }*],
+        // Set by process_trip
+        speed_mean: <km/h>,
+        speed_min: <km/h>,
+        speed_max: <km/h>,
+    }
+}
+"""
+
+print("\n1. Starting aggregation of GTSF-RT files...")
+if not os.path.exists(folder_path):
+    print(f"Folder '{folder_path}' does not exist.")
+    exit()
+    
+for filename in os.listdir(folder_path):
+    file_path = os.path.join(folder_path, filename)
+    
+    if os.path.isfile(file_path) and filename.endswith(".json"):
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                data = json.load(file)
+                process_json(data, filename, RECORDS)
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON in file {filename}: {e}")
+        except Exception as e:
+            print(f"Unexpected error processing file {filename}: {e}")
+
+print(f"\nDONE! Processed {len(RECORDS)} individual trips, with an average number of {statistics.mean([len(r['updates']) for r in RECORDS.values()])} updates per trip")
+```
+
+### 2. Compute speeds for each update (relating each update with previous, Euclidean distance)
+
+```{python}
+# Then analyse position evolution....
+
+HOUR_DATA = dict()
+"""
+{
+    <hour>: [<km/h>, ...]
+}
+"""
+
+print("\n2. Starting computation of average speed between updates...")
+process_trip(RECORDS, HOUR_DATA, trips_stops)
+print(f"\nDONE! Resulted in {len(RECORDS)} individual trips, with an average speed of {statistics.mean([r['speed_mean'] for r in RECORDS.values()])} km/h")
+```
+
+## Output results
+
+```{python}
+# Output updates to CSV
+print("\n3. Generating CSV with updates...")
+with open(f'{output_folder}/updates.csv', 'w') as csv_file:  
+    writer = csv.writer(csv_file)
+    writer.writerow(["trip_id", "route_id", "timestamp", "timestamp_formatted", "lat", "lon", "speed", "stop_seq"])
+    for trip, data in RECORDS.items():
+        for u in RECORDS[trip]['updatesSpeed']:
+            writer.writerow([
+                trip,
+                RECORDS[trip]['route_id'],
+                u['timestamp'],
+                datetime.fromtimestamp(u['timestamp']).strftime('%Y-%m-%d %H:%M:%S'),
+                u['latitude'],
+                u['longitude'],
+                u['speed'],
+                u['current_stop_sequence']
+            ])
+print("\nDONE! :)")
+```
+
+```{python}
+HOUR_DATA.keys()
+
+print("\n3. Generating CSV with hour avg speed...")
+with open(f'{output_folder}/speed_hour.csv', 'w') as csv_file:  
+    writer = csv.writer(csv_file)
+    writer.writerow(["hour", "average", "min", "max", "#"])
+    
+    for hour, speeds in HOUR_DATA.items():
+        writer.writerow([hour, statistics.mean(speeds), min(speeds), max(speeds), len(speeds)])
+print("\nDONE! :)")
+```
+
+```{python}
+print("\n3. Generating CSV with updates stopped...")
+with open(f'{output_folder}/updates_stopped.csv', 'w') as csv_file:  
+    writer = csv.writer(csv_file)
+    writer.writerow(["trip_id", "route_id", "timestamp", "timestamp_formatted", "lat", "lon", "speed", "stop_seq"])
+    for trip, data in RECORDS.items():
+        for u in RECORDS[trip]['updatesSpeed']:
+            if u['speed'] > SPEED_STOPPED:
+                continue
+
+            writer.writerow([
+                trip,
+                RECORDS[trip]['route_id'],
+                u['timestamp'],
+                datetime.fromtimestamp(u['timestamp']).strftime('%Y-%m-%d %H:%M:%S'),
+                u['latitude'],
+                u['longitude'],
+                u['speed'],
+                u['current_stop_sequence']
+            ])
+
+print("\nDONE! :)")
+```
+

@@ -1,0 +1,149 @@
+---
+title: An R Markdown document converted from "1. GTFS RT aggregation.ipynb"
+output: html_document
+---
+
+# GTFS RT aggregation
+
+```{r}
+# Install geopy using reticulate
+# library(reticulate)
+# py_install("geopy")
+```
+
+
+```{python}
+import os
+import json
+import statistics
+import geopy.distance
+from datetime import datetime
+import csv
+import pytz
+```
+
+## Parameters
+
+**Important!** Before running, make sure to have `stop_times.txt` GTFS file at `stop_times` folder, with both `.txt` and `.csv` extensions!
+
+```{python}
+folder_path = "web_version/gtfsrt/CarrisMetropolitana"
+output_folder = "web_version/gtfsrt"
+stop_times = "web_version/gtfsrt/CarrisMetropolitana_stop_times.txt"
+
+SPEED_STOPPED = 6 # Only consider updates with <6km/h speed (100 meters difference in 1 min)
+timezone = pytz.timezone("Europe/Lisbon")
+```
+
+## Methods
+
+```{python}
+def process_json(data, filename, RECORDS):
+    """
+    Placeholder function for processing JSON data.
+    Modify this function to include your specific processing logic.
+    """
+    print(f"> Processing {filename}...")
+    # Your processing logic here
+
+    for e in data:
+        vehicle = e
+        # Add day to trip_id, so that it is unique per day
+        day = filename.split('_')[0]  # Assuming filename format is like '20250401_123_0_6.json'
+        trip_id = f"{day}_{vehicle['trip_id']}"
+        # Create trip_id if it does not exist yet
+        if trip_id not in RECORDS:
+            RECORDS[trip_id] = {
+                "route_id": vehicle['route_id'],
+                "updates": []
+            }
+        # Check if last update has same timestamp as previous and if so, ignore...
+        if len(RECORDS[trip_id]['updates']) and  RECORDS[trip_id]['updates'][-1]['timestamp'] == vehicle['timestamp']:
+            continue
+        # Otherwise, register update
+        RECORDS[trip_id]['updates'].append({
+            'latitude': vehicle['lat'],
+            'longitude': vehicle['lon'],
+            'timestamp': vehicle['timestamp'],
+            'stop_id': vehicle['stop_id'],
+            'current_status': vehicle['current_status'],
+            'speed': vehicle['speed']
+        })
+```
+
+## Analysis
+
+### 1. Aggregate JSONs (one per minute) by trip_id, with record of all updates per trip
+
+```{python}
+# main()
+
+# Start by building records database...
+RECORDS = dict()
+"""
+{ 
+    <trip_id>: {
+        route_id: <route_id>
+        updates: [{
+            latitude: <>,
+            longitude: <>,
+            timestamp: <>,
+            current_stop_sequence: <>
+        }*],
+        updatesSpeed: [{
+            <same as previous>, 
+            speed: <km/h>,
+        }*],
+        // Set by process_trip
+        speed_mean: <km/h>,
+        speed_min: <km/h>,
+        speed_max: <km/h>,
+    }
+}
+"""
+
+print("\n1. Starting aggregation of GTSF-RT files...")
+if not os.path.exists(folder_path):
+    print(f"Folder '{folder_path}' does not exist.")
+    exit()
+    
+for filename in os.listdir(folder_path):
+    file_path = os.path.join(folder_path, filename)
+    
+    if os.path.isfile(file_path) and filename.endswith(".json"):
+        try:
+            with open(file_path, "r", encoding="utf-8") as file:
+                data = json.load(file)
+                process_json(data, filename, RECORDS)
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON in file {filename}: {e}")
+        except Exception as e:
+            print(f"Unexpected error processing file {filename}: {e}")
+
+print(f"\nDONE! Processed {len(RECORDS)} individual trips, with an average number of {statistics.mean([len(r['updates']) for r in RECORDS.values()])} updates per trip")
+```
+
+## Output results
+
+```{python}
+# Output updates to CSV
+print("\n3. Generating CSV with updates...")
+with open(f'{output_folder}/updates.csv', 'w') as csv_file:  
+    writer = csv.writer(csv_file)
+    writer.writerow(["trip_id", "route_id", "timestamp", "timestamp_formatted", "lat", "lon", "speed", "stop_id", "current_status"])
+    for trip, data in RECORDS.items():
+        for u in RECORDS[trip]['updates']:
+            writer.writerow([
+                trip,
+                RECORDS[trip]['route_id'],
+                u['timestamp'],
+                datetime.fromtimestamp(u['timestamp']).strftime('%Y-%m-%d %H:%M:%S'),
+                u['latitude'],
+                u['longitude'],
+                u['speed'],
+                u['stop_id'],
+                u['current_status']
+            ])
+print("\nDONE! :)")
+```
+
