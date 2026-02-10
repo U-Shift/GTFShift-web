@@ -11,16 +11,22 @@
         geoData,
         criteriaHour = 8,
         criteriaBusFrequency = 5,
+        criteriaBusFrequencyEnabled = true,
         criteriaNLanesDirection = 2,
+        criteriaNLanesDirectionEnabled = true,
         criteriaAvgSpeed = undefined,
+        criteriaAvgSpeedEnabled = true,
         onLayerCreate = (layer) => {},
     }: {
         map: L.Map;
         geoData: GeoPrioritization;
         criteriaHour: number;
         criteriaBusFrequency: number;
+        criteriaBusFrequencyEnabled: boolean;
         criteriaNLanesDirection: number;
+        criteriaNLanesDirectionEnabled: boolean;
         criteriaAvgSpeed: number | undefined;
+        criteriaAvgSpeedEnabled: boolean;
         onLayerCreate: (layer: L.Layer) => void;
     } = $props();
 
@@ -31,20 +37,30 @@
 
         // Filter for hour==criteriaHour
         const filteredFeatures = geoData.features.filter(
-            (feature: Feature | undefined) =>
-                feature?.properties?.hour === criteriaHour &&
-                (feature?.properties?.is_bus_lane ||
-                    (
-                        feature?.properties?.frequency &&
-                        feature?.properties?.frequency >= criteriaBusFrequency &&
-                        feature?.properties?.n_lanes_direction &&
+            (feature: Feature | undefined) => {
+                if (feature?.properties?.hour !== criteriaHour) return false;
+
+                if (feature?.properties?.is_bus_lane) return true;
+
+                const frequencyOk =
+                    !criteriaBusFrequencyEnabled ||
+                    (feature?.properties?.frequency !== undefined &&
+                        feature?.properties?.frequency >= criteriaBusFrequency);
+
+                const lanesOk =
+                    !criteriaNLanesDirectionEnabled ||
+                    (feature?.properties?.n_lanes_direction !== undefined &&
                         feature?.properties?.n_lanes_direction >=
-                            criteriaNLanesDirection &&
-                        (criteriaAvgSpeed===undefined ||
-                            (feature?.properties?.speed_avg !== undefined &&
-                                feature?.properties?.speed_avg <=
-                                    criteriaAvgSpeed)))
-                ),
+                            criteriaNLanesDirection);
+
+                const speedOk =
+                    !criteriaAvgSpeedEnabled ||
+                    criteriaAvgSpeed === undefined ||
+                    (feature?.properties?.speed_avg !== undefined &&
+                        feature?.properties?.speed_avg <= criteriaAvgSpeed);
+
+                return frequencyOk && lanesOk && speedOk;
+            },
         );
 
         // Create and add new layer to map
@@ -56,16 +72,24 @@
                 let properties = feature?.properties;
 
                 if (properties?.is_bus_lane) {
-                    if (
-                        properties.frequency >= criteriaBusFrequency &&
-                        properties.n_lanes !== undefined &&
-                        properties.n_lanes_direction >= criteriaNLanesDirection && 
-                        (
-                            !criteriaAvgSpeed ||
-                            (properties.speed_avg !== undefined &&
-                                properties.speed_avg > criteriaAvgSpeed)
-                        )
-                    ) {
+                    const frequencyOk =
+                        !criteriaBusFrequencyEnabled ||
+                        (properties.frequency !== undefined &&
+                            properties.frequency >= criteriaBusFrequency);
+
+                    const lanesOk =
+                        !criteriaNLanesDirectionEnabled ||
+                        (properties.n_lanes !== undefined &&
+                            properties.n_lanes_direction !== undefined &&
+                            properties.n_lanes_direction >= criteriaNLanesDirection);
+
+                    const speedOk =
+                        !criteriaAvgSpeedEnabled ||
+                        criteriaAvgSpeed === undefined ||
+                        (properties.speed_avg !== undefined &&
+                            properties.speed_avg > criteriaAvgSpeed);
+
+                    if (frequencyOk && lanesOk && speedOk) {
                         return {
                             color: COLOR_TEAL,
                             weight: 2.5,

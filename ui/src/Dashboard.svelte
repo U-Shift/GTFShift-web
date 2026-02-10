@@ -48,6 +48,9 @@
     let criteria_bus_frequency: number = $state(0);
     let criteria_n_lanes_direction: number = $state(2);
     let criteria_avg_speed: number | undefined = $state(undefined);
+    let criteria_bus_frequency_enabled: boolean = $state(true);
+    let criteria_n_lanes_direction_enabled: boolean = $state(true);
+    let criteria_avg_speed_enabled: boolean = $state(true);
     
     let action_hide_form: boolean = $state(false); 
     let action_modal_about_open: boolean = $state(false);
@@ -85,6 +88,9 @@
             criteria_n_lanes_direction = 2;
             criteria_bus_frequency = geoData.metadata.data_census.frequency.median;
             criteria_avg_speed = Math.floor(geoData.metadata.data_census.speed_avg?.median ?? 0);
+            criteria_bus_frequency_enabled = true;
+            criteria_n_lanes_direction_enabled = true;
+            criteria_avg_speed_enabled = display_rt;
 
             // Update display_tab option to trigger rendering
             display_tab = DisplayOptions.PRIORITIZATION;            
@@ -239,6 +245,12 @@
                     </p>
                     <ul>
                         <li>
+                            <input
+                                type="checkbox"
+                                aria-label="Enable frequency criteria"
+                                bind:checked={criteria_bus_frequency_enabled}
+                                style="margin-right: 0.35rem;"
+                            />
                             Bus frequencies for
                             <input
                                 type="number"
@@ -249,6 +261,7 @@
                                 bind:value={criteria_hour}
                                 min="0"
                                 max="23"
+                                disabled={!criteria_bus_frequency_enabled}
                             />:00 hour with <input
                                 type="number"
                                 name="number"
@@ -257,9 +270,16 @@
                                 style="width: 5rem;"
                                 bind:value={criteria_bus_frequency}
                                 min="1"
+                                disabled={!criteria_bus_frequency_enabled}
                             /> or + buses/hour
                         </li>
                         <li>
+                            <input
+                                type="checkbox"
+                                aria-label="Enable lanes criteria"
+                                bind:checked={criteria_n_lanes_direction_enabled}
+                                style="margin-right: 0.35rem;"
+                            />
                             <input
                                 type="number"
                                 name="number"
@@ -268,10 +288,17 @@
                                 style="width: 5rem;"
                                 bind:value={criteria_n_lanes_direction}
                                 min="1"
+                                disabled={!criteria_n_lanes_direction_enabled}
                             /> or + lanes/direction
                         </li>
                         {#if display_rt}
                         <li>
+                            <input
+                                type="checkbox"
+                                aria-label="Enable speed criteria"
+                                bind:checked={criteria_avg_speed_enabled}
+                                style="margin-right: 0.35rem;"
+                            />
                             <input 
                                 type="number"
                                 name="number"
@@ -280,6 +307,7 @@
                                 style="width: 5rem;"
                                 bind:value={criteria_avg_speed}
                                 min="0"
+                                disabled={!criteria_avg_speed_enabled}
                             /> or - km/h average commercial speed
                         </li>
                         {/if}
@@ -574,8 +602,11 @@
             {geoData}
             criteriaHour={criteria_hour}
             criteriaBusFrequency={criteria_bus_frequency}
+            criteriaBusFrequencyEnabled={criteria_bus_frequency_enabled}
             criteriaNLanesDirection={criteria_n_lanes_direction}
+            criteriaNLanesDirectionEnabled={criteria_n_lanes_direction_enabled}
             criteriaAvgSpeed={criteria_avg_speed}
+            criteriaAvgSpeedEnabled={criteria_avg_speed_enabled}
             onLayerCreate={handleLayerCreate}
         />
     {:else if display_tab === DisplayOptions.BUS_LANES}
