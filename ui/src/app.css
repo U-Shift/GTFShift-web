@@ -17,6 +17,11 @@ html {
     border-radius: 8px !important;
 }
 
+.leaflet-control-zoom {
+    display: flex;
+    flex-direction: column;
+}
+
 #logo {
     position: absolute;
     bottom: 2.5%;
