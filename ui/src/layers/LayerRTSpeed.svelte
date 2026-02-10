@@ -9,10 +9,12 @@
     let {
         map,
         geoData,
+        criteriaHour,
         onLayerCreate = (layer) => {},
     }: {
         map: L.Map;
         geoData: GeoPrioritization;
+        criteriaHour: number;
         onLayerCreate: (layer: L.Layer) => void;
     } = $props();
 
@@ -21,8 +23,14 @@
     $effect(() => {
         if (!map || !geoData) return;
 
+        // Filter for hour==criteriaHour
+        const filteredFeatures = geoData.features.filter(
+            (feature: Feature | undefined) =>
+                feature?.properties?.hour === criteriaHour
+        );
+
         // Deduplicate by way_osm_id
-        const uniqueFeatures = deduplicateByWayId(geoData.features);
+        const uniqueFeatures = deduplicateByWayId(filteredFeatures);
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(uniqueFeatures, {

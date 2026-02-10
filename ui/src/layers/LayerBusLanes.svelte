@@ -8,10 +8,12 @@
     let {
         map,
         geoData,
+        criteriaHour,
         onLayerCreate = (layer) => {},
     }: {
         map: L.Map;
         geoData: any;
+        criteriaHour: number;
         onLayerCreate: (layer: L.Layer) => void;
     } = $props();
 
@@ -22,7 +24,9 @@
 
         // Filter for bus lanes
         const filteredFeatures = geoData.features.filter(
-            (feature: Feature | undefined) => feature?.properties?.is_bus_lane,
+            (feature: Feature | undefined) => 
+                feature?.properties?.hour === criteriaHour && 
+                feature?.properties?.is_bus_lane,
         );
 
         // Deduplicate by way_osm_id

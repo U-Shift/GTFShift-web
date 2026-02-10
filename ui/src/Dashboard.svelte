@@ -579,7 +579,12 @@
             onLayerCreate={handleLayerCreate}
         />
     {:else if display_tab === DisplayOptions.BUS_LANES}
-        <LayerBusLanes {map} {geoData} onLayerCreate={handleLayerCreate} />
+        <LayerBusLanes 
+            {map} 
+            {geoData} 
+            criteriaHour={criteria_hour}
+            onLayerCreate={handleLayerCreate} 
+        />
     {:else if display_tab === DisplayOptions.FREQUENCY}
         <LayerTransitFrequency
             {map}
@@ -588,9 +593,19 @@
             onLayerCreate={handleLayerCreate}
         />
     {:else if display_tab === DisplayOptions.N_LANES}
-        <LayerNumberOfLanes {map} {geoData} onLayerCreate={handleLayerCreate} />
+        <LayerNumberOfLanes 
+            {map} 
+            {geoData}
+            criteriaHour={criteria_hour}
+            onLayerCreate={handleLayerCreate} 
+        />
     {:else if display_tab === DisplayOptions.RT_SPEED}
-        <LayerRTSpeed {map} {geoData} onLayerCreate={handleLayerCreate} />
+        <LayerRTSpeed 
+            {map} 
+            {geoData} 
+            criteriaHour={criteria_hour}
+            onLayerCreate={handleLayerCreate} 
+        />
     {/if}
 {/if}
 
