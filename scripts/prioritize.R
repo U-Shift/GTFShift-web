@@ -52,7 +52,7 @@ regions = rbind( # CarrisMetropolitana
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
-    ))),
+    )))
     rt_interval = "02-06/02/2026",
     rt_collection = I(list(sf::st_read("dev/web_version/gtfsrt/CarrisMetropolitana_updates.csv") |>
                              mutate(
