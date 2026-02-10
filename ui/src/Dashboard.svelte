@@ -308,7 +308,7 @@
                                 bind:value={criteria_avg_speed}
                                 min="0"
                                 disabled={!criteria_avg_speed_enabled}
-                            /> or - km/h average commercial speed
+                            /> or - km/h average speed
                         </li>
                         {/if}
                     </ul>
@@ -438,10 +438,10 @@
                             display_tab === DisplayOptions.RT_SPEED
                                 ? undefined
                                 : DisplayOptions.RT_SPEED;
-                    }}>Commercial speed</summary
+                    }}>Average speed</summary
                 >
                 <div class="small text-secondary">
-                    Road segments with bus service are colored by the average commercial speed measured 
+                    Road segments with bus service are colored by the average speed measured 
                     , from the <span
                         style="color: {COLOR_GRADIENT_RED.slice().reverse()[0]}; font-weight: bold;"
                         >lowest ({geoData.metadata.data_census.speed_avg?.min?.toFixed(2)})</span
@@ -573,7 +573,7 @@
     {:else if display_tab === DisplayOptions.RT_SPEED}
         <div style="margin-bottom: 1rem;">
             <p style="margin-bottom: 0.5rem;">
-                <b>Commercial speed</b> (km/h)
+                <b>Average speed</b> (km/h)
             </p>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <span

@@ -97,7 +97,7 @@
                 </small>
                 <br/><br/>
                 <small>
-                    ³ Real-time data points within this distance from a bus stop are ignored for commercial speed calculations.
+                    ³ Real-time data points within this distance from a bus stop are ignored for speed calculations.
                 </small>    
             </div>
 
