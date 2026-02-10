@@ -33,7 +33,10 @@
         const uniqueFeatures = deduplicateByWayId(filteredFeatures);
 
         // Create and add new layer to map
-        const newLayer = L.geoJSON(uniqueFeatures, {
+        const newLayer = L.geoJSON(
+            // Order by speed_avg asc, to plot higher speeds on top
+            uniqueFeatures.sort((a, b) => (a.properties?.speed_avg || 0) - (b.properties?.speed_avg || 0)), 
+            {
             style: (feature: Feature | undefined) => {
                 let properties = feature?.properties;
                 let speed_avg = properties?.speed_avg || undefined;

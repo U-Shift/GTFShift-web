@@ -4,6 +4,7 @@
     import { COLOR_YELLOW, COLOR_TEAL, COLOR_RED } from "../data";
     import { createFeaturePopup } from "../lib/layerUtils";
     import type { Feature } from "geojson";
+    import type { GeoPrioritization } from "../types/GeoPrioritization";
 
     let {
         map,
@@ -15,7 +16,7 @@
         onLayerCreate = (layer) => {},
     }: {
         map: L.Map;
-        geoData: any;
+        geoData: GeoPrioritization;
         criteriaHour: number;
         criteriaBusFrequency: number;
         criteriaNLanesDirection: number;
@@ -47,7 +48,10 @@
         );
 
         // Create and add new layer to map
-        const newLayer = L.geoJSON(filteredFeatures, {
+        const newLayer = L.geoJSON(
+            // Order by frequency to plot higher priority on top
+            filteredFeatures.sort((a, b) => (a.properties?.frequency || 0) - (b.properties?.frequency || 0)), 
+            {
             style: (feature: Feature | undefined) => {
                 let properties = feature?.properties;
 

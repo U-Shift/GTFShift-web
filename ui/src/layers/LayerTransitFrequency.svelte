@@ -31,7 +31,10 @@
         );
 
         // Create and add new layer to map
-        const newLayer = L.geoJSON(filteredFeatures, {
+        const newLayer = L.geoJSON(
+            // Order by frequency asc, to plot higher frequencies on top
+            filteredFeatures.sort((a, b) => (a.properties?.frequency || 0) - (b.properties?.frequency || 0)), 
+            {
             style: (feature: Feature | undefined) => {
                 let properties = feature?.properties;
                 let freq = properties?.frequency || 0;

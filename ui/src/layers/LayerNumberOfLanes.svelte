@@ -33,7 +33,10 @@
         const uniqueFeatures = deduplicateByWayId(filteredFeatures);
 
         // Create and add new layer to map
-        const newLayer = L.geoJSON(uniqueFeatures, {
+        const newLayer = L.geoJSON(
+            // Order by n_lanes_direction asc, to plot higher nr of lanes on top
+            uniqueFeatures.sort((a, b) => (a.properties?.n_lanes_direction || 0) - (b.properties?.n_lanes_direction || 0)), 
+            {
             style: (feature: Feature | undefined) => {
                 let properties = feature?.properties;
                 let n_lanes_direction = properties?.n_lanes_direction || 0;
