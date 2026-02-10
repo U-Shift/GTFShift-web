@@ -19,9 +19,21 @@ export const COLOR_GRADIENT_RED: string[] = ["#ffffcc", "#fffecb", "#fffec9", "#
 
 export const DB_REGIONS: DataRegion[] = [
     {
-        id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260203_extended_with_metadata',
+        id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260207_extended_with_metadata',
         name: 'Carris, Lisbon, PT',
-        geojson: './data/prioritization_lisboa_rt_gtfs2026-02-04_run20260203_extended_with_metadata.geojson',
+        geojson: './data/prioritization_lisboa_rt_gtfs2026-02-04_run20260207_extended_with_metadata.geojson',
+        date: 'Feb 2026'
+    },
+    {
+        id: 'prioritization_aml_rt_gtfs2026-02-04_run20260210_extended_with_metadata',
+        name: 'Carris Metropolitana, Lisbon, PT',
+        geojson: './data/prioritization_aml_rt_gtfs2026-02-04_run20260210_extended_with_metadata.geojson',
+        date: 'Feb 2026'
+    },
+    {
+        id: 'prioritization_aml_lisboa_rt_gtfs2026-02-04_run20260210_extended_with_metadata',
+        name: 'AML, Lisbon, PT',
+        geojson: './data/prioritization_aml_lisboa_rt_gtfs2026-02-04_run20260210_extended_with_metadata.geojson',
         date: 'Feb 2026'
     }
 ]
