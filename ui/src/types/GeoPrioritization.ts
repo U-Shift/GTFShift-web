@@ -24,7 +24,7 @@ export interface GeoPrioritization extends FeatureCollection {
         };
         osm_query: Array<{
             key: string;
-            value: string;
+            value: string | string[];
             key_exact: boolean;
         }>;
         prioritization: {

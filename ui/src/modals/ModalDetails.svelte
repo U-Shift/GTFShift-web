@@ -53,10 +53,6 @@
                         <td><kbd>{geoData.metadata.region}</kbd></td>
                     </tr>
                     <tr>
-                        <th>GTFS file</th>
-                        <td><kbd><a href={geoData.metadata.gtfs.url} target="_blank">{geoData.metadata.gtfs.url.split("/").pop()}</a></kbd></td>
-                    </tr>
-                    <tr>
                         <th>Transit services for day¹</th>
                         <td><kbd>{geoData.metadata.gtfs.date}</kbd></td>
                     </tr>
@@ -73,10 +69,6 @@
                         <td>{@html geoData.metadata.osm_query.map(q => `<kbd style="background-color: #f3f4f6; color: #646b79;">${q.key}=${q.value}</kbd>`).join(" ")}</td>
                     </tr>
                     {#if geoData.metadata.rt}
-                    <tr>
-                        <th>Real-time data</th>
-                        <td><kbd><a href={geoData.metadata.rt.url} target="_blank">{geoData.metadata.rt.url.split("/").pop()}</a></kbd></td>
-                    </tr>
                     <tr>
                         <th>Real-time data interval</th>
                         <td><kbd>{geoData.metadata.rt.period}</kbd></td>
@@ -101,7 +93,7 @@
                 <br/><br/>
                 <small>
                     ² <kbd><a href="https://u-shift.github.io/GTFShift/reference/prioritize_lanes.html" target="_blank">GTFShift::prioritize_lanes()</a></kbd>
-                    uses <kbd><a href="https://u-shift.github.io/GTFShift/reference/get_way_frequency_hourly.html" target="_blank">GTFShift::get_way_frequency_hourly()</a></kbd> to match routes with OSM ways, which requires that the OSM relation mapping is well defined for the transit routes. Routes that do not have an OSM match are ignored.
+                    uses <kbd><a href="https://u-shift.github.io/GTFShift/reference/get_way_frequency_hourly.html" target="_blank">GTFShift::get_way_frequency_hourly()</a></kbd> to match routes with OSM ways, which requires that the OSM relation mapping is well defined for the transit routes. Routes that do not have an OSM match are ignored. 
                 </small>
                 <br/><br/>
                 <small>
@@ -121,16 +113,16 @@ library(osmdata)
 library(sf)
 
 # Prioritize based on planned operation and infrastructure characteristics
-gtfs = GTFShift::load_feed(${geoData.metadata.gtfs.url}, create_transfers=FALSE)
+gtfs = GTFShift::load_feed("gtfs.zip", create_transfers=FALSE)
 osm_q = opq(bbox=sf::st_bbox(tidytransit::shapes_as_sf(gtfs$shapes)))  |>
-  ${geoData.metadata.osm_query.map(q => `add_osm_feature(key = "${q.key}", value = "${q.value}", key_exact = ${q.key_exact ? "TRUE" : "FALSE"})`).join(" |> \n  ")} |> 
+  ${geoData.metadata.osm_query.map(q => `add_osm_feature(key = "${q.key}", value = ${Array.isArray(q.value) ? `c(${q.value.map(v => `"${v}"`).join(", ")})` : `"${q.value}"`}, key_exact = ${q.key_exact ? "TRUE" : "FALSE"})`).join(" |> \n  ")}
 
 lane_prioritization = prioritize_lanes(gtfs, osm_q)
 `
 +
 (geoData.metadata.rt ? `
 # Extend with real-time data (filtered to avoid points at bus stops)
-rt_collection <- read.csv(${geoData.metadata.rt.url}) |> sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+rt_collection <- read.csv("updates_collected.csv") |> sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
 gtfs_stops = tidytransit::stops_as_sf(gtfs$stops, crs=4326)
 gtfs_stops_buffered = sf::st_buffer(sf::st_transform(gtfs_stops, 3857), ${geoData.metadata.rt.stop_buffer_size}) |> sf::st_transform(4326)
