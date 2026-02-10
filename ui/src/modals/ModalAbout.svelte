@@ -61,7 +61,15 @@
                         </button>
                     </a>
                 </div>
-                <p style="margin-top: 1rem;">
+
+                <h4 style="margin-bottom: 0.1rem;">Developers</h4>
+                <p>Gonçalo Matos <small>Author, Maintainer <a href="https://orcid.org/0009-0001-3489-1732" target="_blank"><i class="fab fa-orcid orcid"></i></a></small>, Rosa Félix <small>Author <a href="https://orcid.org/0000-0002-5642-6006" target="_blank"><i class="fab fa-orcid orcid"></i></a></small></p>
+
+                <h4 style="margin-bottom: 0.1rem;">Citation</h4>
+                <p><a href="https://u-shift.github.io/GTFShift/authors.html#citation" target="_blank">Citing GTFShift</a></p>
+
+                <h4 style="margin-bottom: 0.1rem;">Acknowledgement</h4>
+                <p>
                     Developed by <a
                         href="https://ushift.tecnico.ulisboa.pt"
                         target="_blank">U-Shift</a
