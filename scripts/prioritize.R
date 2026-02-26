@@ -2,12 +2,17 @@
 
 library(GTFShift)
 library(dplyr)
-library(osmdata)
 library(stringr)
 library(sf)
+library(mapview)
+
+library(osmdata)
+get_overpass_url ()
+set_overpass_url ("https://maps.mail.ru/osm/tools/overpass/api/interpreter") # Crashes less and responds quicker than default one
+get_overpass_url ()
 
 # Parameters
-output = "dev/web_version"
+output = "output"
 
 regions = data.frame(
   name = character(),
@@ -25,14 +30,14 @@ regions = rbind( # Lisboa
   data.frame(
     name = "lisboa_rt",
     name_long = "Lisboa, Portugal",
-    gtfs_url = "dev/web_version/Lisboa.zip",
+    gtfs_url = "data/Lisboa_20260205.zip",
     gtfs_day = "2026-02-04",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
     ))),
     rt_interval = "02-06/02/2026",
-    rt_collection = I(list(sf::st_read("dev/web_version/gtfsrt/CarrisMunicipal_updates.csv") |>
+    rt_collection = I(list(sf::st_read("data/lisboa_updates_20260202_20260206.csv") |>
       mutate(
         lon = str_replace(lon, "c\\(", ""),
         lat = str_replace(lat, "\\)", ""),
@@ -46,7 +51,7 @@ regions = rbind( # CarrisMetropolitana
   data.frame(
     name = "aml_rt",
     name_long = "Lisboa Metro Area, Portugal",
-    gtfs_url = "dev/web_version/AML.zip",
+    gtfs_url = "dev/AML_20260205.zip",
     gtfs_day = "2026-02-04",
     gtfs_manipulate = "manipulate_carris_met",
     query = I(list(list(
@@ -54,7 +59,7 @@ regions = rbind( # CarrisMetropolitana
       list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
     )))
     rt_interval = "02-06/02/2026",
-    rt_collection = I(list(sf::st_read("dev/web_version/gtfsrt/CarrisMetropolitana_updates.csv") |>
+    rt_collection = I(list(sf::st_read("data/cmet_20250113_20250119_updates.csv") |>
                              mutate(
                                speed = as.numeric(speed)
                              ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326)))
@@ -109,7 +114,9 @@ for(i in 1:nrow(regions)) {
   bbox = sf::st_bbox(gtfs_shapes)
 
   if (!is.null(region$gtfs_manipulate)) {
+    message("Manipulating GTFS with function: ", region$gtfs_manipulate)
     gtfs = get(region$gtfs_manipulate)(gtfs)
+    message("GTFS manipulation completed.")
   }
 
   # Build OSM query
@@ -181,12 +188,29 @@ for(i in 1:nrow(regions)) {
   # Save outputs
   write.csv(prioritization |> sf::st_drop_geometry(), sprintf("%s/prioritization_%s_gtfs%s_run%s_extended.csv", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), row.names = FALSE)
   sf::st_write(prioritization, sprintf("%s/prioritization_%s_gtfs%s_run%s_extended.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE)
-  geojson_file = sprintf("%s/prioritization_%s_gtfs%s_run%s_extended.geojson", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
-  sf::st_write(prioritization, geojson_file, append=FALSE, delete_dsn = TRUE)
-
-  # Open geojson with jsonlite, to extend with technical metadata
-  geojson_data = jsonlite::read_json(geojson_file, digits=NA) # To avoid precision loss in coordinates
-
+  
+  
+  # Web version data preparation
+  
+  # 1. Get base road network 
+  ways = prioritization |> 
+    distinct(way_osm_id, geometry)
+  
+  # arroios = opq("Arroios, Lisboa, Portugal") |>
+  #   add_osm_feature(key = "highway", value = c("motorway", "trunk", "primary", "secondary", "tertiary", "residential", "unclassified", "living_street")) |>
+  #   add_osm_feature(key = "area", value = "!yes") |>
+  #   osmdata_sf() |>
+  #   osm_poly2line()
+  # arroios = arroios$osm_lines
+  # mapview(arroios |> st_bbox() |> st_as_sfc())
+  # mapview(ways |> st_filter(arroios |> st_bbox() |> st_as_sfc()))
+  
+  st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.geojson", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE, delete_dsn = TRUE)
+  st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE)
+  
+  # 2. Compute geojson with metadata
+  # TODO! From hereee
+  
   dataCensus = function (numberArray) {
     return(list(
       min = min(numberArray, na.rm=TRUE),
@@ -265,8 +289,14 @@ for(i in 1:nrow(regions)) {
 
 # Debug
 library(sf)
-prioritization = st_read("releases/web/lisboa/2026-02-04/prioritization_lisboa_rt_gtfs2026-02-04_run20260203_extended.geojson")
+# prioritization = st_read("releases/web/lisboa/2026-02-04/prioritization_lisboa_rt_gtfs2026-02-04_run20260203_extended.geojson")
+loures = sf::st_read("https://github.com/U-Shift/MQAT/raw/refs/heads/main/geo/MUNICIPIOSgeo.gpkg", quiet = TRUE) |> filter(Concelho=="Loures")
+
+prioritization = st_read("scripts/dev/web_version/aml_rt/2026-02-04/prioritization_aml_rt_gtfs2026-02-04_run20260210_extended.gpkg")
+
 prioritization_0800 = prioritization |> filter(hour==8)
+prioritization_0800 = st_intersection(prioritization_0800, loures)
+
 p50_frequency = quantile(prioritization_0800$frequency, 0.5, na.rm=TRUE)
 p50_speed = quantile(prioritization_0800$speed_avg, 0.5, na.rm=TRUE)
 mapview::mapview(
@@ -296,4 +326,19 @@ mapview::mapview(
   col.regions = viridis::viridis(nrow(prioritization_0800), option = "C"),
   zcol = "speed_avg",
   layer.name = "Average speed per lane"
+)
+
+mapview::mapview(
+  prioritization_0800,
+  col.regions = viridis::viridis(nrow(prioritization_0800), option = "C"),
+  zcol = "n_lanes_direction",
+  layer.name = "Lanes/direction"
+)
+
+mapview::mapview(loures)+
+mapview::mapview(
+  prioritization_0800 |> filter(n_lanes_direction>1),
+  col.regions = viridis::viridis(nrow(prioritization_0800), option = "C"),
+  zcol = "n_lanes_direction",
+  layer.name = "Lanes/direction"
 )
