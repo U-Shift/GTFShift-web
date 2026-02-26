@@ -247,6 +247,7 @@
                         <li>
                             <input
                                 type="checkbox"
+                                aria-invalid="false"
                                 aria-label="Enable frequency criteria"
                                 bind:checked={criteria_bus_frequency_enabled}
                                 style="margin-right: 0.35rem;"
@@ -277,6 +278,7 @@
                             <input
                                 type="checkbox"
                                 aria-label="Enable lanes criteria"
+                                aria-invalid="false"
                                 bind:checked={criteria_n_lanes_direction_enabled}
                                 style="margin-right: 0.35rem;"
                             />
@@ -296,6 +298,7 @@
                             <input
                                 type="checkbox"
                                 aria-label="Enable speed criteria"
+                                aria-invalid="false"
                                 bind:checked={criteria_avg_speed_enabled}
                                 style="margin-right: 0.35rem;"
                             />
