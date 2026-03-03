@@ -22,40 +22,40 @@ for(i in 1:nrow(regions)) {
   assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
   # tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output, region$name, region$gtfs_day))
 
-  # gtfs_shapes = tidytransit::shapes_as_sf(gtfs$shapes)
-  # bbox = sf::st_bbox(gtfs_shapes)
-  # 
-  # if (!is.null(region$gtfs_manipulate)) {
-  #   gtfs = get(region$gtfs_manipulate)(gtfs)
-  # }
-  # 
-  # # Build OSM query
-  # q <- opq(bbox = bbox)
-  # for (feat in region$query[[1]]) {
-  #   q <- add_osm_feature(
-  #     q,
-  #     key = feat$key,
-  #     value = feat$value,
-  #     key_exact = if (!is.null(feat$key_exact)) feat$key_exact else FALSE
-  #   )
-  # }
-  # # assign(sprintf("q_%s_gtfs%s", region$name, region$gtfs_day), q)
-  # 
-  # # Match shapes geometry
-  # shapes_match_routes = GTFShift::osm_shapes_match_routes(
-  #   gtfs, q,
-  #   gtfs_match = if (!is.null(region$gtfs_match)) region$gtfs_match else "route_short_name",
-  #   osm_match = if (!is.null(region$osm_match)) region$osm_match else "ref",
-  #   gtfs_osm_match_exact = if (!is.null(region$gtfs_osm_match_exact)) region$gtfs_osm_match_exact else TRUE,
-  #   log_file = sprintf("%s/shapes_match_%s_gtfs%s_run%s.r.log", output, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
-  # )
-  # # assign(sprintf("shapes_match_routes_%s_gtfs%s", region$name, region$gtfs_day), shapes_match_routes)
-  # 
-  # write.csv(shapes_match_routes |> sf::st_drop_geometry() |> mutate(
-  #   distance_diff=round(distance_diff),
-  #   points_diff=round(points_diff)
-  # ), sprintf("%s/shapes_match_%s_gtfs%s_run%s.csv", output, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), row.names = FALSE)
-  # sf::st_write(shapes_match_routes, sprintf("%s/shapes_match_%s_gtfs%s_run%s.gpkg", output, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE)
+  gtfs_shapes = tidytransit::shapes_as_sf(gtfs$shapes)
+  bbox = sf::st_bbox(gtfs_shapes)
+
+  if (!is.null(region$gtfs_manipulate)) {
+    gtfs = get(region$gtfs_manipulate)(gtfs)
+  }
+
+  # Build OSM query
+  q <- opq(bbox = bbox)
+  for (feat in region$query[[1]]) {
+    q <- add_osm_feature(
+      q,
+      key = feat$key,
+      value = feat$value,
+      key_exact = if (!is.null(feat$key_exact)) feat$key_exact else FALSE
+    )
+  }
+  # assign(sprintf("q_%s_gtfs%s", region$name, region$gtfs_day), q)
+
+  # Match shapes geometry
+  shapes_match_routes = GTFShift::osm_shapes_match_routes(
+    gtfs, q,
+    gtfs_match = if (!is.null(region$gtfs_match)) region$gtfs_match else "route_short_name",
+    osm_match = if (!is.null(region$osm_match)) region$osm_match else "ref",
+    gtfs_osm_match_exact = if (!is.null(region$gtfs_osm_match_exact)) region$gtfs_osm_match_exact else TRUE,
+    log_file = sprintf("%s/shapes_match_%s_gtfs%s_run%s.r.log", output, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
+  )
+  # assign(sprintf("shapes_match_routes_%s_gtfs%s", region$name, region$gtfs_day), shapes_match_routes)
+
+  write.csv(shapes_match_routes |> sf::st_drop_geometry() |> mutate(
+    distance_diff=round(distance_diff),
+    points_diff=round(points_diff)
+  ), sprintf("%s/shapes_match_%s_gtfs%s_run%s.csv", output, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), row.names = FALSE)
+  sf::st_write(shapes_match_routes, sprintf("%s/shapes_match_%s_gtfs%s_run%s.gpkg", output, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE)
 }
 
 shapes_match_routes
