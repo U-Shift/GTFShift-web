@@ -5,11 +5,13 @@ library(dplyr)
 library(stringr)
 library(sf)
 library(mapview)
-
+library(jsonlite)
 library(osmdata)
-get_overpass_url ()
-set_overpass_url ("https://maps.mail.ru/osm/tools/overpass/api/interpreter") # Crashes less and responds quicker than default one
-get_overpass_url ()
+get_overpass_url()
+set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter") # Crashes less and responds quicker than default one
+set_overpass_url("https://overpass.private.coffee/api/interpreter") # 4 servers with 20 cores, 256GB RAM, SSD each 
+get_overpass_url()
+# set_overpass_url("https://overpass-api.de/api/interpreter")
 
 # Refer to prioritize_parameters.R to define parameters before running this script!
 
@@ -21,6 +23,7 @@ if (!dir.exists(output)) {
 }
 
 for(i in 1:nrow(regions)) {
+  # 1. Load data for region
   region <- regions[i, ]
   message(sprintf("\n\nRunning for %s (%s)...", region$name, region$gtfs_day))
 
@@ -31,7 +34,7 @@ for(i in 1:nrow(regions)) {
 
   gtfs = GTFShift::load_feed(region$gtfs_url)
   # assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
-  tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, region$gtfs_day))
+  # tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, region$gtfs_day))
 
   gtfs_shapes = tidytransit::shapes_as_sf(gtfs$shapes)
   bbox = sf::st_bbox(gtfs_shapes)
@@ -54,17 +57,25 @@ for(i in 1:nrow(regions)) {
   }
   # assign(sprintf("q_%s_gtfs%s", region$name, region$gtfs_day), q)
 
-  # Prioritize based on planned operation and infrastructure characteristics
-  prioritization = prioritize_lanes(gtfs, q, date=region$gtfs_day)
+  # 2. Prioritize based on planned operation and infrastructure characteristics
+  prioritization = GTFShift::prioritize_lanes(gtfs, q, date=region$gtfs_day)
   # assign(sprintf("prioritization_%s_gtfs%s", region$name, region$gtfs_day), prioritization)
 
-  write.csv(prioritization |> sf::st_drop_geometry(), sprintf("%s/prioritization_%s_gtfs%s_run%s.csv", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), row.names = FALSE)
-  sf::st_write(prioritization, sprintf("%s/prioritization_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE)
+  write.csv(
+    prioritization |> 
+      sf::st_drop_geometry() |> 
+      mutate(
+        # Convert vector of strings to single string with ";" separator
+        routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
+        shapes = sapply(shapes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE)
+      )
+    , 
+    sprintf("%s/prioritization_%s_gtfs%s_run%s.csv", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), 
+    row.names = FALSE
+  )
 
-  # prioritization = st_read(sprintf("%s/prioritization_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())))
-
-  # Extend with real-time data if available
-  if (!is.na(region$rt_collection)) {
+  # 3. Extend with real-time data if available
+  if (!is.null(region$rt_collection) && !is.na(region$rt_collection)) {
     rt_collection = region$rt_collection[[1]]
     # Filter updates, to remove those close to bus stops
     gtfs_stops = tidytransit::stops_as_sf(gtfs$stops, crs=4326)
@@ -80,59 +91,81 @@ for(i in 1:nrow(regions)) {
     )
   }
 
-  # Replace route_id with route names, considering that prioritization$routes has multiple route_ids separated by ";"
-  route_names = gtfs$routes[, c("route_id", "route_short_name", "route_long_name")]
-  prioritization = prioritization |>
-    mutate(row_n = row_number())
-  prioritization_routes = prioritization |>
-    st_drop_geometry() |>
-    tidyr::separate_rows(routes, sep = ";")
-  routes_covered = prioritization_routes |>
-    select(routes) |>
-    distinct()
-  routes_covered = routes_covered |>
-    left_join(route_names, by = c("routes" = "route_id")) |>
-    mutate(
-      route_name = ifelse(!is.na(route_short_name) & route_short_name != "", route_short_name, route_long_name)
-    ) |>
-    select(routes, route_name)
-  prioritization_routes = prioritization_routes |>
-    left_join(routes_covered, by = c("routes" = "routes"))
-  prioritization_routes_grouped = prioritization_routes |>
-    group_by(row_n) |>
-    summarise(
-      route_names = paste(unique(route_name), collapse = ";"),
-      .groups = "drop"
-    )
-  prioritization = prioritization |>
-    left_join(prioritization_routes_grouped, by = c("row_n" = "row_n")) |>
-    select(-row_n)
-
-  # Save outputs
-  write.csv(prioritization |> sf::st_drop_geometry(), sprintf("%s/prioritization_%s_gtfs%s_run%s_extended.csv", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), row.names = FALSE)
-  sf::st_write(prioritization, sprintf("%s/prioritization_%s_gtfs%s_run%s_extended.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE)
-  
-  
-  # Web version data preparation
-  
-  # 1. Get base road network 
+  # 4. Build data for dashboard 
+  # > 4.1. Store ways geometries
   ways = prioritization |> 
     distinct(way_osm_id, geometry)
-  
-  # arroios = opq("Arroios, Lisboa, Portugal") |>
-  #   add_osm_feature(key = "highway", value = c("motorway", "trunk", "primary", "secondary", "tertiary", "residential", "unclassified", "living_street")) |>
-  #   add_osm_feature(key = "area", value = "!yes") |>
-  #   osmdata_sf() |>
-  #   osm_poly2line()
-  # arroios = arroios$osm_lines
-  # mapview(arroios |> st_bbox() |> st_as_sfc())
-  # mapview(ways |> st_filter(arroios |> st_bbox() |> st_as_sfc()))
-  
-  st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.geojson", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE, delete_dsn = TRUE)
   st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE)
+  st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.geojson", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE)
   
-  # 2. Compute geojson with metadata
-  # TODO! From hereee
+  # > 4.2. Store prioritization as json, grouping by way_osm_id, each grouped by hour
+  nested_data <- lapply(split(prioritization |> st_drop_geometry(), prioritization$way_osm_id), function(df) {
+    # Get the static attributes (taking the first row)
+    # We exclude 'hour' and 'frequency' here
+    static_info <- df[1, ] %>% 
+      select(-way_osm_id, -hour, -frequency) %>% 
+      as.list()
+    
+    # Get the hourly frequency data
+    # This creates a named list: "6" = 5, "7" = 12, etc.
+    hourly_freqs <- setNames(as.list(df$frequency), df$hour)
+    
+    # Combine them: Static info + a new 'hours' key
+    c(static_info, list(hour_frequency = hourly_freqs))
+  })
+  # TODO! Validate when rt_data present!
+  write_json(
+    nested_data,
+    sprintf("%s/way_data_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
+    auto_unbox = TRUE,
+    digits=NA # To avoid precision loss in coordinates
+  )
+  
+  # > 4.3. Store route data 
+  gtfs_date = tidytransit::filter_feed_by_date(gtfs, extract_date=region$gtfs_day)
+  routes = GTFShift::get_route_frequency_hourly(gtfs_date, date=region$gtfs_day) |>
+    st_drop_geometry() |>
+    left_join(gtfs_date$routes |> select(route_id, route_long_name))
+  nested_shapes <- lapply(split(routes, routes$shape_id), function(df) {
+    
+    # Extract static metadata associated with this shape
+    shape_metadata <- df[1, ] %>% 
+      select(route_id, route_short_name, route_long_name, direction_id) %>% 
+      as.list()
+    
+    # Create the hourly frequency mapping
+    hourly_frequencies <- setNames(as.list(df$frequency), df$hour)
+    
+    # Combine metadata with the hourly 'schedule'
+    c(shape_metadata, list(schedule = hourly_frequencies))
+  })
+  write_json(
+    nested_shapes,
+    sprintf("%s/shape_data_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
+    auto_unbox = TRUE,
+    digits=NA # To avoid precision loss in coordinates
+  )
+  
+  # > 4.4. Store metadata about execution details
+  shapes_found = unique(unlist(prioritization$shapes))
+  shapes_missing = unique(gtfs$shapes$shape_id) %>% setdiff(shapes_found)
+  
+  routes_missing = routes |> 
+    group_by(route_id) |>
+    summarise(
+      shapes = list(unique(shape_id)),
+      n_shapes = length(unique(shape_id))
+    ) |>
+    mutate(
+      n_shapes_missing = sapply(shapes, function(s_list) sum(s_list %in% shapes_missing))
+    ) |>
+    filter(n_shapes_missing>0) |>
+    select(-shapes)
+  routes_missing_nested <- lapply(split(routes_missing, routes_missing$route_id), function(df) {
+    df %>% 
+      select(n_shapes, n_shapes_missing) %>% 
+      as.list()
+  })
   
   dataCensus = function (numberArray) {
     return(list(
@@ -148,7 +181,7 @@ for(i in 1:nrow(regions)) {
   }
 
   rt_list = NA
-  if(!is.na(region$rt_collection)) {
+  if(!is.null(region$rt_collection) && !is.na(region$rt_collection)) {
     rt_list = list(
       url = "", # To be edited manually
       period = region$rt_interval,
@@ -158,7 +191,10 @@ for(i in 1:nrow(regions)) {
   census_frequency_hour = list()
   for(h in 0:23) {
     prioritization_hour = prioritization |> filter(hour == h)
-    census_frequency_hour[[as.character(h)]] = dataCensus(prioritization_hour$frequency)
+    census = dataCensus(prioritization_hour$frequency)
+    if (!is.na(census$mean)) {
+      census_frequency_hour[[as.character(h)]] = census
+    }
   }
 
   metadata = list(
@@ -175,14 +211,14 @@ for(i in 1:nrow(regions)) {
       )
     }),
     prioritization = list(
-      routes_missing = paste(gtfs$routes |> filter(!route_short_name %in% routes_covered$route_name) |> distinct(route_short_name) |> pull(route_short_name), collapse = ";"),
-      routes_covered = nrow(routes_covered),
-      routes_total = nrow(gtfs$routes)
+      shapes_missing = shapes_missing,
+      routes_missing = routes_missing_nested,
+      shapes_total = length(unique(gtfs$shapes$shape_id))
     ),
     data_census = list(
       frequency = dataCensus(prioritization$frequency),
       frequency_hour = census_frequency_hour,
-      speed_avg = dataCensus(prioritization$speed_avg),
+      speed_avg = ifelse("spped_avg" %in% colnames(prioritization), dataCensus(prioritization$speed_avg), NA),
       lanes = dataCensus(prioritization$n_lanes_direction)
     ),
     rt = rt_list,
@@ -198,15 +234,11 @@ for(i in 1:nrow(regions)) {
       os_release = Sys.info()[["release"]]
     )
   )
-
-  geojson_data$metadata <- metadata
-  # Save at geojson_file.replace(".geojson", "_with_metadata.geojson")
-  geojson_file_metadata = gsub(".geojson$", "_with_metadata.geojson", geojson_file)
-  jsonlite::write_json(
-    geojson_data,
-    geojson_file_metadata,
+  write_json(
+    metadata,
+    sprintf("%s/metadata_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
     auto_unbox = TRUE,
-    digits=NA # To avoid precision loss in coordinates
+    digits=NA
   )
 }
 
