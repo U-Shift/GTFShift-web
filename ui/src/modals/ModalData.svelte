@@ -10,11 +10,13 @@
         geoData,
         hour,
         rt_data,
+        onWaySelect = (wayId) => {},
     }: {
         open: boolean;
         geoData: GeoPrioritization;
         hour: number;
         rt_data: boolean;
+        onWaySelect?: (wayId: string) => void;
     } = $props();
 
     let data_filtered = $state<Feature[]>([]);
@@ -156,14 +158,19 @@
                                         class="hover:bg-muted/30 transition-colors"
                                     >
                                         <td class="px-4 py-2">
-                                            <a
-                                                href="https://www.openstreetmap.org/way/{row
-                                                    .properties.way_osm_id}"
-                                                target="_blank"
+                                            <button
+                                                onclick={() => {
+                                                    open = false;
+                                                    if (onWaySelect)
+                                                        onWaySelect(
+                                                            row.properties
+                                                                .way_osm_id,
+                                                        );
+                                                }}
                                                 class="text-primary hover:underline font-mono"
                                             >
                                                 {row.properties.way_osm_id}
-                                            </a>
+                                            </button>
                                         </td>
                                         <td class="px-4 py-2"
                                             >{row.properties.frequency}</td

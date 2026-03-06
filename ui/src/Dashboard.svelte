@@ -1137,6 +1137,21 @@
         {geoData}
         hour={criteria_hour}
         rt_data={display_rt}
+        onWaySelect={(wayId) => {
+            selectedWayId = wayId;
+            if (map && geoData) {
+                const feature = geoData.features.find(
+                    (f: any) => f.properties?.way_osm_id === wayId,
+                );
+                if (feature) {
+                    const tempLayer = L.geoJSON(feature);
+                    map.flyToBounds(tempLayer.getBounds(), {
+                        padding: [100, 100],
+                        duration: 1,
+                    });
+                }
+            }
+        }}
     />
 {/if}
 
