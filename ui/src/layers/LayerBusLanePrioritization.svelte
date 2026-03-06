@@ -118,18 +118,18 @@
                         if (frequencyOk && lanesOk && speedOk) {
                             return {
                                 color: COLOR_TEAL,
-                                weight: 2.5,
+                                weight: 3.5,
                             };
                         } else {
                             return {
                                 color: COLOR_YELLOW,
-                                weight: 2.5,
+                                weight: 3.5,
                             };
                         }
                     } else {
                         return {
                             color: COLOR_RED,
-                            weight: 2.5,
+                            weight: 3.5,
                         };
                     }
                 },

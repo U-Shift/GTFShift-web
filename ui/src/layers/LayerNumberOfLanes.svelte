@@ -57,7 +57,7 @@
                     );
                     return {
                         color: COLOR_GRADIENT[colorIndex],
-                        weight: 2.5,
+                        weight: 3.5,
                     };
                 },
                 onEachFeature: (feature, layer) => {

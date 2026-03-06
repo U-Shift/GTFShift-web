@@ -38,7 +38,7 @@
         const newLayer = L.geoJSON(filteredFeatures, {
             style: {
                 color: COLOR_TEAL,
-                weight: 2.5,
+                weight: 3.5,
             },
             onEachFeature: (feature, layer) => {
                 // createFeaturePopup(feature, layer, geoData, criteriaHour),

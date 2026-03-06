@@ -71,7 +71,7 @@
                                       colorIndex
                                   ]
                                 : COLOR_GRAY,
-                        weight: 2.5,
+                        weight: 3.5,
                     };
                 },
                 onEachFeature: (feature, layer) => {
