@@ -243,14 +243,43 @@
             <div class="flex flex-col gap-2 mt-3">
                 {#each DB_REGIONS as r}
                     <button
-                        class="group relative w-full text-left rounded-xl border border-border bg-background hover:border-[rgb(59,193,168)] hover:bg-[rgb(59,193,168)]/5 transition-all duration-200 p-3 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                        class="group relative w-full text-left rounded-xl border border-border bg-background transition-all duration-200 p-3 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                         onclick={() => handleRegionChange(r.id)}
                         disabled={loading !== undefined}
                         style="cursor: pointer;"
+                        onmouseenter={(e) => {
+                            const el = e.currentTarget as HTMLElement;
+                            el.style.borderColor = r.color ?? "";
+                            el.style.backgroundColor = (r.color ?? "") + "0d";
+                            el.querySelector<HTMLElement>(
+                                ".region-icon",
+                            )!.style.backgroundColor = (r.color ?? "") + "33";
+                            el.querySelector<HTMLElement>(
+                                ".region-chevron",
+                            )!.style.color = r.color ?? "";
+                            el.querySelector<HTMLElement>(
+                                ".region-accent",
+                            )!.style.transform = "scaleX(1)";
+                        }}
+                        onmouseleave={(e) => {
+                            const el = e.currentTarget as HTMLElement;
+                            el.style.borderColor = "";
+                            el.style.backgroundColor = "";
+                            el.querySelector<HTMLElement>(
+                                ".region-icon",
+                            )!.style.backgroundColor = "";
+                            el.querySelector<HTMLElement>(
+                                ".region-chevron",
+                            )!.style.color = "";
+                            el.querySelector<HTMLElement>(
+                                ".region-accent",
+                            )!.style.transform = "scaleX(0)";
+                        }}
                     >
                         <div class="flex items-start gap-3">
                             <div
-                                class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgb(59,193,168)]/10 text-[rgb(59,193,168)] group-hover:bg-[rgb(59,193,168)]/20 transition-colors"
+                                class="region-icon mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors"
+                                style="background-color: {r.color}1a; color: {r.color};"
                             >
                                 <i class="fas fa-map-location-dot text-sm"></i>
                             </div>
@@ -266,12 +295,13 @@
                                 </p>
                             </div>
                             <i
-                                class="fas fa-chevron-right text-xs text-muted-foreground group-hover:text-[rgb(59,193,168)] transition-colors mt-1"
+                                class="region-chevron fas fa-chevron-right text-xs text-muted-foreground transition-colors mt-1"
                             ></i>
                         </div>
                         <!-- Accent line at bottom on hover -->
                         <div
-                            class="absolute bottom-0 left-0 right-0 h-[2px] bg-[rgb(59,193,168)] scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left rounded-b-xl"
+                            class="region-accent absolute bottom-0 left-0 right-0 h-[2px] transition-transform duration-200 origin-left rounded-b-xl"
+                            style="background-color: {r.color}; transform: scaleX(0);"
                         ></div>
                     </button>
                 {/each}

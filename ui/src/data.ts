@@ -20,7 +20,7 @@ export const COLOR_GRADIENT_RED: string[] = ["#ffffcc", "#fffecb", "#fffec9", "#
 export const DB_REGIONS: DataRegion[] = [
     {
         id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260306',
-        name: 'Carris, Lisbon, PT (New Model)',
+        name: 'Carris, Lisbon, PT',
         files: {
             ways: './data/lisbon/ways_lisboa_rt_gtfs2026-02-04_run20260306.geojson',
             way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-02-04_run20260306.json',
@@ -29,6 +29,7 @@ export const DB_REGIONS: DataRegion[] = [
             shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-02-04_run20260306.json',
             zip: './data/lisbon/lisbon.zip'
         },
-        date: 'Feb 2026'
+        date: 'Feb 2026',
+        color: '#003f8f'
     }
 ]
