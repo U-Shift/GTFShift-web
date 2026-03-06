@@ -247,7 +247,8 @@
                     >
                         <pre class="p-4 text-xs overflow-x-auto"><code>
                             {@html hljs.highlight(
-                                    `library(GTFShift)
+                                    `
+library(GTFShift)
 library(tidytransit)
 library(osmdata)
 library(sf)

@@ -67,6 +67,18 @@
 
     let selectedWayId: string | undefined = $state(undefined);
 
+    // Clear way selection when clicking on empty map area
+    $effect(() => {
+        if (!map) return;
+        const onClick = () => {
+            selectedWayId = undefined;
+        };
+        map.on("click", onClick);
+        return () => {
+            map.off("click", onClick);
+        };
+    });
+
     // Action handlers
     const handleLayerCreate = (layer: L.Layer) => {};
 
@@ -570,6 +582,7 @@
                     region = undefined;
                     active_layer = undefined;
                     open_accordion = undefined;
+                    selectedWayId = undefined;
                 }}
                 class="flex-1"
             >
@@ -879,140 +892,143 @@
 {/if}
 
 <!-- Map caption -->
-<div
-    id="caption"
-    class="absolute bottom-6 right-6 z-[1000] flex flex-col gap-3 p-4 bg-background/95 backdrop-blur shadow-lg border rounded-xl text-sm w-[350px] max-h-[40vh] overflow-y-auto {selectedWayId
-        ? 'right-[420px]'
-        : ''}"
->
-    {#if active_layer === DisplayOptions.PRIORITIZATION}
-        <p class="flex items-start text-muted-foreground leading-tight">
-            <span
-                class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
-                style="background-color: {COLOR_YELLOW}"
-            ></span>
-            <span
-                ><b class="text-foreground">Bus lane</b> with - {criteria_bus_frequency}
-                bus/h OR - {criteria_n_lanes_direction} lane/dir {#if display_rt}OR
-                    {criteria_avg_speed} or - km/h avg. speed{/if}</span
-            >
-        </p>
-        <p class="flex items-start text-muted-foreground leading-tight">
-            <span
-                class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
-                style="background-color: {COLOR_TEAL}"
-            ></span>
-            <span
-                ><b class="text-foreground">Bus lane</b> with + {criteria_bus_frequency -
-                    1} bus/h AND + {criteria_n_lanes_direction - 1} lane/dir {#if display_rt}AND
-                    + {criteria_avg_speed} km/h avg. speed{/if}</span
-            >
-        </p>
-        <p class="flex items-start text-muted-foreground leading-tight">
-            <span
-                class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
-                style="background-color: {COLOR_RED}"
-            ></span>
-            <span
-                ><b class="text-foreground">NO bus lane</b> with + {criteria_bus_frequency -
-                    1} bus/h AND + {criteria_n_lanes_direction - 1} lane/dir {#if display_rt}AND
-                    {criteria_avg_speed} or - km/h avg. speed{/if}</span
-            >
-        </p>
-    {:else if active_layer === DisplayOptions.BUS_LANES}
-        <p class="flex items-start text-muted-foreground leading-tight">
-            <span
-                class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
-                style="background-color: {COLOR_TEAL}"
-            ></span>
-            <span
-                ><b class="text-foreground">Bus lane</b> with existing bus service</span
-            >
-        </p>
-    {:else if active_layer === DisplayOptions.FREQUENCY}
-        <div class="mb-2">
-            <p class="mb-2 text-foreground font-semibold">
-                Transit frequency <span
-                    class="text-muted-foreground font-normal"
-                    >(buses/hour, at {criteria_hour}:00)</span
+{#if active_layer !== undefined}
+    <div
+        id="caption"
+        class="absolute bottom-6 right-6 z-[1000] flex flex-col gap-3 p-4 bg-background/95 backdrop-blur shadow-lg border rounded-xl text-sm w-[350px] max-h-[40vh] overflow-y-auto {selectedWayId
+            ? 'right-[420px]'
+            : ''}"
+    >
+        {#if active_layer === DisplayOptions.PRIORITIZATION}
+            <p class="flex items-start text-muted-foreground leading-tight">
+                <span
+                    class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
+                    style="background-color: {COLOR_YELLOW}"
+                ></span>
+                <span
+                    ><b class="text-foreground">Bus lane</b> with - {criteria_bus_frequency}
+                    bus/h OR - {criteria_n_lanes_direction} lane/dir {#if display_rt}OR
+                        {criteria_avg_speed} or - km/h avg. speed{/if}</span
                 >
             </p>
-            <div class="flex gap-2 items-center">
+            <p class="flex items-start text-muted-foreground leading-tight">
                 <span
-                    class="min-w-[40px] text-right text-xs text-muted-foreground"
-                    >{geoData?.metadata.data_census.frequency_hour[
-                        criteria_hour
-                    ]?.min}</span
-                >
-                <div
-                    class="flex-1 h-3 rounded border"
-                    style="background: linear-gradient(to right, {COLOR_GRADIENT.map(
-                        (c) => c,
-                    ).join(', ')});"
-                ></div>
+                    class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
+                    style="background-color: {COLOR_TEAL}"
+                ></span>
                 <span
-                    class="min-w-[40px] text-left text-xs text-muted-foreground"
-                    >{geoData?.metadata.data_census.frequency_hour[
-                        criteria_hour
-                    ]?.max}</span
-                >
-            </div>
-        </div>
-    {:else if active_layer === DisplayOptions.N_LANES}
-        <div class="mb-2">
-            <p class="mb-2 text-foreground font-semibold">
-                Number of lanes per direction
-            </p>
-            <div class="flex gap-2 items-center">
-                <span
-                    class="min-w-[40px] text-right text-xs text-muted-foreground"
-                    >{geoData?.metadata.data_census.lanes?.min}</span
-                >
-                <div
-                    class="flex-1 h-3 rounded border"
-                    style="background: linear-gradient(to right, {COLOR_GRADIENT.map(
-                        (c) => c,
-                    ).join(', ')});"
-                ></div>
-                <span
-                    class="min-w-[40px] text-left text-xs text-muted-foreground"
-                    >{geoData?.metadata.data_census.lanes?.max}</span
-                >
-            </div>
-        </div>
-    {:else if active_layer === DisplayOptions.RT_SPEED}
-        <div class="mb-2">
-            <p class="mb-2 text-foreground font-semibold">
-                Average speed <span class="text-muted-foreground font-normal"
-                    >(km/h)</span
+                    ><b class="text-foreground">Bus lane</b> with + {criteria_bus_frequency -
+                        1} bus/h AND + {criteria_n_lanes_direction - 1} lane/dir
+                    {#if display_rt}AND + {criteria_avg_speed} km/h avg. speed{/if}</span
                 >
             </p>
-            <div class="flex gap-2 items-center">
+            <p class="flex items-start text-muted-foreground leading-tight">
                 <span
-                    class="min-w-[40px] text-right text-xs text-muted-foreground"
-                    >{geoData?.metadata.data_census.speed_avg?.min &&
-                        Math.floor(
-                            geoData.metadata.data_census.speed_avg.min,
-                        )}</span
-                >
-                <div
-                    class="flex-1 h-3 rounded border"
-                    style="background: linear-gradient(to right, {COLOR_GRADIENT_RED.slice()
-                        .reverse()
-                        .map((c) => c)
-                        .join(', ')});"
-                ></div>
+                    class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
+                    style="background-color: {COLOR_RED}"
+                ></span>
                 <span
-                    class="min-w-[40px] text-left text-xs text-muted-foreground"
-                    >{geoData?.metadata.data_census.speed_avg?.max &&
-                        Math.ceil(
-                            geoData.metadata.data_census.speed_avg.max,
-                        )}</span
+                    ><b class="text-foreground">NO bus lane</b> with + {criteria_bus_frequency -
+                        1} bus/h AND + {criteria_n_lanes_direction - 1} lane/dir
+                    {#if display_rt}AND
+                        {criteria_avg_speed} or - km/h avg. speed{/if}</span
                 >
+            </p>
+        {:else if active_layer === DisplayOptions.BUS_LANES}
+            <p class="flex items-start text-muted-foreground leading-tight">
+                <span
+                    class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
+                    style="background-color: {COLOR_TEAL}"
+                ></span>
+                <span
+                    ><b class="text-foreground">Bus lane</b> with existing bus service</span
+                >
+            </p>
+        {:else if active_layer === DisplayOptions.FREQUENCY}
+            <div class="mb-2">
+                <p class="mb-2 text-foreground font-semibold">
+                    Transit frequency <span
+                        class="text-muted-foreground font-normal"
+                        >(buses/hour, at {criteria_hour}:00)</span
+                    >
+                </p>
+                <div class="flex gap-2 items-center">
+                    <span
+                        class="min-w-[40px] text-right text-xs text-muted-foreground"
+                        >{geoData?.metadata.data_census.frequency_hour[
+                            criteria_hour
+                        ]?.min}</span
+                    >
+                    <div
+                        class="flex-1 h-3 rounded border"
+                        style="background: linear-gradient(to right, {COLOR_GRADIENT.map(
+                            (c) => c,
+                        ).join(', ')});"
+                    ></div>
+                    <span
+                        class="min-w-[40px] text-left text-xs text-muted-foreground"
+                        >{geoData?.metadata.data_census.frequency_hour[
+                            criteria_hour
+                        ]?.max}</span
+                    >
+                </div>
             </div>
-        </div>
-    {/if}
-</div>
+        {:else if active_layer === DisplayOptions.N_LANES}
+            <div class="mb-2">
+                <p class="mb-2 text-foreground font-semibold">
+                    Number of lanes per direction
+                </p>
+                <div class="flex gap-2 items-center">
+                    <span
+                        class="min-w-[40px] text-right text-xs text-muted-foreground"
+                        >{geoData?.metadata.data_census.lanes?.min}</span
+                    >
+                    <div
+                        class="flex-1 h-3 rounded border"
+                        style="background: linear-gradient(to right, {COLOR_GRADIENT.map(
+                            (c) => c,
+                        ).join(', ')});"
+                    ></div>
+                    <span
+                        class="min-w-[40px] text-left text-xs text-muted-foreground"
+                        >{geoData?.metadata.data_census.lanes?.max}</span
+                    >
+                </div>
+            </div>
+        {:else if active_layer === DisplayOptions.RT_SPEED}
+            <div class="mb-2">
+                <p class="mb-2 text-foreground font-semibold">
+                    Average speed <span
+                        class="text-muted-foreground font-normal">(km/h)</span
+                    >
+                </p>
+                <div class="flex gap-2 items-center">
+                    <span
+                        class="min-w-[40px] text-right text-xs text-muted-foreground"
+                        >{geoData?.metadata.data_census.speed_avg?.min &&
+                            Math.floor(
+                                geoData.metadata.data_census.speed_avg.min,
+                            )}</span
+                    >
+                    <div
+                        class="flex-1 h-3 rounded border"
+                        style="background: linear-gradient(to right, {COLOR_GRADIENT_RED.slice()
+                            .reverse()
+                            .map((c) => c)
+                            .join(', ')});"
+                    ></div>
+                    <span
+                        class="min-w-[40px] text-left text-xs text-muted-foreground"
+                        >{geoData?.metadata.data_census.speed_avg?.max &&
+                            Math.ceil(
+                                geoData.metadata.data_census.speed_avg.max,
+                            )}</span
+                    >
+                </div>
+            </div>
+        {/if}
+    </div>
+{/if}
 
 <!-- Map layers -->
 {#if region && geoData && active_layer !== undefined && map}
