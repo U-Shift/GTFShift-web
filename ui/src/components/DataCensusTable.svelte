@@ -1,7 +1,6 @@
 <script lang="ts">
     import type { StatisticsBundle } from "../types/GeoPrioritization";
 
-
     let {
         census,
     }: {
@@ -13,11 +12,17 @@
     <table class="table-census">
         <tbody>
             <tr>
-                <th colspan="2"><b>Measures of Central Tendency and Spread</b></th>
+                <th colspan="2"
+                    ><b>Measures of Central Tendency and Spread</b></th
+                >
             </tr>
             <tr>
                 <th>Mean</th>
                 <td>{census.mean.toFixed(2)}</td>
+            </tr>
+            <tr>
+                <th>P5</th>
+                <td>{census.p5.toFixed(2)}</td>
             </tr>
             <tr>
                 <th>P25</th>
@@ -30,6 +35,10 @@
             <tr>
                 <th>P75</th>
                 <td>{census.p75.toFixed(2)}</td>
+            </tr>
+            <tr>
+                <th>P95</th>
+                <td>{census.p95.toFixed(2)}</td>
             </tr>
             <tr>
                 <th>Standard Deviation</th>
@@ -47,6 +56,6 @@
     .table-census th,
     .table-census td {
         padding: 0.1rem !important;
-        color: #6a6a6a!important;
+        color: #6a6a6a !important;
     }
 </style>

@@ -3,8 +3,10 @@ import type { Feature } from "geojson";
 export interface StatisticsBundle {
     min: number;
     max: number;
+    p5: number;
     p25: number;
     p75: number;
+    p95: number;
     mean: number;
     median: number;
     variance: number;
