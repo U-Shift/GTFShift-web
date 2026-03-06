@@ -65,6 +65,11 @@
     let action_modal_about_open: boolean = $state(false);
     let action_modal_data_open: boolean = $state(false);
     let action_modal_details_open: boolean = $state(false);
+    let any_modal_open: boolean = $derived(
+        action_modal_about_open ||
+            action_modal_data_open ||
+            action_modal_details_open,
+    );
 
     let selectedWayId: string | undefined = $state(undefined);
 
@@ -934,12 +939,10 @@
 {/if}
 
 <!-- Map caption -->
-{#if active_layer !== undefined}
+{#if active_layer !== undefined && !any_modal_open && !selectedWayId}
     <div
         id="caption"
-        class="absolute bottom-6 right-6 z-[1000] flex flex-col gap-3 p-4 bg-background/95 backdrop-blur shadow-lg border rounded-xl text-sm w-[350px] max-h-[40vh] overflow-y-auto {selectedWayId
-            ? 'right-[420px]'
-            : ''}"
+        class="absolute bottom-6 right-6 z-[1000] flex flex-col gap-3 p-4 bg-background/95 backdrop-blur shadow-lg border rounded-xl text-sm w-[350px] max-h-[40vh] overflow-y-auto"
     >
         {#if active_layer === DisplayOptions.PRIORITIZATION}
             <p class="flex items-start text-muted-foreground leading-tight">
