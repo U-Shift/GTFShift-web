@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { untrack } from "svelte";
     import * as L from "leaflet";
     import type { Feature } from "geojson";
     import type { GeoPrioritization } from "./types/GeoPrioritization";
@@ -66,6 +67,19 @@
     let action_modal_details_open: boolean = $state(false);
 
     let selectedWayId: string | undefined = $state(undefined);
+
+    // Clear way selection when a modal is opened
+    $effect(() => {
+        if (
+            action_modal_about_open ||
+            action_modal_data_open ||
+            action_modal_details_open
+        ) {
+            untrack(() => {
+                selectedWayId = undefined;
+            });
+        }
+    });
 
     // Clear way selection when clicking on empty map area
     $effect(() => {
@@ -199,9 +213,7 @@
 
 <div
     id="controls-panel"
-    class="absolute top-4 left-4 z-[1000] flex flex-col items-start w-[350px] max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-4 overflow-y-auto {action_hide_form
-        ? 'h-auto'
-        : 'h-[calc(100vh-2rem)]'}"
+    class="absolute top-4 left-4 z-[1000] flex flex-col items-start w-[350px] max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-4 overflow-y-auto h-fit"
     style="background-image: url('./static/logo/background_blur_transparent.png'); background-size: auto 7vw; background-position: top right; background-repeat: no-repeat;"
 >
     <!-- Title -->
@@ -647,7 +659,7 @@
     {@const way = geoData.wayData[selectedWayId]}
     <div
         id="details-panel"
-        class="absolute top-4 right-4 z-[1000] flex flex-col w-[400px] h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-6 overflow-y-auto"
+        class="absolute top-4 right-4 z-[1000] flex flex-col w-[400px] h-fit max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-6 overflow-y-auto"
     >
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-bold text-primary m-0">Way Details</h3>

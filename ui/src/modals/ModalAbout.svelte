@@ -14,8 +14,8 @@
 
     <!-- Panel: same margins as the left sidebar -->
     <div
-        class="fixed z-[1000] flex flex-col bg-background/95 backdrop-blur border rounded-xl shadow-xl overflow-hidden"
-        style="top: 1rem; bottom: 1rem; left: calc(1rem + 350px + 0.5rem); right: 1rem;"
+        class="fixed z-[1000] flex flex-col bg-background/95 backdrop-blur border rounded-xl shadow-xl overflow-hidden h-fit max-h-[calc(100vh-2rem)]"
+        style="top: 1rem; left: calc(1rem + 350px + 0.5rem); right: 1rem;"
     >
         <!-- Header -->
         <div
@@ -65,7 +65,7 @@
                 disseminating the outputs of these real world scenarios.
             </p>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                 <Button
                     variant="outline"
                     href="https://github.com/U-Shift/GTFShift-web/issues/new?template=new-region.yml"
