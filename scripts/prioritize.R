@@ -100,25 +100,40 @@ for(i in 1:nrow(regions)) {
   
   # > 4.2. Store prioritization as json, grouping by way_osm_id, each grouped by hour
   nested_data <- lapply(split(prioritization |> st_drop_geometry(), prioritization$way_osm_id), function(df) {
-    # Get the static attributes (taking the first row)
-    # We exclude 'hour' and 'frequency' here
-    static_info <- df[1, ] %>% 
-      select(-way_osm_id, -hour, -frequency) %>% 
-      as.list()
     
-    # Get the hourly frequency data
-    # This creates a named list: "6" = 5, "7" = 12, etc.
+    # 1. Extract first row and convert to list
+    static_df <- df[1, ] %>% select(-way_osm_id, -hour, -frequency)
+    static_info <- as.list(static_df)
+    
+    # 2. Extract values from list-columns and wrap routes/shapes in I()
+    # This ensures they remain arrays even with length 1
+    for (col in names(static_info)) {
+      # If it's a list-column (common in sf/dplyr), grab the vector inside
+      if (is.list(static_info[[col]])) {
+        static_info[[col]] <- static_info[[col]][[1]]
+      }
+      
+      # Protect specific columns from unboxing
+      if (col %in% c("routes", "shapes")) {
+        static_info[[col]] <- I(static_info[[col]])
+      }
+    }
+    
+    # 3. Hourly frequencies (auto_unbox will handle these as single numbers)
     hourly_freqs <- setNames(as.list(df$frequency), df$hour)
     
-    # Combine them: Static info + a new 'hours' key
+    # Combine
     c(static_info, list(hour_frequency = hourly_freqs))
   })
-  # TODO! Validate when rt_data present!
-  write_json(
-    nested_data,
-    sprintf("%s/way_data_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
-    auto_unbox = TRUE,
-    digits=NA # To avoid precision loss in coordinates
+  json_string <- toJSON(
+    nested_data, 
+    na = "null", # To avoid NAs being converted to strings in JSON
+    auto_unbox = TRUE, 
+    pretty = TRUE
+  )
+  write(
+    json_string,
+    sprintf("%s/way_data_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
   )
   
   # > 4.3. Store route data 
@@ -142,6 +157,19 @@ for(i in 1:nrow(regions)) {
   write_json(
     nested_shapes,
     sprintf("%s/shape_data_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
+    auto_unbox = TRUE,
+    digits=NA # To avoid precision loss in coordinates
+  )
+  
+  nested_routes = lapply(split(gtfs_date$routes |> select(route_id, route_short_name, route_long_name), gtfs_date$routes$route_id), function(df) {
+    route_metadata <- df[1, ] %>% 
+      as.list()
+    
+    c(route_metadata)
+  })
+  write_json(
+    nested_routes,
+    sprintf("%s/route_data_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
     auto_unbox = TRUE,
     digits=NA # To avoid precision loss in coordinates
   )
@@ -171,8 +199,10 @@ for(i in 1:nrow(regions)) {
     return(list(
       min = min(numberArray, na.rm=TRUE),
       max = max(numberArray, na.rm=TRUE),
+      p5 = as.numeric(quantile(numberArray, 0.05, na.rm=TRUE)),
       p25 = as.numeric(quantile(numberArray, 0.25, na.rm=TRUE)),
       p75 = as.numeric(quantile(numberArray, 0.75, na.rm=TRUE)),
+      p95 = as.numeric(quantile(numberArray, 0.95, na.rm=TRUE)),
       mean = mean(numberArray, na.rm=TRUE),
       median = as.numeric(median(numberArray, na.rm=TRUE)),
       variance = var(numberArray, na.rm=TRUE),
@@ -218,7 +248,7 @@ for(i in 1:nrow(regions)) {
     data_census = list(
       frequency = dataCensus(prioritization$frequency),
       frequency_hour = census_frequency_hour,
-      speed_avg = ifelse("spped_avg" %in% colnames(prioritization), dataCensus(prioritization$speed_avg), NA),
+      speed_avg = NA,
       lanes = dataCensus(prioritization$n_lanes_direction)
     ),
     rt = rt_list,
@@ -234,6 +264,9 @@ for(i in 1:nrow(regions)) {
       os_release = Sys.info()[["release"]]
     )
   )
+  if ("speed_avg" %in% colnames(prioritization)) {
+    metadata$data_census$speed_avg = dataCensus(prioritization$speed_avg)
+  }
   write_json(
     metadata,
     sprintf("%s/metadata_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
