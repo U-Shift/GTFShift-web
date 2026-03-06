@@ -1043,6 +1043,7 @@
             criteriaNLanesDirectionEnabled={criteria_n_lanes_direction_enabled}
             criteriaAvgSpeed={criteria_avg_speed}
             criteriaAvgSpeedEnabled={criteria_avg_speed_enabled}
+            {selectedWayId}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
         />
@@ -1051,6 +1052,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            {selectedWayId}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
         />
@@ -1059,6 +1061,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            {selectedWayId}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
         />
@@ -1067,6 +1070,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            {selectedWayId}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
         />
@@ -1075,6 +1079,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            {selectedWayId}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
         />

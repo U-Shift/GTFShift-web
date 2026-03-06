@@ -10,20 +10,39 @@
         map,
         geoData,
         criteriaHour = 8,
+        selectedWayId = undefined,
         onLayerCreate = (layer) => {},
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
         geoData: GeoPrioritization;
         criteriaHour: number;
+        selectedWayId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
         onWaySelect: (wayId: string) => void;
     } = $props();
 
     let currentLayer: L.Layer | null = $state(null);
+    let wayLayerMap: Map<string, L.Path> = new Map();
+
+    function getFreqStyle(wayId: string): L.PathOptions {
+        const props = geoData.wayData[wayId];
+        const freq = props?.hour_frequency?.[criteriaHour] || 0;
+        const colorIndex = Math.min(
+            Math.ceil(
+                (freq * COLOR_GRADIENT.length) /
+                    (geoData.metadata.data_census.frequency_hour[criteriaHour]
+                        ?.max || 1),
+            ),
+            COLOR_GRADIENT.length - 1,
+        );
+        return { color: COLOR_GRADIENT[colorIndex], weight: 3.5 };
+    }
 
     $effect(() => {
         if (!map || !geoData) return;
+
+        wayLayerMap = new Map();
 
         // Filter for valid features based on criteria
         const filteredFeatures = geoData.features.filter(
@@ -52,27 +71,14 @@
             {
                 style: (feature: Feature | undefined) => {
                     const wayId = feature?.properties?.way_osm_id;
-                    const props = wayId ? geoData.wayData[wayId] : undefined;
-                    let freq = props?.hour_frequency?.[criteriaHour] || 0;
-                    let colorIndex = Math.min(
-                        Math.ceil(
-                            (freq * COLOR_GRADIENT.length) /
-                                (geoData.metadata.data_census.frequency_hour[
-                                    criteriaHour
-                                ]?.max || 1),
-                        ),
-                        COLOR_GRADIENT.length - 1,
-                    );
-                    return {
-                        color: COLOR_GRADIENT[colorIndex],
-                        weight: 3.5,
-                    };
+                    if (!wayId) return {};
+                    return getFreqStyle(wayId);
                 },
                 onEachFeature: (feature, layer) => {
-                    // createFeaturePopup(feature, layer, geoData, criteriaHour),
+                    const wayId = feature.properties?.way_osm_id;
+                    if (wayId) wayLayerMap.set(wayId, layer as L.Path);
                     layer.on("click", (e) => {
                         L.DomEvent.stopPropagation(e);
-                        const wayId = feature.properties?.way_osm_id;
                         if (wayId) onWaySelect(wayId);
                     });
                 },
@@ -94,6 +100,20 @@
                 map.removeLayer(currentLayer);
                 currentLayer = null;
             }
+            wayLayerMap = new Map();
         };
+    });
+
+    // Highlight the selected way reactively
+    $effect(() => {
+        const selected = selectedWayId;
+        wayLayerMap.forEach((path, wayId) => {
+            if (wayId === selected) {
+                path.setStyle({ weight: 7, color: "#FFD4B8", opacity: 1 });
+                path.bringToFront();
+            } else {
+                path.setStyle(getFreqStyle(wayId));
+            }
+        });
     });
 </script>

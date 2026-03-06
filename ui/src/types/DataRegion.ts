@@ -9,5 +9,6 @@ export type DataRegion = {
         shape_data: string;
         zip: string; // Aggregated data
     };
-    date: string
+    date: string;
+    color: string;
 };

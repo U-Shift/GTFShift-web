@@ -10,20 +10,48 @@
         map,
         geoData,
         criteriaHour,
+        selectedWayId = undefined,
         onLayerCreate = (layer) => {},
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
         geoData: GeoPrioritization;
         criteriaHour: number;
+        selectedWayId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
         onWaySelect: (wayId: string) => void;
     } = $props();
 
     let currentLayer: L.Layer | null = $state(null);
+    let wayLayerMap: Map<string, L.Path> = new Map();
+
+    function getSpeedStyle(wayId: string): L.PathOptions {
+        const props = geoData.wayData[wayId];
+        const speed_avg = props?.speed_avg || undefined;
+        const colorIndex =
+            speed_avg !== undefined
+                ? Math.min(
+                      Math.ceil(
+                          (speed_avg * COLOR_GRADIENT_RED.length) /
+                              (geoData.metadata.data_census.speed_avg?.max ||
+                                  1),
+                      ),
+                      COLOR_GRADIENT_RED.length - 1,
+                  )
+                : undefined;
+        return {
+            color:
+                colorIndex !== undefined
+                    ? COLOR_GRADIENT_RED.slice().reverse()[colorIndex]
+                    : COLOR_GRAY,
+            weight: 3.5,
+        };
+    }
 
     $effect(() => {
         if (!map || !geoData) return;
+
+        wayLayerMap = new Map();
 
         // Filter out features with no speed data
         const filteredFeatures = geoData.features.filter(
@@ -51,34 +79,14 @@
             {
                 style: (feature: Feature | undefined) => {
                     const wayId = feature?.properties?.way_osm_id;
-                    const props = wayId ? geoData.wayData[wayId] : undefined;
-                    let speed_avg = props?.speed_avg || undefined;
-                    let colorIndex =
-                        speed_avg !== undefined
-                            ? Math.min(
-                                  Math.ceil(
-                                      (speed_avg * COLOR_GRADIENT_RED.length) /
-                                          (geoData.metadata.data_census
-                                              .speed_avg?.max || 1),
-                                  ),
-                                  COLOR_GRADIENT_RED.length - 1,
-                              )
-                            : undefined;
-                    return {
-                        color:
-                            colorIndex !== undefined
-                                ? COLOR_GRADIENT_RED.slice().reverse()[
-                                      colorIndex
-                                  ]
-                                : COLOR_GRAY,
-                        weight: 3.5,
-                    };
+                    if (!wayId) return {};
+                    return getSpeedStyle(wayId);
                 },
                 onEachFeature: (feature, layer) => {
-                    // createFeaturePopup(feature, layer, geoData, criteriaHour),
+                    const wayId = feature.properties?.way_osm_id;
+                    if (wayId) wayLayerMap.set(wayId, layer as L.Path);
                     layer.on("click", (e) => {
                         L.DomEvent.stopPropagation(e);
-                        const wayId = feature.properties?.way_osm_id;
                         if (wayId) onWaySelect(wayId);
                     });
                 },
@@ -100,6 +108,20 @@
                 map.removeLayer(currentLayer);
                 currentLayer = null;
             }
+            wayLayerMap = new Map();
         };
+    });
+
+    // Highlight the selected way reactively
+    $effect(() => {
+        const selected = selectedWayId;
+        wayLayerMap.forEach((path, wayId) => {
+            if (wayId === selected) {
+                path.setStyle({ weight: 7, color: "#FFD4B8", opacity: 1 });
+                path.bringToFront();
+            } else {
+                path.setStyle(getSpeedStyle(wayId));
+            }
+        });
     });
 </script>
