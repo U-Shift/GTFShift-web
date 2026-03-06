@@ -1,13 +1,12 @@
 <script lang="ts">
-    import "./ModalData.css";
-
     import { untrack } from "svelte";
-    import type { Feature, GeoJsonProperties } from "geojson";
+    import type { Feature } from "geojson";
     import { TableHandler, Datatable, ThSort } from "@vincjo/datatables";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import { Button } from "$lib/components/ui/button/index.js";
 
     let {
-        open,
+        open = $bindable(false),
         geoData,
         hour,
         rt_data,
@@ -23,11 +22,8 @@
 
     $effect(() => {
         if (geoData) {
-            // Extract properties from wayData
-            data_filtered = Object.entries(
-                (geoData as GeoPrioritization).wayData,
-            )
-                .filter(([wayId, wayData]: [string, any]) => {
+            data_filtered = Object.entries(geoData.wayData)
+                .filter(([_, wayData]: [string, any]) => {
                     return (
                         wayData.hour_frequency &&
                         wayData.hour_frequency[hour] !== undefined
@@ -49,13 +45,7 @@
             if (data_filtered) {
                 if (!table) {
                     table = new TableHandler([] as Feature[], {
-                        rowsPerPage: 10,
-                        i18n: {
-                            // Characters
-                            previous: "<",
-                            next: ">",
-                            rowCount: "{start} to {end}, of {total} entries",
-                        },
+                        rowsPerPage: 20,
                     });
                 }
                 table.setRows([...data_filtered]);
@@ -64,51 +54,83 @@
     });
 </script>
 
-<main>
-    <dialog {open} id="modal-about" class={open ? "" : "hidden"}>
-        <article>
-            <header>
-                <h4>
-                    <strong
-                        ><i class="fas fa-table"></i> Attribute table (at {hour}:00)</strong
-                    >
-                </h4>
-            </header>
-            <main>
-                {#if table}
+{#if open}
+    <!-- Backdrop -->
+    <div
+        class="fixed inset-0 z-[999] bg-black/20 backdrop-blur-[1px]"
+        onclick={() => (open = false)}
+        role="presentation"
+    ></div>
+
+    <!-- Panel: same margins as the left sidebar (1rem all around, starts after 350px sidebar) -->
+    <div
+        class="fixed z-[1000] flex flex-col bg-background/95 backdrop-blur border rounded-xl shadow-xl overflow-hidden"
+        style="top: 1rem; bottom: 1rem; left: calc(1rem + 350px + 0.5rem); right: 1rem;"
+    >
+        <!-- Header -->
+        <div
+            class="flex items-center justify-between px-5 py-4 border-b shrink-0"
+        >
+            <h2 class="text-lg font-bold flex items-center gap-2">
+                <i class="fas fa-table text-primary"></i>
+                Attribute table
+                <span class="text-muted-foreground font-normal text-sm"
+                    >at {hour}:00</span
+                >
+            </h2>
+            <Button
+                variant="ghost"
+                size="sm"
+                onclick={() => (open = false)}
+                class="h-8 w-8 p-0"
+            >
+                <i class="fas fa-times"></i>
+            </Button>
+        </div>
+
+        <!-- Table -->
+        <div class="flex-1 overflow-auto px-4 py-3">
+            {#if table}
+                <div class="border rounded-md">
                     <Datatable basic {table}>
-                        <table>
-                            <thead>
+                        <table class="w-full text-sm">
+                            <thead class="bg-muted/50 border-b sticky top-0">
                                 <tr>
                                     <ThSort
                                         {table}
                                         field={(r) => r.properties.way_osm_id}
+                                        class="px-4 py-2 text-left font-bold"
                                         >OSM ID</ThSort
                                     >
                                     <ThSort
                                         {table}
                                         field={(r) => r.properties.frequency}
+                                        class="px-4 py-2 text-left font-bold"
                                         >Frequency</ThSort
                                     >
                                     <ThSort
                                         {table}
                                         field={(r) => r.properties.is_bus_lane}
+                                        class="px-4 py-2 text-left font-bold"
                                         >Bus Lane</ThSort
                                     >
                                     <ThSort
                                         {table}
                                         field={(r) => r.properties.n_lanes}
+                                        class="px-4 py-2 text-left font-bold"
                                         >Nr lanes</ThSort
                                     >
                                     <ThSort
                                         {table}
                                         field={(r) => r.properties.n_directions}
+                                        class="px-4 py-2 text-left font-bold"
                                         >Nr directions</ThSort
                                     >
                                     <ThSort
                                         {table}
                                         field={(r) =>
                                             r.properties.n_lanes_direction}
+                                        class="px-4 py-2 text-left font-bold"
                                         >Nr lanes/dir</ThSort
                                     >
                                     {#if rt_data}
@@ -116,132 +138,86 @@
                                             {table}
                                             field={(r) =>
                                                 r.properties.speed_avg}
+                                            class="px-4 py-2 text-left font-bold"
                                             >Avg speed</ThSort
-                                        >
-                                        <ThSort
-                                            {table}
-                                            field={(r) =>
-                                                r.properties.speed_p25}
-                                            >Speed P25</ThSort
-                                        >
-                                        <ThSort
-                                            {table}
-                                            field={(r) =>
-                                                r.properties.speed_median}
-                                            >Speed Median</ThSort
-                                        >
-                                        <ThSort
-                                            {table}
-                                            field={(r) =>
-                                                r.properties.speed_p75}
-                                            >Speed P75</ThSort
-                                        >
-                                        <ThSort
-                                            {table}
-                                            field={(r) =>
-                                                r.properties.speed_count}
-                                            >Speed Count</ThSort
                                         >
                                     {/if}
                                     <ThSort
                                         {table}
                                         field={(r) => r.properties.route_names}
+                                        class="px-4 py-2 text-left font-bold"
                                         >Routes</ThSort
                                     >
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y">
                                 {#each table.rows as row}
-                                    <tr>
-                                        <td>
+                                    <tr
+                                        class="hover:bg-muted/30 transition-colors"
+                                    >
+                                        <td class="px-4 py-2">
                                             <a
                                                 href="https://www.openstreetmap.org/way/{row
                                                     .properties.way_osm_id}"
                                                 target="_blank"
-                                                >{row.properties.way_osm_id}</a
+                                                class="text-primary hover:underline font-mono"
+                                            >
+                                                {row.properties.way_osm_id}
+                                            </a>
+                                        </td>
+                                        <td class="px-4 py-2"
+                                            >{row.properties.frequency}</td
+                                        >
+                                        <td class="px-4 py-2"
+                                            >{row.properties.is_bus_lane
+                                                ? "Yes"
+                                                : "No"}</td
+                                        >
+                                        <td
+                                            class="px-4 py-2 text-muted-foreground"
+                                        >
+                                            {row.properties.n_lanes}
+                                            <span class="text-[10px]"
+                                                >({row.properties
+                                                    .n_lanes_circulation}c+{row
+                                                    .properties
+                                                    .n_lanes_parking}p)</span
                                             >
                                         </td>
-                                        <td>{row.properties.frequency}</td>
-                                        <td>{row.properties.is_bus_lane}</td>
-                                        <td>{row.properties.n_lanes}</td>
-                                        <td>{row.properties.n_directions}</td>
-                                        <td
+                                        <td class="px-4 py-2"
+                                            >{row.properties.n_directions}</td
+                                        >
+                                        <td class="px-4 py-2"
                                             >{row.properties
                                                 .n_lanes_direction}</td
                                         >
                                         {#if rt_data}
-                                            <td
-                                                >{row.properties.speed_avg &&
-                                                !isNaN(row.properties.speed_avg)
-                                                    ? row.properties.speed_avg?.toFixed(
-                                                          2,
-                                                      )
-                                                    : "-"}</td
-                                            >
-                                            <td
-                                                >{row.properties.speed_p25 &&
-                                                !isNaN(row.properties.speed_p25)
-                                                    ? row.properties.speed_p25?.toFixed(
-                                                          2,
-                                                      )
-                                                    : "-"}</td
-                                            >
-                                            <td
-                                                >{row.properties.speed_median &&
-                                                !isNaN(
-                                                    row.properties.speed_median,
-                                                )
-                                                    ? row.properties.speed_median?.toFixed(
-                                                          2,
-                                                      )
-                                                    : "-"}</td
-                                            >
-                                            <td
-                                                >{row.properties.speed_p75 &&
-                                                !isNaN(row.properties.speed_p75)
-                                                    ? row.properties.speed_p75?.toFixed(
-                                                          2,
-                                                      )
-                                                    : "-"}</td
-                                            >
-                                            <td
-                                                >{row.properties.speed_count &&
-                                                !isNaN(
-                                                    row.properties.speed_count,
-                                                )
-                                                    ? row.properties.speed_count
-                                                    : "-"}</td
+                                            <td class="px-4 py-2 font-mono"
+                                                >{row.properties.speed_avg?.toFixed(
+                                                    1,
+                                                ) || "-"}</td
                                             >
                                         {/if}
-                                        <td>{row.properties.route_names}</td>
+                                        <td
+                                            class="px-4 py-2 truncate max-w-[200px]"
+                                            title={row.properties.route_names}
+                                        >
+                                            {row.properties.route_names}
+                                        </td>
                                     </tr>
                                 {/each}
                             </tbody>
                         </table>
                     </Datatable>
-                {/if}
-            </main>
-
-            <footer>
-                <div role="group">
-                    <button
-                        class="secondary outline modal-close"
-                        onclick={() => (open = false)}>Go back</button
-                    >
                 </div>
-            </footer>
-        </article>
-    </dialog>
-</main>
+            {/if}
+        </div>
+    </div>
+{/if}
 
 <style>
-    .svelte-simple-datatable button {
+    :global(.svelte-simple-datatable button) {
         white-space: nowrap !important;
-    }
-
-    @media (min-width: 768px) {
-        dialog > article {
-            max-width: 95vw !important;
-        }
+        font-weight: bold;
     }
 </style>

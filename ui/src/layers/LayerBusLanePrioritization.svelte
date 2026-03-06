@@ -17,6 +17,7 @@
         criteriaAvgSpeed = undefined,
         criteriaAvgSpeedEnabled = true,
         onLayerCreate = (layer) => {},
+        onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
         geoData: GeoPrioritization;
@@ -28,6 +29,7 @@
         criteriaAvgSpeed: number | undefined;
         criteriaAvgSpeedEnabled: boolean;
         onLayerCreate: (layer: L.Layer) => void;
+        onWaySelect: (wayId: string) => void;
     } = $props();
 
     let currentLayer: L.Layer | null = $state(null);
@@ -131,8 +133,14 @@
                         };
                     }
                 },
-                onEachFeature: (feature, layer) =>
-                    createFeaturePopup(feature, layer, geoData, criteriaHour),
+                onEachFeature: (feature, layer) => {
+                    // createFeaturePopup(feature, layer, geoData, criteriaHour),
+                    layer.on("click", (e) => {
+                        L.DomEvent.stopPropagation(e);
+                        const wayId = feature.properties?.way_osm_id;
+                        if (wayId) onWaySelect(wayId);
+                    });
+                },
             },
         ).addTo(map);
 
