@@ -23,34 +23,53 @@
     $effect(() => {
         if (!map || !geoData) return;
 
-        // Filter for hour==criteriaHour and has frequency
+        // Filter for valid features based on criteria
         const filteredFeatures = geoData.features.filter(
-            (feature: Feature | undefined) =>
-                feature?.properties?.hour === criteriaHour &&
-                feature?.properties?.frequency,
+            (feature: Feature | undefined) => {
+                const wayId = feature?.properties?.way_osm_id;
+                const props = wayId ? geoData.wayData[wayId] : undefined;
+                return props?.hour_frequency?.[criteriaHour];
+            },
         );
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(
             // Order by frequency asc, to plot higher frequencies on top
-            filteredFeatures.sort((a, b) => (a.properties?.frequency || 0) - (b.properties?.frequency || 0)), 
-            {
-            style: (feature: Feature | undefined) => {
-                let properties = feature?.properties;
-                let freq = properties?.frequency || 0;
-                let colorIndex = Math.min(
-                    Math.ceil(
-                        (freq * COLOR_GRADIENT.length) / (geoData.metadata.data_census.frequency_hour[criteriaHour]?.max || 1),
-                    ),
-                    COLOR_GRADIENT.length - 1,
+            filteredFeatures.sort((a, b) => {
+                const propsA = a.properties?.way_osm_id
+                    ? geoData.wayData[a.properties.way_osm_id]
+                    : null;
+                const propsB = b.properties?.way_osm_id
+                    ? geoData.wayData[b.properties.way_osm_id]
+                    : null;
+                return (
+                    (propsA?.hour_frequency?.[criteriaHour] || 0) -
+                    (propsB?.hour_frequency?.[criteriaHour] || 0)
                 );
-                return {
-                    color: COLOR_GRADIENT[colorIndex],
-                    weight: 2.5,
-                };
+            }),
+            {
+                style: (feature: Feature | undefined) => {
+                    const wayId = feature?.properties?.way_osm_id;
+                    const props = wayId ? geoData.wayData[wayId] : undefined;
+                    let freq = props?.hour_frequency?.[criteriaHour] || 0;
+                    let colorIndex = Math.min(
+                        Math.ceil(
+                            (freq * COLOR_GRADIENT.length) /
+                                (geoData.metadata.data_census.frequency_hour[
+                                    criteriaHour
+                                ]?.max || 1),
+                        ),
+                        COLOR_GRADIENT.length - 1,
+                    );
+                    return {
+                        color: COLOR_GRADIENT[colorIndex],
+                        weight: 2.5,
+                    };
+                },
+                onEachFeature: (feature, layer) =>
+                    createFeaturePopup(feature, layer, geoData, criteriaHour),
             },
-            onEachFeature: createFeaturePopup,
-        }).addTo(map);
+        ).addTo(map);
 
         // Update parent state
         untrack(() => {

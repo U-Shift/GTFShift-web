@@ -1,11 +1,10 @@
 <script lang="ts">
-    import './ModalData.css';
-    
+    import "./ModalData.css";
+
     import { untrack } from "svelte";
     import type { Feature, GeoJsonProperties } from "geojson";
     import { TableHandler, Datatable, ThSort } from "@vincjo/datatables";
-    import type { GeoPrioritization } from '../types/GeoPrioritization';
-
+    import type { GeoPrioritization } from "../types/GeoPrioritization";
 
     let {
         open,
@@ -24,19 +23,32 @@
 
     $effect(() => {
         if (geoData) {
-            // Extract properties from features
-            data_filtered = (geoData as GeoPrioritization).features
-                .filter((feature) => {
-                    const featureHour = feature.properties?.hour;
-                    return featureHour === hour;
+            // Extract properties from wayData
+            data_filtered = Object.entries(
+                (geoData as GeoPrioritization).wayData,
+            )
+                .filter(([wayId, wayData]: [string, any]) => {
+                    return (
+                        wayData.hour_frequency &&
+                        wayData.hour_frequency[hour] !== undefined
+                    );
                 })
-                .map((f) => f);
-        } 
+                .map(([wayId, wayData]: [string, any]) => {
+                    return {
+                        properties: {
+                            way_osm_id: wayId,
+                            ...wayData,
+                            frequency: wayData.hour_frequency[hour],
+                            route_names: wayData.routes?.join(", ") || "",
+                        },
+                    } as unknown as Feature;
+                });
+        }
 
         untrack(() => {
             if (data_filtered) {
                 if (!table) {
-                    table = new TableHandler([] as Feature[],{
+                    table = new TableHandler([] as Feature[], {
                         rowsPerPage: 10,
                         i18n: {
                             // Characters
@@ -68,42 +80,72 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <ThSort {table} field={(r) => r.properties.way_osm_id}
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.way_osm_id}
                                         >OSM ID</ThSort
                                     >
-                                    <ThSort {table} field={(r) => r.properties.frequency}
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.frequency}
                                         >Frequency</ThSort
                                     >
-                                    <ThSort {table} field={(r) => r.properties.is_bus_lane}
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.is_bus_lane}
                                         >Bus Lane</ThSort
                                     >
-                                    <ThSort {table} field={(r) => r.properties.n_lanes}
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.n_lanes}
                                         >Nr lanes</ThSort
                                     >
-                                    <ThSort {table} field={(r) => r.properties.n_directions}
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.n_directions}
                                         >Nr directions</ThSort
                                     >
-                                    <ThSort {table} field={(r) => r.properties.n_lanes_direction}
+                                    <ThSort
+                                        {table}
+                                        field={(r) =>
+                                            r.properties.n_lanes_direction}
                                         >Nr lanes/dir</ThSort
                                     >
                                     {#if rt_data}
-                                        <ThSort {table} field={(r) => r.properties.speed_avg}
+                                        <ThSort
+                                            {table}
+                                            field={(r) =>
+                                                r.properties.speed_avg}
                                             >Avg speed</ThSort
                                         >
-                                        <ThSort {table} field={(r) => r.properties.speed_p25}
+                                        <ThSort
+                                            {table}
+                                            field={(r) =>
+                                                r.properties.speed_p25}
                                             >Speed P25</ThSort
                                         >
-                                        <ThSort {table} field={(r) => r.properties.speed_median}
+                                        <ThSort
+                                            {table}
+                                            field={(r) =>
+                                                r.properties.speed_median}
                                             >Speed Median</ThSort
                                         >
-                                        <ThSort {table} field={(r) => r.properties.speed_p75}
+                                        <ThSort
+                                            {table}
+                                            field={(r) =>
+                                                r.properties.speed_p75}
                                             >Speed P75</ThSort
                                         >
-                                        <ThSort {table} field={(r) => r.properties.speed_count}
+                                        <ThSort
+                                            {table}
+                                            field={(r) =>
+                                                r.properties.speed_count}
                                             >Speed Count</ThSort
                                         >
                                     {/if}
-                                    <ThSort {table} field={(r) => r.properties.route_names}
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.route_names}
                                         >Routes</ThSort
                                     >
                                 </tr>
@@ -113,7 +155,8 @@
                                     <tr>
                                         <td>
                                             <a
-                                                href="https://www.openstreetmap.org/way/{row.properties.way_osm_id}"
+                                                href="https://www.openstreetmap.org/way/{row
+                                                    .properties.way_osm_id}"
                                                 target="_blank"
                                                 >{row.properties.way_osm_id}</a
                                             >
@@ -122,23 +165,32 @@
                                         <td>{row.properties.is_bus_lane}</td>
                                         <td>{row.properties.n_lanes}</td>
                                         <td>{row.properties.n_directions}</td>
-                                        <td>{row.properties.n_lanes_direction}</td>
+                                        <td
+                                            >{row.properties
+                                                .n_lanes_direction}</td
+                                        >
                                         {#if rt_data}
                                             <td
                                                 >{row.properties.speed_avg &&
                                                 !isNaN(row.properties.speed_avg)
-                                                    ? row.properties.speed_avg?.toFixed(2)
+                                                    ? row.properties.speed_avg?.toFixed(
+                                                          2,
+                                                      )
                                                     : "-"}</td
                                             >
                                             <td
                                                 >{row.properties.speed_p25 &&
                                                 !isNaN(row.properties.speed_p25)
-                                                    ? row.properties.speed_p25?.toFixed(2)
+                                                    ? row.properties.speed_p25?.toFixed(
+                                                          2,
+                                                      )
                                                     : "-"}</td
                                             >
                                             <td
                                                 >{row.properties.speed_median &&
-                                                !isNaN(row.properties.speed_median)
+                                                !isNaN(
+                                                    row.properties.speed_median,
+                                                )
                                                     ? row.properties.speed_median?.toFixed(
                                                           2,
                                                       )
@@ -147,12 +199,16 @@
                                             <td
                                                 >{row.properties.speed_p75 &&
                                                 !isNaN(row.properties.speed_p75)
-                                                    ? row.properties.speed_p75?.toFixed(2)
+                                                    ? row.properties.speed_p75?.toFixed(
+                                                          2,
+                                                      )
                                                     : "-"}</td
                                             >
                                             <td
                                                 >{row.properties.speed_count &&
-                                                !isNaN(row.properties.speed_count)
+                                                !isNaN(
+                                                    row.properties.speed_count,
+                                                )
                                                     ? row.properties.speed_count
                                                     : "-"}</td
                                             >

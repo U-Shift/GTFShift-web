@@ -2,7 +2,7 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT } from "../data";
-    import { createFeaturePopup, deduplicateByWayId } from "../lib/layerUtils";
+    import { createFeaturePopup } from "../lib/layerUtils";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
     import type { Feature } from "geojson";
 
@@ -23,36 +23,45 @@
     $effect(() => {
         if (!map || !geoData) return;
 
-        // Filter for hour==criteriaHour
-        const filteredFeatures = geoData.features.filter(
-            (feature: Feature | undefined) =>
-                feature?.properties?.hour === criteriaHour
-        );
-
-        // Deduplicate by way_osm_id
-        const uniqueFeatures = deduplicateByWayId(filteredFeatures);
+        // Features are already unique ways. No hour filter or deduplication needed.
+        const filteredFeatures = geoData.features;
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(
             // Order by n_lanes_direction asc, to plot higher nr of lanes on top
-            uniqueFeatures.sort((a, b) => (a.properties?.n_lanes_direction || 0) - (b.properties?.n_lanes_direction || 0)), 
-            {
-            style: (feature: Feature | undefined) => {
-                let properties = feature?.properties;
-                let n_lanes_direction = properties?.n_lanes_direction || 0;
-                let colorIndex = Math.min(
-                    Math.ceil(
-                        (n_lanes_direction * COLOR_GRADIENT.length) / geoData.metadata.data_census.lanes.max,
-                    ),
-                    COLOR_GRADIENT.length - 1,
+            filteredFeatures.sort((a, b) => {
+                const propsA = a.properties?.way_osm_id
+                    ? geoData.wayData[a.properties.way_osm_id]
+                    : null;
+                const propsB = b.properties?.way_osm_id
+                    ? geoData.wayData[b.properties.way_osm_id]
+                    : null;
+                return (
+                    (propsA?.n_lanes_direction || 0) -
+                    (propsB?.n_lanes_direction || 0)
                 );
-                return {
-                    color: COLOR_GRADIENT[colorIndex],
-                    weight: 2.5,
-                };
+            }),
+            {
+                style: (feature: Feature | undefined) => {
+                    const wayId = feature?.properties?.way_osm_id;
+                    const props = wayId ? geoData.wayData[wayId] : undefined;
+                    let n_lanes_direction = props?.n_lanes_direction || 0;
+                    let colorIndex = Math.min(
+                        Math.ceil(
+                            (n_lanes_direction * COLOR_GRADIENT.length) /
+                                geoData.metadata.data_census.lanes.max,
+                        ),
+                        COLOR_GRADIENT.length - 1,
+                    );
+                    return {
+                        color: COLOR_GRADIENT[colorIndex],
+                        weight: 2.5,
+                    };
+                },
+                onEachFeature: (feature, layer) =>
+                    createFeaturePopup(feature, layer, geoData, criteriaHour),
             },
-            onEachFeature: createFeaturePopup,
-        }).addTo(map);
+        ).addTo(map);
 
         // Update parent state
         untrack(() => {

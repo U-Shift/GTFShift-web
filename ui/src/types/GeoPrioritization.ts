@@ -1,4 +1,4 @@
-import type { FeatureCollection } from "geojson";
+import type { Feature } from "geojson";
 
 export interface StatisticsBundle {
     min: number;
@@ -15,7 +15,11 @@ interface HourlyFrequency {
     [hour: string]: StatisticsBundle;
 }
 
-export interface GeoPrioritization extends FeatureCollection {
+export interface GeoPrioritization {
+    features: Feature[];
+    wayData: Record<string, any>;
+    routes: Record<string, any>;
+    shapes: Record<string, any>;
     metadata: {
         region: string;
         gtfs: {

@@ -32,83 +32,109 @@
 
     let currentLayer: L.Layer | null = $state(null);
 
+    console.log("LayerBusLanePrioritization component executing script block");
+
+    let filteredFeatures = $derived.by(() => {
+        if (!geoData) return [];
+        return geoData.features.filter((feature: Feature | undefined) => {
+            const wayId = feature?.properties?.way_osm_id;
+            const props = wayId ? geoData.wayData[wayId] : undefined;
+            if (!props) return false;
+
+            if (props.is_bus_lane) return true;
+
+            const frequencyOk =
+                !criteriaBusFrequencyEnabled ||
+                (props.hour_frequency?.[criteriaHour] !== undefined &&
+                    props.hour_frequency[criteriaHour] >= criteriaBusFrequency);
+
+            const lanesOk =
+                !criteriaNLanesDirectionEnabled ||
+                (props.n_lanes !== undefined &&
+                    props.n_lanes_direction !== undefined &&
+                    props.n_lanes_direction >= criteriaNLanesDirection);
+
+            const speedOk =
+                !criteriaAvgSpeedEnabled ||
+                criteriaAvgSpeed === undefined ||
+                (props.speed_avg !== undefined &&
+                    props.speed_avg <= criteriaAvgSpeed);
+
+            return frequencyOk && lanesOk && speedOk;
+        });
+    });
+
     $effect(() => {
         if (!map || !geoData) return;
 
-        // Filter for hour==criteriaHour
-        const filteredFeatures = geoData.features.filter(
-            (feature: Feature | undefined) => {
-                if (feature?.properties?.hour !== criteriaHour) return false;
-
-                if (feature?.properties?.is_bus_lane) return true;
-
-                const frequencyOk =
-                    !criteriaBusFrequencyEnabled ||
-                    (feature?.properties?.frequency !== undefined &&
-                        feature?.properties?.frequency >= criteriaBusFrequency);
-
-                const lanesOk =
-                    !criteriaNLanesDirectionEnabled ||
-                    (feature?.properties?.n_lanes_direction !== undefined &&
-                        feature?.properties?.n_lanes_direction >=
-                            criteriaNLanesDirection);
-
-                const speedOk =
-                    !criteriaAvgSpeedEnabled ||
-                    criteriaAvgSpeed === undefined ||
-                    (feature?.properties?.speed_avg !== undefined &&
-                        feature?.properties?.speed_avg <= criteriaAvgSpeed);
-
-                return frequencyOk && lanesOk && speedOk;
-            },
+        console.log(
+            "LayerBusLanePrioritization effect running. filteredFeatures length:",
+            filteredFeatures.length,
         );
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(
             // Order by frequency to plot higher priority on top
-            filteredFeatures.sort((a, b) => (a.properties?.frequency || 0) - (b.properties?.frequency || 0)), 
+            filteredFeatures.sort((a, b) => {
+                const propsA = a.properties?.way_osm_id
+                    ? geoData.wayData[a.properties.way_osm_id]
+                    : null;
+                const propsB = b.properties?.way_osm_id
+                    ? geoData.wayData[b.properties.way_osm_id]
+                    : null;
+                return (
+                    (propsA?.hour_frequency?.[criteriaHour] || 0) -
+                    (propsB?.hour_frequency?.[criteriaHour] || 0)
+                );
+            }),
             {
-            style: (feature: Feature | undefined) => {
-                let properties = feature?.properties;
+                style: (feature: Feature | undefined) => {
+                    const wayId = feature?.properties?.way_osm_id;
+                    const props = wayId ? geoData.wayData[wayId] : undefined;
 
-                if (properties?.is_bus_lane) {
-                    const frequencyOk =
-                        !criteriaBusFrequencyEnabled ||
-                        (properties.frequency !== undefined &&
-                            properties.frequency >= criteriaBusFrequency);
+                    if (props?.is_bus_lane) {
+                        const frequencyOk =
+                            !criteriaBusFrequencyEnabled ||
+                            (props.hour_frequency?.[criteriaHour] !==
+                                undefined &&
+                                props.hour_frequency[criteriaHour] >=
+                                    criteriaBusFrequency);
 
-                    const lanesOk =
-                        !criteriaNLanesDirectionEnabled ||
-                        (properties.n_lanes !== undefined &&
-                            properties.n_lanes_direction !== undefined &&
-                            properties.n_lanes_direction >= criteriaNLanesDirection);
+                        const lanesOk =
+                            !criteriaNLanesDirectionEnabled ||
+                            (props.n_lanes !== undefined &&
+                                props.n_lanes_direction !== undefined &&
+                                props.n_lanes_direction >=
+                                    criteriaNLanesDirection);
 
-                    const speedOk =
-                        !criteriaAvgSpeedEnabled ||
-                        criteriaAvgSpeed === undefined ||
-                        (properties.speed_avg !== undefined &&
-                            properties.speed_avg > criteriaAvgSpeed);
+                        const speedOk =
+                            !criteriaAvgSpeedEnabled ||
+                            criteriaAvgSpeed === undefined ||
+                            (props.speed_avg !== undefined &&
+                                props.speed_avg > criteriaAvgSpeed);
 
-                    if (frequencyOk && lanesOk && speedOk) {
-                        return {
-                            color: COLOR_TEAL,
-                            weight: 2.5,
-                        };
+                        if (frequencyOk && lanesOk && speedOk) {
+                            return {
+                                color: COLOR_TEAL,
+                                weight: 2.5,
+                            };
+                        } else {
+                            return {
+                                color: COLOR_YELLOW,
+                                weight: 2.5,
+                            };
+                        }
                     } else {
                         return {
-                            color: COLOR_YELLOW,
+                            color: COLOR_RED,
                             weight: 2.5,
                         };
                     }
-                } else {
-                    return {
-                        color: COLOR_RED,
-                        weight: 2.5,
-                    };
-                }
+                },
+                onEachFeature: (feature, layer) =>
+                    createFeaturePopup(feature, layer, geoData, criteriaHour),
             },
-            onEachFeature: createFeaturePopup,
-        }).addTo(map);
+        ).addTo(map);
 
         // Update parent state
         untrack(() => {

@@ -2,8 +2,9 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_TEAL } from "../data";
-    import { createFeaturePopup, deduplicateByWayId } from "../lib/layerUtils";
+    import { createFeaturePopup } from "../lib/layerUtils";
     import type { Feature } from "geojson";
+    import type { GeoPrioritization } from "../types/GeoPrioritization";
 
     let {
         map,
@@ -12,7 +13,7 @@
         onLayerCreate = (layer) => {},
     }: {
         map: L.Map;
-        geoData: any;
+        geoData: GeoPrioritization;
         criteriaHour: number;
         onLayerCreate: (layer: L.Layer) => void;
     } = $props();
@@ -24,21 +25,21 @@
 
         // Filter for bus lanes
         const filteredFeatures = geoData.features.filter(
-            (feature: Feature | undefined) => 
-                feature?.properties?.hour === criteriaHour && 
-                feature?.properties?.is_bus_lane,
+            (feature: Feature | undefined) => {
+                const wayId = feature?.properties?.way_osm_id;
+                const props = wayId ? geoData.wayData[wayId] : undefined;
+                return props?.is_bus_lane;
+            },
         );
 
-        // Deduplicate by way_osm_id
-        const uniqueFeatures = deduplicateByWayId(filteredFeatures);
-
         // Create and add new layer to map
-        const newLayer = L.geoJSON(uniqueFeatures, {
+        const newLayer = L.geoJSON(filteredFeatures, {
             style: {
                 color: COLOR_TEAL,
                 weight: 2.5,
             },
-            onEachFeature: createFeaturePopup,
+            onEachFeature: (feature, layer) =>
+                createFeaturePopup(feature, layer, geoData, criteriaHour),
         }).addTo(map);
 
         // Update parent state

@@ -2,7 +2,7 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT_RED, COLOR_GRAY } from "../data";
-    import { createFeaturePopup, deduplicateByWayId } from "../lib/layerUtils";
+    import { createFeaturePopup } from "../lib/layerUtils";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
     import type { Feature } from "geojson";
 
@@ -23,36 +23,59 @@
     $effect(() => {
         if (!map || !geoData) return;
 
-        // Filter for hour==criteriaHour
+        // Filter out features with no speed data
         const filteredFeatures = geoData.features.filter(
-            (feature: Feature | undefined) =>
-                feature?.properties?.hour === criteriaHour
+            (feature: Feature | undefined) => {
+                const wayId = feature?.properties?.way_osm_id;
+                const props = wayId ? geoData.wayData[wayId] : undefined;
+                return (
+                    props?.speed_avg !== undefined && props?.speed_avg !== null
+                );
+            },
         );
-
-        // Deduplicate by way_osm_id
-        const uniqueFeatures = deduplicateByWayId(filteredFeatures);
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(
             // Order by speed_avg asc, to plot higher speeds on top
-            uniqueFeatures.sort((a, b) => (a.properties?.speed_avg || 0) - (b.properties?.speed_avg || 0)), 
+            filteredFeatures.sort((a, b) => {
+                const propsA = a.properties?.way_osm_id
+                    ? geoData.wayData[a.properties.way_osm_id]
+                    : null;
+                const propsB = b.properties?.way_osm_id
+                    ? geoData.wayData[b.properties.way_osm_id]
+                    : null;
+                return (propsA?.speed_avg || 0) - (propsB?.speed_avg || 0);
+            }),
             {
-            style: (feature: Feature | undefined) => {
-                let properties = feature?.properties;
-                let speed_avg = properties?.speed_avg || undefined;
-                let colorIndex = speed_avg!==undefined ? Math.min(
-                    Math.ceil(
-                        (speed_avg * COLOR_GRADIENT_RED.length) / (geoData.metadata.data_census.speed_avg?.max || 1),
-                    ),
-                    COLOR_GRADIENT_RED.length - 1,
-                ) : undefined;
-                return {
-                    color: colorIndex!==undefined ?COLOR_GRADIENT_RED.slice().reverse()[colorIndex] : COLOR_GRAY,
-                    weight: 2.5,
-                };
+                style: (feature: Feature | undefined) => {
+                    const wayId = feature?.properties?.way_osm_id;
+                    const props = wayId ? geoData.wayData[wayId] : undefined;
+                    let speed_avg = props?.speed_avg || undefined;
+                    let colorIndex =
+                        speed_avg !== undefined
+                            ? Math.min(
+                                  Math.ceil(
+                                      (speed_avg * COLOR_GRADIENT_RED.length) /
+                                          (geoData.metadata.data_census
+                                              .speed_avg?.max || 1),
+                                  ),
+                                  COLOR_GRADIENT_RED.length - 1,
+                              )
+                            : undefined;
+                    return {
+                        color:
+                            colorIndex !== undefined
+                                ? COLOR_GRADIENT_RED.slice().reverse()[
+                                      colorIndex
+                                  ]
+                                : COLOR_GRAY,
+                        weight: 2.5,
+                    };
+                },
+                onEachFeature: (feature, layer) =>
+                    createFeaturePopup(feature, layer, geoData, criteriaHour),
             },
-            onEachFeature: createFeaturePopup,
-        }).addTo(map);
+        ).addTo(map);
 
         // Update parent state
         untrack(() => {

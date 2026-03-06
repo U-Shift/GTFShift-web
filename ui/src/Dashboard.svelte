@@ -3,7 +3,7 @@
     import type { Feature } from "geojson";
     import type { GeoPrioritization } from "./types/GeoPrioritization";
     import type { DataRegion } from "./types/DataRegion";
-    
+
     import ModalAbout from "./modals/ModalAbout.svelte";
     import LayerBusLanePrioritization from "./layers/LayerBusLanePrioritization.svelte";
     import LayerBusLanes from "./layers/LayerBusLanes.svelte";
@@ -24,7 +24,8 @@
     } from "./data";
 
     // Map
-    let { map, light_mode = $bindable() }: { map: L.Map, light_mode: boolean } = $props();
+    let { map, light_mode = $bindable() }: { map: L.Map; light_mode: boolean } =
+        $props();
     let geoData: GeoPrioritization | null = $state(null);
 
     // User feedback
@@ -36,14 +37,14 @@
         BUS_LANES,
         FREQUENCY,
         N_LANES,
-        RT_SPEED
-    }   
+        RT_SPEED,
+    }
 
     let region: DataRegion | undefined = $state(undefined);
 
     let display_tab: DisplayOptions | undefined = $state(undefined);
     let display_rt: boolean = $state(false); // true if region has rt-data (optional)
-    
+
     let criteria_hour: number = $state(8);
     let criteria_bus_frequency: number = $state(0);
     let criteria_n_lanes_direction: number = $state(2);
@@ -51,13 +52,13 @@
     let criteria_bus_frequency_enabled: boolean = $state(true);
     let criteria_n_lanes_direction_enabled: boolean = $state(true);
     let criteria_avg_speed_enabled: boolean = $state(true);
-    
-    let action_hide_form: boolean = $state(false); 
+
+    let action_hide_form: boolean = $state(false);
     let action_modal_about_open: boolean = $state(false);
     let action_modal_data_open: boolean = $state(false);
     let action_modal_details_open: boolean = $state(false);
 
-    // Action handlers 
+    // Action handlers
     const handleLayerCreate = (layer: L.Layer) => {};
 
     const handleRegionChange = async (event: Event) => {
@@ -73,12 +74,39 @@
         loading = "data for " + region.name;
 
         try {
-            // Fetch and load GeoJSON
-            const response = await fetch(region.geojson);
-            geoData = await response.json() as GeoPrioritization;
+            // Fetch and load new data model components
+            const [
+                waysRes,
+                wayDataRes,
+                metadataRes,
+                routeDataRes,
+                shapeDataRes,
+            ] = await Promise.all([
+                fetch(region.files.ways),
+                fetch(region.files.way_data),
+                fetch(region.files.metadata),
+                fetch(region.files.route_data),
+                fetch(region.files.shape_data),
+            ]);
 
-            display_rt = geoData.features.some(
-                (feature:Feature) => feature.properties?.speed_avg,
+            const ways = await waysRes.json();
+            const wayData = await wayDataRes.json();
+            const metadata = await metadataRes.json();
+            const routeData = await routeDataRes.json();
+            const shapeData = await shapeDataRes.json();
+
+            geoData = {
+                features: ways.features,
+                wayData: wayData,
+                metadata: metadata,
+                routes: routeData,
+                shapes: shapeData,
+            } as GeoPrioritization;
+            console.log("geoData", geoData);
+
+            display_rt = Object.values(geoData.wayData).some(
+                (data: any) =>
+                    data.speed_avg !== undefined && data.speed_avg !== null,
             );
 
             // Set criteria base values
@@ -86,14 +114,17 @@
             action_modal_details_open = false;
             criteria_hour = 8;
             criteria_n_lanes_direction = 2;
-            criteria_bus_frequency = geoData.metadata.data_census.frequency.median;
-            criteria_avg_speed = Math.floor(geoData.metadata.data_census.speed_avg?.median ?? 0);
+            criteria_bus_frequency =
+                geoData.metadata.data_census.frequency.median;
+            criteria_avg_speed = Math.floor(
+                geoData.metadata.data_census.speed_avg?.median ?? 0,
+            );
             criteria_bus_frequency_enabled = true;
             criteria_n_lanes_direction_enabled = true;
             criteria_avg_speed_enabled = display_rt;
 
             // Update display_tab option to trigger rendering
-            display_tab = DisplayOptions.PRIORITIZATION;            
+            display_tab = DisplayOptions.PRIORITIZATION;
 
             console.log("Loaded GeoJSON for region:", region.id);
         } catch (error) {
@@ -211,8 +242,8 @@
                 >
                     <i class="fas fa-code"></i>
                 </a>
-                <a 
-                    href={region.geojson} 
+                <a
+                    href={region.files.zip}
                     target="_blank"
                     class="text-secondary"
                     data-tooltip="Download raw data"
@@ -226,7 +257,9 @@
             <p class="small text-primary">Explore the different layers below</p>
             <details
                 name={DisplayOptions.PRIORITIZATION.toString()}
-                open={display_tab === DisplayOptions.PRIORITIZATION ? true : undefined}
+                open={display_tab === DisplayOptions.PRIORITIZATION
+                    ? true
+                    : undefined}
             >
                 <summary
                     onclick={(e) => {
@@ -241,7 +274,10 @@
                 <div class="small text-primary">
                     <p>
                         Display road segments coloured by bus lane
-                        prioritization criteria: <span data-tooltip="Frequency and speed initially set to median values"><i class="fa fa-circle-info"></i></span>
+                        prioritization criteria: <span
+                            data-tooltip="Frequency and speed initially set to median values"
+                            ><i class="fa fa-circle-info"></i></span
+                        >
                     </p>
                     <ul>
                         <li>
@@ -263,7 +299,8 @@
                                 min="0"
                                 max="23"
                                 disabled={!criteria_bus_frequency_enabled}
-                            />:00 hour with <input
+                            />:00 hour with
+                            <input
                                 type="number"
                                 name="number"
                                 placeholder="Nr"
@@ -279,7 +316,9 @@
                                 type="checkbox"
                                 aria-label="Enable lanes criteria"
                                 aria-invalid="false"
-                                bind:checked={criteria_n_lanes_direction_enabled}
+                                bind:checked={
+                                    criteria_n_lanes_direction_enabled
+                                }
                                 style="margin-right: 0.35rem;"
                             />
                             <input
@@ -294,25 +333,25 @@
                             /> or + lanes/direction
                         </li>
                         {#if display_rt}
-                        <li>
-                            <input
-                                type="checkbox"
-                                aria-label="Enable speed criteria"
-                                aria-invalid="false"
-                                bind:checked={criteria_avg_speed_enabled}
-                                style="margin-right: 0.35rem;"
-                            />
-                            <input 
-                                type="number"
-                                name="number"
-                                placeholder="Nr"
-                                aria-label="Nr"
-                                style="width: 5rem;"
-                                bind:value={criteria_avg_speed}
-                                min="0"
-                                disabled={!criteria_avg_speed_enabled}
-                            /> or - km/h average speed
-                        </li>
+                            <li>
+                                <input
+                                    type="checkbox"
+                                    aria-label="Enable speed criteria"
+                                    aria-invalid="false"
+                                    bind:checked={criteria_avg_speed_enabled}
+                                    style="margin-right: 0.35rem;"
+                                />
+                                <input
+                                    type="number"
+                                    name="number"
+                                    placeholder="Nr"
+                                    aria-label="Nr"
+                                    style="width: 5rem;"
+                                    bind:value={criteria_avg_speed}
+                                    min="0"
+                                    disabled={!criteria_avg_speed_enabled}
+                                /> or - km/h average speed
+                            </li>
                         {/if}
                     </ul>
                 </div>
@@ -320,7 +359,9 @@
 
             <details
                 name={DisplayOptions.BUS_LANES.toString()}
-                open={display_tab === DisplayOptions.BUS_LANES ? true : undefined}
+                open={display_tab === DisplayOptions.BUS_LANES
+                    ? true
+                    : undefined}
             >
                 <summary
                     onclick={(e) => {
@@ -344,7 +385,9 @@
 
             <details
                 name={DisplayOptions.FREQUENCY.toString()}
-                open={display_tab === DisplayOptions.FREQUENCY ? true : undefined}
+                open={display_tab === DisplayOptions.FREQUENCY
+                    ? true
+                    : undefined}
             >
                 <summary
                     onclick={(e) => {
@@ -361,14 +404,16 @@
                         Road segments with bus service are colored by frequency,
                         from the <span
                             style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT[0]}; font-weight: bold; border-radius: 4px;"
-                            >lowest ({geoData.metadata.data_census.frequency_hour[criteria_hour].min})</span
+                            >lowest ({geoData.metadata.data_census
+                                .frequency_hour[criteria_hour].min})</span
                         >
                         to the
                         <span
                             style="color: {COLOR_GRADIENT[
                                 COLOR_GRADIENT.length - 1
                             ]}; font-weight: bold;"
-                            >highest ({geoData.metadata.data_census.frequency_hour[criteria_hour].max})</span
+                            >highest ({geoData.metadata.data_census
+                                .frequency_hour[criteria_hour].max})</span
                         >
                         number of buses per hour, considering:
                     </p>
@@ -390,7 +435,11 @@
                 </div>
 
                 {#if geoData.metadata.data_census.frequency_hour[criteria_hour]}
-                    <DataCensusTable census={geoData.metadata.data_census.frequency_hour[criteria_hour]} />
+                    <DataCensusTable
+                        census={geoData.metadata.data_census.frequency_hour[
+                            criteria_hour
+                        ]}
+                    />
                 {/if}
             </details>
 
@@ -419,56 +468,67 @@
                         style="color: {COLOR_GRADIENT[
                             COLOR_GRADIENT.length - 1
                         ]}; font-weight: bold;"
-                        >highest ({geoData.metadata.data_census.lanes.max})</span
+                        >highest ({geoData.metadata.data_census.lanes
+                            .max})</span
                     > number of lanes per direction.
                 </div>
 
                 {#if geoData.metadata.data_census.lanes}
-                    <DataCensusTable census={geoData.metadata.data_census.lanes} />
+                    <DataCensusTable
+                        census={geoData.metadata.data_census.lanes}
+                    />
                 {/if}
             </details>
 
             {#if display_rt}
-            <details
-                name={DisplayOptions.RT_SPEED.toString()}
-                open={display_tab === DisplayOptions.RT_SPEED ? true: undefined}
-            >
-                <summary
-                    onclick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        display_tab =
-                            display_tab === DisplayOptions.RT_SPEED
-                                ? undefined
-                                : DisplayOptions.RT_SPEED;
-                    }}>Average speed</summary
+                <details
+                    name={DisplayOptions.RT_SPEED.toString()}
+                    open={display_tab === DisplayOptions.RT_SPEED
+                        ? true
+                        : undefined}
                 >
-                <div class="small text-secondary">
-                    Road segments with bus service are colored by the average speed measured 
-                    , from the <span
-                        style="color: {COLOR_GRADIENT_RED.slice().reverse()[0]}; font-weight: bold;"
-                        >lowest ({geoData.metadata.data_census.speed_avg?.min?.toFixed(2)})</span
+                    <summary
+                        onclick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            display_tab =
+                                display_tab === DisplayOptions.RT_SPEED
+                                    ? undefined
+                                    : DisplayOptions.RT_SPEED;
+                        }}>Average speed</summary
                     >
-                    to the
-                    <span
-                        style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT_RED.slice().reverse()[
-                            COLOR_GRADIENT_RED.length - 1
-                        ]}; font-weight: bold;border-radius: 4px;"
-                        >highest ({geoData.metadata.data_census.speed_avg?.max?.toFixed(2)})</span
-                    > values (km/h).
-                </div>
+                    <div class="small text-secondary">
+                        Road segments with bus service are colored by the
+                        average speed measured , from the <span
+                            style="color: {COLOR_GRADIENT_RED.slice().reverse()[0]}; font-weight: bold;"
+                            >lowest ({geoData.metadata.data_census.speed_avg?.min?.toFixed(
+                                2,
+                            )})</span
+                        >
+                        to the
+                        <span
+                            style="padding: 0 4px; background-color: #00000080; color: {COLOR_GRADIENT_RED.slice().reverse()[
+                                COLOR_GRADIENT_RED.length - 1
+                            ]}; font-weight: bold;border-radius: 4px;"
+                            >highest ({geoData.metadata.data_census.speed_avg?.max?.toFixed(
+                                2,
+                            )})</span
+                        > values (km/h).
+                    </div>
 
-                {#if geoData.metadata.data_census.speed_avg}
-                    <DataCensusTable census={geoData.metadata.data_census.speed_avg} />
-                {/if}
-            </details>
+                    {#if geoData.metadata.data_census.speed_avg}
+                        <DataCensusTable
+                            census={geoData.metadata.data_census.speed_avg}
+                        />
+                    {/if}
+                </details>
             {/if}
         </div>
     {/if}
 
     <!-- Control buttons -->
     <div class="container-fluid" role="group">
-        {#if region && region.geojson && geoData && geoData.metadata}
+        {#if region && region.files && geoData && geoData.metadata}
             <button
                 class="secondary outline"
                 id="clear-region"
@@ -492,7 +552,9 @@
         <button
             class="secondary outline"
             id="toggle-color"
-            onclick={() => {light_mode = !light_mode}}
+            onclick={() => {
+                light_mode = !light_mode;
+            }}
         >
             {@html light_mode
                 ? '<i class="fa-solid fa-circle-half-stroke"></i> Dark mode'
@@ -508,23 +570,22 @@
             <span
                 class="caption-square"
                 style="background-color: {COLOR_YELLOW}"
-            ></span><b>Bus lane</b> with 
-                - {criteria_bus_frequency} bus/h 
-                OR - {criteria_n_lanes_direction} lane/dir
-                {#if display_rt}OR {criteria_avg_speed} or - km/h avg. speed{/if}
+            ></span><b>Bus lane</b> with - {criteria_bus_frequency} bus/h OR - {criteria_n_lanes_direction}
+            lane/dir
+            {#if display_rt}OR {criteria_avg_speed} or - km/h avg. speed{/if}
         </p>
         <p>
             <span class="caption-square" style="background-color: {COLOR_TEAL}"
-            ></span><b>Bus lane</b> with 
-                + {criteria_bus_frequency-1} bus/h 
-                AND + {criteria_n_lanes_direction-1} lane/dir
-                {#if display_rt}AND + {criteria_avg_speed} km/h avg. speed{/if}
+            ></span><b>Bus lane</b> with + {criteria_bus_frequency - 1} bus/h AND
+            + {criteria_n_lanes_direction - 1} lane/dir
+            {#if display_rt}AND + {criteria_avg_speed} km/h avg. speed{/if}
         </p>
         <p>
             <span class="caption-square" style="background-color: {COLOR_RED}"
-            ></span><b>NO bus lane</b> with + {criteria_bus_frequency-1} bus/h AND
-            + {criteria_n_lanes_direction-1} lane/dir
-            {#if display_rt} AND {criteria_avg_speed} or - km/h avg. speed{/if}
+            ></span><b>NO bus lane</b> with + {criteria_bus_frequency - 1} bus/h
+            AND + {criteria_n_lanes_direction - 1} lane/dir
+            {#if display_rt}
+                AND {criteria_avg_speed} or - km/h avg. speed{/if}
         </p>
     {:else if display_tab === DisplayOptions.BUS_LANES}
         <p>
@@ -539,7 +600,9 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <span
                     style="min-width: 40px; text-align: right; font-size: 0.85rem;"
-                    >{geoData?.metadata.data_census.frequency_hour[criteria_hour]?.min}</span
+                    >{geoData?.metadata.data_census.frequency_hour[
+                        criteria_hour
+                    ]?.min}</span
                 >
                 <div
                     style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT.map(
@@ -548,7 +611,9 @@
                 ></div>
                 <span
                     style="min-width: 40px; text-align: left; font-size: 0.85rem;"
-                    >{geoData?.metadata.data_census.frequency_hour[criteria_hour]?.max}</span
+                    >{geoData?.metadata.data_census.frequency_hour[
+                        criteria_hour
+                    ]?.max}</span
                 >
             </div>
         </div>
@@ -581,16 +646,25 @@
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <span
                     style="min-width: 40px; text-align: right; font-size: 0.85rem;"
-                    >{geoData?.metadata.data_census.speed_avg?.min && Math.floor(geoData.metadata.data_census.speed_avg.min)}</span
+                    >{geoData?.metadata.data_census.speed_avg?.min &&
+                        Math.floor(
+                            geoData.metadata.data_census.speed_avg.min,
+                        )}</span
                 >
                 <div
-                    style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT_RED.slice().reverse().map(
-                        (c) => c,
-                    ).join(', ')}); border-radius: 4px; border: 1px solid #ccc;"
+                    style="flex: 1; height: 1.5em; background: linear-gradient(to right, {COLOR_GRADIENT_RED.slice()
+                        .reverse()
+                        .map((c) => c)
+                        .join(
+                            ', ',
+                        )}); border-radius: 4px; border: 1px solid #ccc;"
                 ></div>
                 <span
                     style="min-width: 40px; text-align: left; font-size: 0.85rem;"
-                    >{geoData?.metadata.data_census.speed_avg?.max && Math.ceil(geoData.metadata.data_census.speed_avg.max)}</span
+                    >{geoData?.metadata.data_census.speed_avg?.max &&
+                        Math.ceil(
+                            geoData.metadata.data_census.speed_avg.max,
+                        )}</span
                 >
             </div>
         </div>
@@ -613,11 +687,11 @@
             onLayerCreate={handleLayerCreate}
         />
     {:else if display_tab === DisplayOptions.BUS_LANES}
-        <LayerBusLanes 
-            {map} 
-            {geoData} 
+        <LayerBusLanes
+            {map}
+            {geoData}
             criteriaHour={criteria_hour}
-            onLayerCreate={handleLayerCreate} 
+            onLayerCreate={handleLayerCreate}
         />
     {:else if display_tab === DisplayOptions.FREQUENCY}
         <LayerTransitFrequency
@@ -627,18 +701,18 @@
             onLayerCreate={handleLayerCreate}
         />
     {:else if display_tab === DisplayOptions.N_LANES}
-        <LayerNumberOfLanes 
-            {map} 
+        <LayerNumberOfLanes
+            {map}
             {geoData}
             criteriaHour={criteria_hour}
-            onLayerCreate={handleLayerCreate} 
+            onLayerCreate={handleLayerCreate}
         />
     {:else if display_tab === DisplayOptions.RT_SPEED}
-        <LayerRTSpeed 
-            {map} 
-            {geoData} 
+        <LayerRTSpeed
+            {map}
+            {geoData}
             criteriaHour={criteria_hour}
-            onLayerCreate={handleLayerCreate} 
+            onLayerCreate={handleLayerCreate}
         />
     {/if}
 {/if}
@@ -646,19 +720,15 @@
 <!-- Modals -->
 <ModalAbout bind:open={action_modal_about_open} />
 
-{#if geoData && geoData.metadata!==undefined}
-<ModalData 
-    open={action_modal_data_open} 
-    geoData={geoData} 
-    hour={criteria_hour}    
-    rt_data={display_rt}
-/>
-<ModalDetails 
-    open={action_modal_details_open} 
-    geoData={geoData} 
-/>
+{#if geoData && geoData.metadata !== undefined}
+    <ModalData
+        open={action_modal_data_open}
+        {geoData}
+        hour={criteria_hour}
+        rt_data={display_rt}
+    />
+    <ModalDetails open={action_modal_details_open} {geoData} />
 {/if}
-
 
 <style>
     @import "./dashboard.css";
