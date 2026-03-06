@@ -120,7 +120,7 @@
                                         {table}
                                         field={(r) => r.properties.n_lanes}
                                         class="px-4 py-2 text-left font-bold"
-                                        >Nr lanes</ThSort
+                                        >Nr lanes (circulation + parking)</ThSort
                                     >
                                     <ThSort
                                         {table}
@@ -186,9 +186,9 @@
                                             {row.properties.n_lanes}
                                             <span class="text-[10px]"
                                                 >({row.properties
-                                                    .n_lanes_circulation}c+{row
-                                                    .properties
-                                                    .n_lanes_parking}p)</span
+                                                    .n_lanes_circulation}
+                                                + {row.properties
+                                                    .n_lanes_parking})</span
                                             >
                                         </td>
                                         <td class="px-4 py-2"
