@@ -21,6 +21,7 @@ regions = rbind( # Lisboa
     name_long = "Lisboa, Portugal",
     gtfs_url = "data/Lisboa_20260205.zip",
     gtfs_day = "2026-02-04",
+    gtfs_manipulate = "manipulate_carris_lx",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
@@ -89,6 +90,16 @@ manipulate_carris_met = function(gtfs) {
   # Remove all text from [ to ] from gtfs$shape_ids, which are present in Carris Metropolitana feed and cause issues in matching with OSM shapes
   gtfs$shapes$shape_id = str_replace_all(gtfs$shapes$shape_id, "\\[.*\\]", "")
   gtfs$trips$shape_id = str_replace_all(gtfs$trips$shape_id, "\\[.*\\]", "")
+  
+  return(gtfs)
+}
+
+manipulate_carris_lx = function(gtfs) {
+  colors = read.csv("data_useful/carris_colors.csv")
+  
+  gtfs$routes = gtfs$routes |>
+    select(-c(route_color, route_text_color)) |>
+    left_join(colors, by = "route_short_name")
   
   return(gtfs)
 }

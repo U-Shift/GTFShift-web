@@ -58,8 +58,11 @@ for(i in 1:nrow(regions)) {
   # assign(sprintf("q_%s_gtfs%s", region$name, region$gtfs_day), q)
 
   # 2. Prioritize based on planned operation and infrastructure characteristics
-  prioritization = GTFShift::prioritize_lanes(gtfs, q, date=region$gtfs_day)
+  prioritization = GTFShift::prioritize_lanes(gtfs, q, date=region$gtfs_day, keep_osm_attributes = TRUE)
   # assign(sprintf("prioritization_%s_gtfs%s", region$name, region$gtfs_day), prioritization)
+  
+  prioritization = prioritization |>
+    select(way_osm_id, hour, frequency, is_bus_lane, n_lanes_parking, n_lanes_circulation, n_lanes, n_directions, n_lanes_circulation_direction, n_lanes_direction, routes, shapes, name, geometry)
 
   write.csv(
     prioritization |> 
@@ -140,12 +143,13 @@ for(i in 1:nrow(regions)) {
   gtfs_date = tidytransit::filter_feed_by_date(gtfs, extract_date=region$gtfs_day)
   routes = GTFShift::get_route_frequency_hourly(gtfs_date, date=region$gtfs_day) |>
     st_drop_geometry() |>
-    left_join(gtfs_date$routes |> select(route_id, route_long_name))
+    left_join(gtfs_date$routes |> select(route_id, route_long_name)) |>
+    left_join(gtfs$routes |> select(route_id, route_color, route_text_color), by="route_id")
   nested_shapes <- lapply(split(routes, routes$shape_id), function(df) {
     
     # Extract static metadata associated with this shape
     shape_metadata <- df[1, ] %>% 
-      select(route_id, route_short_name, route_long_name, direction_id) %>% 
+      select(route_id, route_short_name, route_long_name, direction_id, route_color, route_text_color) %>% 
       as.list()
     
     # Create the hourly frequency mapping
@@ -161,7 +165,7 @@ for(i in 1:nrow(regions)) {
     digits=NA # To avoid precision loss in coordinates
   )
   
-  nested_routes = lapply(split(gtfs_date$routes |> select(route_id, route_short_name, route_long_name), gtfs_date$routes$route_id), function(df) {
+  nested_routes = lapply(split(gtfs_date$routes |> select(route_id, route_short_name, route_long_name,route_color,route_text_color), gtfs_date$routes$route_id), function(df) {
     route_metadata <- df[1, ] %>% 
       as.list()
     
