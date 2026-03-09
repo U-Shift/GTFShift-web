@@ -97,12 +97,22 @@ for(i in 1:nrow(regions)) {
   # 4. Build data for dashboard 
   # > 4.1. Store ways geometries
   ways = prioritization |> 
-    distinct(way_osm_id, geometry)
+    distinct(way_osm_id, geometry) |>
   st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE)
   st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.geojson", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE)
   
+  ways_length = ways |> # Convert to 3857 crs
+    st_transform(crs=3857) |>
+    # Calculate lenght in meters
+    mutate(length_m = st_length(geometry)) |>
+    # Drop units
+    mutate(length_m = as.numeric(length_m))
+  
   # > 4.2. Store prioritization as json, grouping by way_osm_id, each grouped by hour
-  nested_data <- lapply(split(prioritization |> st_drop_geometry(), prioritization$way_osm_id), function(df) {
+  nested_data <- lapply(split(prioritization |> 
+                                st_drop_geometry() |> 
+                                left_join(ways_length |> select(way_osm_id, length_m) |> st_drop_geometry()), 
+                              prioritization$way_osm_id), function(df) {
     
     # 1. Extract first row and convert to list
     static_df <- df[1, ] %>% select(-way_osm_id, -hour, -frequency)
