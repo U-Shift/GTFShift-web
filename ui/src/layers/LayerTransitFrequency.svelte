@@ -81,6 +81,20 @@
                         L.DomEvent.stopPropagation(e);
                         if (wayId) onWaySelect(wayId);
                     });
+                    layer.on("mouseover", () => {
+                        if (wayId && wayId !== selectedWayId) {
+                            (layer as L.Path).setStyle({
+                                color: "#FCF1DD",
+                                weight: 5,
+                            });
+                            (layer as L.Path).bringToFront();
+                        }
+                    });
+                    layer.on("mouseout", () => {
+                        if (wayId && wayId !== selectedWayId) {
+                            (layer as L.Path).setStyle(getFreqStyle(wayId));
+                        }
+                    });
                 },
             },
         ).addTo(map);
