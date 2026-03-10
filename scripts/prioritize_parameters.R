@@ -114,5 +114,12 @@ manipulate_carris_lx = function(gtfs) {
     select(-c(route_color, route_text_color)) |>
     left_join(colors, by = "route_short_name")
   
+  # Filter tram routes (route_short_name contains "E")
+  routes_bus = gtfs$routes |>
+    filter(!str_detect(route_short_name, "E"))
+  trips_routes_bus = gtfs$trips |>
+    filter(route_id %in% routes_bus$route_id)
+  gtfs = tidytransit::filter_feed_by_trips(gtfs, trips_routes_bus$trip_id)
+  
   return(gtfs)
 }
