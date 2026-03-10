@@ -580,7 +580,7 @@
                                     </Tooltip.Root>
                                 </Tooltip.Provider>
                             </p>
-                            <ul class="space-y-3">
+                            <ul class="space-y-3 mb-3">
                                 <li class="flex items-center gap-2">
                                     <Switch
                                         checked={criteria_bus_frequency_enabled}
@@ -647,6 +647,30 @@
                                     </li>
                                 {/if}
                             </ul>
+                            <div class="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    class="h-6 text-[10px] px-2"
+                                    onclick={() => {
+                                        criteria_bus_frequency_enabled = true;
+                                        criteria_n_lanes_direction_enabled = true;
+                                        if (display_rt)
+                                            criteria_avg_speed_enabled = true;
+                                    }}>Select All</Button
+                                >
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    class="h-6 text-[10px] px-2"
+                                    onclick={() => {
+                                        criteria_bus_frequency_enabled = false;
+                                        criteria_n_lanes_direction_enabled = false;
+                                        if (display_rt)
+                                            criteria_avg_speed_enabled = false;
+                                    }}>Deselect All</Button
+                                >
+                            </div>
                         </div>
                     </Accordion.Content>
                 </Accordion.Item>
@@ -838,7 +862,12 @@
 </div>
 
 <!-- Right Details Panel -->
-<PanelWayDetails bind:selectedWayId bind:selected_shape_id {geoData} {criteria_hour} />
+<PanelWayDetails
+    bind:selectedWayId
+    bind:selected_shape_id
+    {geoData}
+    {criteria_hour}
+/>
 
 <!-- Route Details Panel (shown when a shape is selected and no way is selected) -->
 <PanelRouteDetails bind:selected_shape_id {geoData} {selectedWayId} />
