@@ -838,7 +838,7 @@
 </div>
 
 <!-- Right Details Panel -->
-<PanelWayDetails bind:selectedWayId {geoData} {criteria_hour} />
+<PanelWayDetails bind:selectedWayId bind:selected_shape_id {geoData} {criteria_hour} />
 
 <!-- Route Details Panel (shown when a shape is selected and no way is selected) -->
 <PanelRouteDetails bind:selected_shape_id {geoData} {selectedWayId} />
@@ -1050,6 +1050,10 @@
         {geoData}
         hour={criteria_hour}
         rt_data={display_rt}
+        onRouteSelect={(shapeId) => {
+            selected_shape_id = shapeId;
+            selectedWayId = undefined;
+        }}
         onWaySelect={(wayId) => {
             selectedWayId = wayId;
             if (map && geoData) {

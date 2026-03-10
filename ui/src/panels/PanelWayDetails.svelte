@@ -1,15 +1,18 @@
 <script lang="ts">
     import { Button } from "$lib/components/ui/button/index.js";
+    import * as Tooltip from "$lib/components/ui/tooltip/index.js";
     import { getColorFromGradient } from "$lib/utils.js";
     import { COLOR_GRADIENT, COLOR_GRADIENT_RED, COLOR_TEAL } from "../data.js";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
 
     let {
         selectedWayId = $bindable(),
+        selected_shape_id = $bindable(),
         geoData,
         criteria_hour,
     }: {
         selectedWayId: string | undefined;
+        selected_shape_id: string | undefined;
         geoData: GeoPrioritization | null;
         criteria_hour: number;
     } = $props();
@@ -239,14 +242,30 @@
                             {@const routeColor = route?.route_color
                                 ? `${route.route_color}`
                                 : null}
-                            <span
-                                class="px-2 py-1 text-[10px] font-bold rounded border"
-                                style={routeColor
-                                    ? `background-color: ${routeColor}22; border-color: ${routeColor}44; color: ${routeColor};`
-                                    : ""}
-                            >
-                                {route?.route_short_name || shape_id}
-                            </span>
+                            <Tooltip.Provider delayDuration={0}>
+                                <Tooltip.Root>
+                                    <Tooltip.Trigger>
+                                        {#snippet child({ props })}
+                                            <button
+                                                {...props}
+                                                onclick={() => {
+                                                    selected_shape_id = shape_id;
+                                                    selectedWayId = undefined;
+                                                }}
+                                                class="px-2 py-1 text-[10px] font-bold rounded border cursor-pointer hover:brightness-90 transition-all text-left"
+                                                style={routeColor
+                                                    ? `background-color: ${routeColor}22; border-color: ${routeColor}44; color: ${routeColor};`
+                                                    : ""}
+                                            >
+                                                {route?.route_short_name || shape_id}
+                                            </button>
+                                        {/snippet}
+                                    </Tooltip.Trigger>
+                                    <Tooltip.Content class="z-[1100]">
+                                        <p>{route?.route_short_name}: {route?.route_long_name} ({route?.direction_id ? "DESC" : "ASC"})</p>
+                                    </Tooltip.Content>
+                                </Tooltip.Root>
+                            </Tooltip.Provider>
                         {/each}
                     </div>
                 </section>

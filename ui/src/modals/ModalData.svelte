@@ -12,12 +12,14 @@
         hour,
         rt_data,
         onWaySelect = (wayId) => {},
+        onRouteSelect = (shapeId) => {},
     }: {
         open: boolean;
         geoData: GeoPrioritization;
         hour: number;
         rt_data: boolean;
         onWaySelect?: (wayId: string) => void;
+        onRouteSelect?: (shapeId: string) => void;
     } = $props();
 
     let data_filtered = $state<Feature[]>([]);
@@ -240,11 +242,43 @@
                                                 1,
                                             )}</td
                                         >
-                                        <td
-                                            class="px-4 py-2 truncate max-w-[200px]"
-                                            title={row.properties.route_names}
-                                        >
-                                            {row.properties.route_names}
+                                        <td class="px-4 py-2 max-w-[300px]">
+                                            {#if row.properties.shapes && row.properties.shapes.length > 0}
+                                                <div class="flex flex-wrap gap-1">
+                                                    {#each row.properties.shapes as shape_id}
+                                                        {@const route = geoData.shapes[shape_id]}
+                                                        {@const routeColor = route?.route_color
+                                                            ? `${route.route_color}`
+                                                            : null}
+                                                        <Tooltip.Provider delayDuration={0}>
+                                                            <Tooltip.Root>
+                                                                <Tooltip.Trigger>
+                                                                    {#snippet child({ props })}
+                                                                        <button
+                                                                            {...props}
+                                                                            onclick={() => {
+                                                                                open = false;
+                                                                                if (onRouteSelect) onRouteSelect(shape_id);
+                                                                            }}
+                                                                            class="px-2 py-0.5 text-[10px] font-bold rounded border cursor-pointer hover:brightness-90 transition-all text-left"
+                                                                            style={routeColor
+                                                                                ? `background-color: ${routeColor}22; border-color: ${routeColor}44; color: ${routeColor};`
+                                                                                : ""}
+                                                                        >
+                                                                            {route?.route_short_name || shape_id}
+                                                                        </button>
+                                                                    {/snippet}
+                                                                </Tooltip.Trigger>
+                                                                <Tooltip.Content class="z-[1100]">
+                                                                    <p>{route?.route_short_name}: {route?.route_long_name} ({route?.direction_id ? "DESC" : "ASC"})</p>
+                                                                </Tooltip.Content>
+                                                            </Tooltip.Root>
+                                                        </Tooltip.Provider>
+                                                    {/each}
+                                                </div>
+                                            {:else}
+                                                <span class="text-muted-foreground">-</span>
+                                            {/if}
                                         </td>
                                     </tr>
                                 {/each}
