@@ -2,7 +2,6 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_TEAL } from "../data";
-    import { createFeaturePopup } from "../lib/layerUtils";
     import type { Feature } from "geojson";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
 

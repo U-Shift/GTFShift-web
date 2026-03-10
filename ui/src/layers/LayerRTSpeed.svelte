@@ -2,7 +2,6 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT_RED, COLOR_GRAY } from "../data";
-    import { createFeaturePopup } from "../lib/layerUtils";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
     import type { Feature } from "geojson";
 
