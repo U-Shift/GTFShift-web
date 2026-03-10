@@ -166,8 +166,11 @@
             onLayerCreate(newLayer);
         });
 
-        // Zoom to layer
-        map.fitBounds(newLayer.getBounds());
+        // Zoom to layer (only if there are features with valid bounds)
+        if (filteredFeatures.length > 0) {
+            const bounds = newLayer.getBounds();
+            if (bounds.isValid()) map.fitBounds(bounds);
+        }
 
         // Cleanup
         return () => {
