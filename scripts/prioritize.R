@@ -124,14 +124,18 @@ for(i in 1:nrow(regions)) {
     # 2. Extract values from list-columns and wrap routes/shapes in I()
     # This ensures they remain arrays even with length 1
     for (col in names(static_info)) {
-      # If it's a list-column (common in sf/dplyr), grab the vector inside
-      if (is.list(static_info[[col]])) {
+      if (col == "routes") {
+        static_info[[col]] <- unique(unlist(df$routes))
+      } else if (col == "shapes") {
+        static_info[[col]] <- unique(unlist(df$shapes))
+      } else if (is.list(static_info[[col]])) {
+        # If it's a list-column (common in sf/dplyr), grab the vector inside
         static_info[[col]] <- static_info[[col]][[1]]
       }
       
       # Protect specific columns from unboxing
       if (col %in% c("routes", "shapes")) {
-        static_info[[col]] <- I(static_info[[col]])
+        static_info[[col]] <- I(as.character(na.omit(static_info[[col]])))
       }
     }
     
