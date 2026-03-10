@@ -23,7 +23,7 @@ export const DB_REGIONS: DataRegion[] = [
         name: 'Carris, Lisbon, PT',
         files: {
             ways: './data/lisbon/ways_lisboa_rt_gtfs2026-02-04_run20260306.geojson',
-            way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-02-04_run20260306.json',
+            way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-02-04_run20260309.json',
             metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-02-04_run20260306.json',
             route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-02-04_run20260306.json',
             shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-02-04_run20260306.json',

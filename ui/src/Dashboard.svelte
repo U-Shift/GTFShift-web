@@ -702,7 +702,7 @@
             <div class="grid grid-cols-2 gap-3">
                 <!-- Bus Frequency Card -->
                 <div
-                    class="p-3 bg-zinc-100/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
+                    class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
                 >
                     {#if true}
                         {@const freq = way.hour_frequency?.[criteria_hour] ?? 0}
@@ -737,7 +737,7 @@
 
                 <!-- Bus Lane Card -->
                 <div
-                    class="p-3 bg-zinc-100/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
+                    class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
                 >
                     <p
                         class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
@@ -755,41 +755,9 @@
                     {/if}
                 </div>
 
-                <!-- Total Lanes Card -->
-                <div
-                    class="p-3 bg-zinc-100/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
-                >
-                    <p
-                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
-                    >
-                        Total Lanes
-                    </p>
-                    <p class="text-sm font-semibold text-muted-foreground">
-                        <span class="text-foreground font-bold"
-                            >{way.n_lanes ?? "N/A"}</span
-                        >
-                        <span class="text-[9px]"
-                            >({way.n_lanes_circulation ?? 0} circulation + {way.n_lanes_parking ??
-                                0} parking)</span
-                        >
-                    </p>
-                </div>
-
-                <!-- Directions Card -->
-                <div
-                    class="p-3 bg-zinc-100/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
-                >
-                    <p
-                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
-                    >
-                        Nr Directions
-                    </p>
-                    <p class="text-sm font-bold">{way.n_directions ?? "N/A"}</p>
-                </div>
-
                 <!-- Lanes/Direction Card -->
                 <div
-                    class="p-3 bg-zinc-100/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
+                    class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
                 >
                     {#if true}
                         {@const lanesDir = way.n_lanes_direction ?? 0}
@@ -823,7 +791,7 @@
                 <!-- Average Speed Card -->
                 {#if way.speed_avg}
                     <div
-                        class="p-3 bg-zinc-100/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
+                        class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
                     >
                         {#if true}
                             {@const speed = way.speed_avg}
@@ -856,6 +824,53 @@
                         {/if}
                     </div>
                 {/if}
+
+                <!-- Total Lanes Card -->
+                <div
+                    class="p-3 bg-zinc-50/80 dark:bg-zinc-950/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
+                >
+                    <p
+                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
+                    >
+                        Total Lanes
+                    </p>
+                    <p class="text-sm font-semibold text-muted-foreground">
+                        <span class="text-foreground font-bold"
+                            >{way.n_lanes ?? "N/A"}</span
+                        >
+                        <span class="text-[9px]"
+                            >({way.n_lanes_circulation ?? 0} circulation + {way.n_lanes_parking ??
+                                0} parking)</span
+                        >
+                    </p>
+                </div>
+
+                <!-- Directions Card -->
+                <div
+                    class="p-3 bg-zinc-50/80 dark:bg-zinc-950/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
+                >
+                    <p
+                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
+                    >
+                        Nr Directions
+                    </p>
+                    <p class="text-sm font-bold">{way.n_directions ?? "N/A"}</p>
+                </div>
+
+                <!-- Extension Card -->
+                <div
+                    class="p-3 bg-zinc-50/80 dark:bg-zinc-950/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
+                >
+                    <p
+                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
+                    >
+                        Extension
+                    </p>
+                    <p class="text-sm font-bold">
+                        {way.length_m.toFixed(1)}
+                        <span class="text-[10px] font-normal">meters</span>
+                    </p>
+                </div>
             </div>
 
             {#if way.shapes && way.shapes.length > 0}
@@ -883,7 +898,7 @@
             {/if}
 
             <section
-                class="space-y-3 p-4 bg-zinc-100/80 dark:bg-zinc-900/40 rounded-xl border border-border/50"
+                class="space-y-3 p-4 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50"
             >
                 <h5 class="text-sm font-bold flex items-center gap-2">
                     <i class="fas fa-chart-bar text-primary/70"></i>
@@ -919,7 +934,7 @@
                             <div
                                 class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-foreground text-background text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20"
                             >
-                                {i}:00: {freq}
+                                {i}:00: {freq} buses
                             </div>
                         </div>
                     {/each}
