@@ -19,6 +19,11 @@
     import { Switch } from "$lib/components/ui/switch/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
     import * as Accordion from "$lib/components/ui/accordion/index.js";
+    import * as Select from "$lib/components/ui/select/index.js";
+    import * as Popover from "$lib/components/ui/popover/index.js";
+    import * as Command from "$lib/components/ui/command/index.js";
+    import Check from "@lucide/svelte/icons/check";
+    import ChevronsUpDown from "@lucide/svelte/icons/chevrons-up-down";
 
     import {
         DB_REGIONS,
@@ -51,6 +56,8 @@
 
     let active_layer: DisplayOptions | undefined = $state(undefined);
     let open_accordion: string | undefined = $state(undefined);
+    let selected_shape_id: string = $state("all");
+    let route_select_open: boolean = $state(false);
     let display_rt: boolean = $state(false); // true if region has rt-data (optional)
 
     let criteria_hour: number = $state(8);
@@ -109,6 +116,7 @@
 
         active_layer = undefined;
         open_accordion = undefined;
+        selected_shape_id = "all";
         geoData = null;
         loading = "data for " + region.name;
 
@@ -207,6 +215,35 @@
 
         return rgbToHex(r, g, b);
     }
+
+    // Effect to zoom to selected route
+    $effect(() => {
+        if (
+            !selected_shape_id ||
+            selected_shape_id === "all" ||
+            !map ||
+            !geoData
+        )
+            return;
+
+        console.log("Filtering by shape:", selected_shape_id);
+    });
+
+    const routeOptions = $derived.by(() => {
+        if (!geoData || !geoData.shapes) return [];
+        return Object.keys(geoData.shapes)
+            .map((s: any) => ({
+                id: s,
+                label: `${geoData.shapes[s].route_short_name}: ${geoData.shapes[s].route_long_name} (${geoData.shapes[s].direction_id ? "DESC" : "ASC"})`,
+                short_name: geoData.shapes[s].route_short_name,
+                color: geoData.shapes[s].route_color,
+            }))
+            .sort((a, b) =>
+                a.short_name.localeCompare(b.short_name, undefined, {
+                    numeric: true,
+                }),
+            );
+    });
 </script>
 
 <svelte:head>
@@ -219,7 +256,9 @@
 <div
     id="controls-panel"
     class="absolute top-4 left-4 z-[1000] flex flex-col items-start w-[350px] max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-4 overflow-y-auto h-fit"
-    style="background-image: url('./static/logo/background_blur_transparent.png'); background-size: auto 7vw; background-position: top right; background-repeat: no-repeat;"
+    style={geoData
+        ? "background-image: url('./static/logo/background_blur_transparent.png'); background-size: auto 7vw; background-position: top right; background-repeat: no-repeat;"
+        : ""}
 >
     <!-- Title -->
     <div class="w-full text-left mb-4">
@@ -369,6 +408,117 @@
                 >
                     <i class="fas fa-download"></i>
                 </a>
+            </div>
+
+            <div class="w-full mb-6">
+                <h5
+                    class="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider"
+                >
+                    Filter by Route
+                </h5>
+                <Popover.Root bind:open={route_select_open}>
+                    <Popover.Trigger class="w-full">
+                        <div
+                            class="flex items-center justify-between w-full border rounded-md px-3 py-2 text-sm bg-background/50 hover:bg-accent transition-colors"
+                        >
+                            <div
+                                class="flex items-center gap-2 overflow-hidden"
+                            >
+                                {#if selected_shape_id === "all"}
+                                    <div
+                                        class="w-2 h-2 rounded-full bg-muted-foreground shrink-0"
+                                    ></div>
+                                    <span class="truncate">All Network</span>
+                                {:else}
+                                    {@const opt = routeOptions.find(
+                                        (o) => o.id === selected_shape_id,
+                                    )}
+                                    {#if opt}
+                                        <div
+                                            class="w-2 h-2 rounded-full shrink-0"
+                                            style="background-color: {opt.color}"
+                                        ></div>
+                                        <span class="truncate font-medium"
+                                            >{opt.label}</span
+                                        >
+                                    {:else}
+                                        <span class="truncate"
+                                            >Select Route</span
+                                        >
+                                    {/if}
+                                {/if}
+                            </div>
+                            <ChevronsUpDown
+                                class="size-4 opacity-50 shrink-0 ml-2"
+                            />
+                        </div>
+                    </Popover.Trigger>
+                    <Popover.Content class="w-[316px] p-0 z-[1100]">
+                        <Command.Root>
+                            <Command.Input placeholder="Search route..." />
+                            <Command.List
+                                class="max-h-[300px] overflow-y-auto overflow-x-hidden"
+                            >
+                                <Command.Empty>No route found.</Command.Empty>
+                                <Command.Group>
+                                    <Command.Item
+                                        value="all"
+                                        onSelect={() => {
+                                            selected_shape_id = "all";
+                                            route_select_open = false;
+                                        }}
+                                        class="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-accent rounded-sm"
+                                    >
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-2.5 h-2.5 rounded-full bg-muted-foreground shrink-0"
+                                            ></div>
+                                            <span class="font-medium"
+                                                >All Network</span
+                                            >
+                                        </div>
+                                        {#if selected_shape_id === "all"}
+                                            <Check
+                                                class="size-4 text-primary shrink-0"
+                                            />
+                                        {/if}
+                                    </Command.Item>
+                                </Command.Group>
+                                <Command.Separator />
+                                <Command.Group heading="Routes">
+                                    {#each routeOptions as opt}
+                                        <Command.Item
+                                            value={opt.label}
+                                            onSelect={() => {
+                                                selected_shape_id = opt.id;
+                                                route_select_open = false;
+                                            }}
+                                            class="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-accent rounded-sm"
+                                        >
+                                            <div
+                                                class="flex items-center gap-3 overflow-hidden"
+                                            >
+                                                <div
+                                                    class="w-2.5 h-2.5 rounded-full shrink-0"
+                                                    style="background-color: {opt.color}"
+                                                ></div>
+                                                <span
+                                                    class="truncate font-medium"
+                                                    >{opt.label}</span
+                                                >
+                                            </div>
+                                            {#if selected_shape_id === opt.id}
+                                                <Check
+                                                    class="size-4 text-primary shrink-0 ml-2"
+                                                />
+                                            {/if}
+                                        </Command.Item>
+                                    {/each}
+                                </Command.Group>
+                            </Command.List>
+                        </Command.Root>
+                    </Popover.Content>
+                </Popover.Root>
             </div>
 
             <p class="text-xs font-medium text-muted-foreground mb-2">
@@ -629,6 +779,7 @@
                     region = undefined;
                     active_layer = undefined;
                     open_accordion = undefined;
+                    selected_shape_id = "all";
                     selectedWayId = undefined;
                 }}
                 class="flex-1"
@@ -1104,6 +1255,7 @@
             criteriaAvgSpeed={criteria_avg_speed}
             criteriaAvgSpeedEnabled={criteria_avg_speed_enabled}
             {selectedWayId}
+            selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
         />
@@ -1113,6 +1265,7 @@
             {geoData}
             criteriaHour={criteria_hour}
             {selectedWayId}
+            selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
         />
@@ -1122,6 +1275,7 @@
             {geoData}
             criteriaHour={criteria_hour}
             {selectedWayId}
+            selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
         />
@@ -1131,6 +1285,7 @@
             {geoData}
             criteriaHour={criteria_hour}
             {selectedWayId}
+            selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
         />
@@ -1140,6 +1295,7 @@
             {geoData}
             criteriaHour={criteria_hour}
             {selectedWayId}
+            selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
         />

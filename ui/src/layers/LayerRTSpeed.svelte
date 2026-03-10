@@ -10,6 +10,7 @@
         geoData,
         criteriaHour,
         selectedWayId = undefined,
+        selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
         onWaySelect = (wayId) => {},
     }: {
@@ -17,6 +18,7 @@
         geoData: GeoPrioritization;
         criteriaHour: number;
         selectedWayId: string | undefined;
+        selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
         onWaySelect: (wayId: string) => void;
     } = $props();
@@ -57,6 +59,9 @@
             (feature: Feature | undefined) => {
                 const wayId = feature?.properties?.way_osm_id;
                 const props = wayId ? geoData.wayData[wayId] : undefined;
+                if (selectedShapeId && selectedShapeId !== "all" && !props?.shapes?.includes(selectedShapeId)) {
+                    return false;
+                }
                 return (
                     props?.speed_avg !== undefined && props?.speed_avg !== null
                 );

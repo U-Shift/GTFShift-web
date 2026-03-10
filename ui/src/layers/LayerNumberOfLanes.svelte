@@ -10,6 +10,7 @@
         geoData,
         criteriaHour,
         selectedWayId = undefined,
+        selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
         onWaySelect = (wayId) => {},
     }: {
@@ -17,6 +18,7 @@
         geoData: GeoPrioritization;
         criteriaHour: number;
         selectedWayId: string | undefined;
+        selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
         onWaySelect: (wayId: string) => void;
     } = $props();
@@ -42,8 +44,17 @@
 
         wayLayerMap = new Map();
 
-        // Features are already unique ways. No hour filter or deduplication needed.
-        const filteredFeatures = geoData.features;
+        // Filter features by shape if selected
+        const filteredFeatures = geoData.features.filter(
+            (feature: Feature | undefined) => {
+                const wayId = feature?.properties?.way_osm_id;
+                const props = wayId ? geoData.wayData[wayId] : undefined;
+                if (selectedShapeId && selectedShapeId !== "all" && !props?.shapes?.includes(selectedShapeId)) {
+                    return false;
+                }
+                return true;
+            },
+        );
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(

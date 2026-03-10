@@ -16,6 +16,7 @@
         criteriaAvgSpeed = undefined,
         criteriaAvgSpeedEnabled = true,
         selectedWayId = undefined,
+        selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
         onWaySelect = (wayId) => {},
     }: {
@@ -29,6 +30,7 @@
         criteriaAvgSpeed: number | undefined;
         criteriaAvgSpeedEnabled: boolean;
         selectedWayId: string | undefined;
+        selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
         onWaySelect: (wayId: string) => void;
     } = $props();
@@ -45,6 +47,11 @@
             const wayId = feature?.properties?.way_osm_id;
             const props = wayId ? geoData.wayData[wayId] : undefined;
             if (!props) return false;
+
+            // Filter by shape if selected
+            if (selectedShapeId && selectedShapeId !== "all" && !props.shapes?.includes(selectedShapeId)) {
+                return false;
+            }
 
             if (props.is_bus_lane) return true;
 

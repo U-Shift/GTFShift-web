@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { Select as SelectPrimitive } from "bits-ui";
 
-	let { ...restProps }: SelectPrimitive.PortalProps = $props();
+	let { children, ...restProps }: SelectPrimitive.PortalProps = $props();
 </script>
 
-<SelectPrimitive.Portal {...restProps} />
+<SelectPrimitive.Portal {...restProps}>
+	{@render children?.()}
+</SelectPrimitive.Portal>
