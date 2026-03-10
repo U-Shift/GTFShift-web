@@ -186,15 +186,15 @@
 
                 <!-- Total Lanes Card -->
                 <div
-                    class="p-3 bg-zinc-50/80 dark:bg-zinc-950/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
+                    class="p-2.5 bg-transparent rounded-lg border border-border/40 flex flex-col justify-between"
                 >
                     <p
-                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
+                        class="text-[9px] uppercase text-muted-foreground/70 mb-1"
                     >
                         Total Lanes
                     </p>
-                    <p class="text-sm font-semibold text-muted-foreground">
-                        <span class="text-foreground font-bold"
+                    <p class="text-xs font-medium text-muted-foreground">
+                        <span class="text-foreground"
                             >{way.n_lanes ?? "N/A"}</span
                         >
                         <span class="text-[9px]"
@@ -206,43 +206,43 @@
 
                 <!-- Directions Card -->
                 <div
-                    class="p-3 bg-zinc-50/80 dark:bg-zinc-950/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
+                    class="p-2.5 bg-transparent rounded-lg border border-border/40 flex flex-col justify-between"
                 >
                     <p
-                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
+                        class="text-[9px] uppercase text-muted-foreground/70 mb-1"
                     >
                         Nr Directions
                     </p>
-                    <p class="text-sm font-bold">{way.n_directions ?? "N/A"}</p>
+                    <p class="text-xs font-medium text-foreground">{way.n_directions ?? "N/A"}</p>
                 </div>
 
                 <!-- Extension Card -->
                 <div
-                    class="p-3 bg-zinc-50/80 dark:bg-zinc-950/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
+                    class="p-2.5 bg-transparent rounded-lg border border-border/40 flex flex-col justify-between"
                 >
                     <p
-                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
+                        class="text-[9px] uppercase text-muted-foreground/70 mb-1"
                     >
                         Extension
                     </p>
-                    <p class="text-sm font-bold">
+                    <p class="text-xs font-medium text-foreground">
                         {way.length_m.toFixed(1)}
-                        <span class="text-[10px] font-normal">meters</span>
+                        <span class="text-[9px] text-muted-foreground">meters</span>
                     </p>
                 </div>
 
                 <!-- Speed count -->
                 <div
-                    class="p-3 bg-zinc-50/80 dark:bg-zinc-950/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
+                    class="p-2.5 bg-transparent rounded-lg border border-border/40 flex flex-col justify-between"
                 >
                     <p
-                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
+                        class="text-[9px] uppercase text-muted-foreground/70 mb-1"
                     >
                         Speed count
                     </p>
-                    <p class="text-sm font-bold">
-                        {way.speed_count}
-                        <span class="text-[10px] font-normal">measurements</span
+                    <p class="text-xs font-medium text-foreground">
+                        {way.speed_count ?? 0}
+                        <span class="text-[9px] text-muted-foreground">measurements</span
                         >
                     </p>
                 </div>

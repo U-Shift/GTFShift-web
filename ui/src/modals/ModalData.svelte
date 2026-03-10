@@ -109,6 +109,12 @@
                                     >
                                     <ThSort
                                         {table}
+                                        field={(r) => r.properties.name}
+                                        class="px-4 py-2 text-left font-bold"
+                                        >Name</ThSort
+                                    >
+                                    <ThSort
+                                        {table}
                                         field={(r) => r.properties.frequency}
                                         class="px-4 py-2 text-left font-bold"
                                         >Frequency <small>(Buses/h)</small
@@ -213,6 +219,9 @@
                                                 </Tooltip.Root>
                                             </Tooltip.Provider>
                                         </td>
+                                        <td class="px-4 py-2"
+                                            >{row.properties.name ?? "-"}</td
+                                        >
                                         <td class="px-4 py-2"
                                             >{row.properties.frequency}</td
                                         >
