@@ -80,3 +80,16 @@
 
   <div id="map" style="height:100vh;width:100vw" use:mapAction></div>
 </main>
+
+<style>
+  :global(.leaflet-top) {
+    z-index: 999 !important;
+  }
+  :global(.leaflet-control-zoom) {
+    margin: 1rem 1rem 0 0 !important;
+    border-radius: calc(0.625rem + 4px) !important;
+  }
+  :global(.leaflet-touch .leaflet-bar a) {
+    border-radius: calc(0.625rem + 4px) !important;
+  }
+</style>

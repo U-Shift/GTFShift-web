@@ -14,6 +14,8 @@
     import DataCensusTable from "./components/DataCensusTable.svelte";
     import ModalData from "./modals/ModalData.svelte";
     import ModalDetails from "./modals/ModalDetails.svelte";
+    import PanelRouteDetails from "./panels/PanelRouteDetails.svelte";
+    import PanelWayDetails from "./panels/PanelWayDetails.svelte";
 
     import { Button } from "$lib/components/ui/button/index.js";
     import { Switch } from "$lib/components/ui/switch/index.js";
@@ -22,6 +24,7 @@
     import * as Select from "$lib/components/ui/select/index.js";
     import * as Popover from "$lib/components/ui/popover/index.js";
     import * as Command from "$lib/components/ui/command/index.js";
+    import * as Tooltip from "$lib/components/ui/tooltip/index.js";
     import Check from "@lucide/svelte/icons/check";
     import ChevronsUpDown from "@lucide/svelte/icons/chevrons-up-down";
 
@@ -179,43 +182,6 @@
         }
     };
 
-    /**
-     * Interpolates a color from a gradient based on a value and a range.
-     */
-    function getColorFromGradient(
-        value: number,
-        min: number,
-        max: number,
-        gradient: string[],
-    ) {
-        if (min === max) return gradient[0];
-        const percent = Math.min(Math.max((value - min) / (max - min), 0), 1);
-        const index = percent * (gradient.length - 1);
-        const lowIndex = Math.floor(index);
-        const highIndex = Math.ceil(index);
-        const fraction = index - lowIndex;
-
-        const hexToRgb = (hex: string) => {
-            const r = parseInt(hex.substring(1, 3), 16);
-            const g = parseInt(hex.substring(3, 5), 16);
-            const b = parseInt(hex.substring(5, 7), 16);
-            return [r, g, b];
-        };
-
-        const rgbToHex = (r: number, g: number, b: number) => {
-            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
-        };
-
-        const color1 = hexToRgb(gradient[lowIndex]);
-        const color2 = hexToRgb(gradient[highIndex]);
-
-        const r = Math.round(color1[0] + (color2[0] - color1[0]) * fraction);
-        const g = Math.round(color1[1] + (color2[1] - color1[1]) * fraction);
-        const b = Math.round(color1[2] + (color2[2] - color1[2]) * fraction);
-
-        return rgbToHex(r, g, b);
-    }
-
     // Effect to zoom to selected route
     $effect(() => {
         if (
@@ -264,18 +230,29 @@
     <div class="w-full text-left mb-4">
         <div class="flex items-center gap-2 mb-1">
             <h3 class="text-xl font-bold text-primary m-0">GTFShift</h3>
-            <button
-                class="text-muted-foreground hover:text-foreground"
-                onclick={(e) => {
-                    e.preventDefault();
-                    action_modal_data_open = false;
-                    action_modal_details_open = false;
-                    action_modal_about_open = !action_modal_about_open;
-                }}
-                aria-label="About"
-            >
-                <i class="fas fa-info-circle"></i>
-            </button>
+            <Tooltip.Provider delayDuration={0}>
+                <Tooltip.Root>
+                    <Tooltip.Trigger>
+                        {#snippet child({ props })}
+                            <button
+                                {...props}
+                                class="text-muted-foreground hover:text-foreground cursor-pointer"
+                                onclick={(e) => {
+                                    e.preventDefault();
+                                    action_modal_data_open = false;
+                                    action_modal_details_open = false;
+                                    action_modal_about_open =
+                                        !action_modal_about_open;
+                                }}
+                                aria-label="About"
+                            >
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        {/snippet}
+                    </Tooltip.Trigger>
+                    <Tooltip.Content class="z-[1100]">About</Tooltip.Content>
+                </Tooltip.Root>
+            </Tooltip.Provider>
         </div>
         <p class="text-sm text-muted-foreground">
             Bus lane prioritization tool
@@ -375,39 +352,77 @@
                 class="flex items-center gap-3 text-sm text-muted-foreground mb-4"
             >
                 <span>Data for {region.date}</span>
-                <button
-                    class="hover:text-foreground"
-                    onclick={(e) => {
-                        e.preventDefault();
-                        action_modal_about_open = false;
-                        action_modal_details_open = false;
-                        action_modal_data_open = !action_modal_data_open;
-                    }}
-                    aria-label="Attribute table"
-                >
-                    <i class="fas fa-table"></i>
-                </button>
-                <button
-                    class="hover:text-foreground"
-                    onclick={(e) => {
-                        e.preventDefault();
-                        action_modal_about_open = false;
-                        action_modal_data_open = false;
-                        action_modal_details_open = !action_modal_details_open;
-                    }}
-                    aria-label="Details"
-                >
-                    <i class="fas fa-code"></i>
-                </button>
-                <a
-                    href={region.files.zip}
-                    target="_blank"
-                    rel="noreferrer"
-                    class="hover:text-foreground"
-                    aria-label="Download raw data"
-                >
-                    <i class="fas fa-download"></i>
-                </a>
+                <Tooltip.Provider delayDuration={0}>
+                    <Tooltip.Root>
+                        <Tooltip.Trigger>
+                            {#snippet child({ props })}
+                                <button
+                                    {...props}
+                                    class="hover:text-foreground cursor-pointer"
+                                    onclick={(e) => {
+                                        e.preventDefault();
+                                        action_modal_about_open = false;
+                                        action_modal_details_open = false;
+                                        action_modal_data_open =
+                                            !action_modal_data_open;
+                                    }}
+                                    aria-label="Attribute table"
+                                >
+                                    <i class="fas fa-table"></i>
+                                </button>
+                            {/snippet}
+                        </Tooltip.Trigger>
+                        <Tooltip.Content class="z-[1100]"
+                            >Attribute table</Tooltip.Content
+                        >
+                    </Tooltip.Root>
+                </Tooltip.Provider>
+                <Tooltip.Provider delayDuration={0}>
+                    <Tooltip.Root>
+                        <Tooltip.Trigger>
+                            {#snippet child({ props })}
+                                <button
+                                    {...props}
+                                    class="hover:text-foreground cursor-pointer"
+                                    onclick={(e) => {
+                                        e.preventDefault();
+                                        action_modal_about_open = false;
+                                        action_modal_data_open = false;
+                                        action_modal_details_open =
+                                            !action_modal_details_open;
+                                    }}
+                                    aria-label="Details"
+                                >
+                                    <i class="fas fa-code"></i>
+                                </button>
+                            {/snippet}
+                        </Tooltip.Trigger>
+                        <Tooltip.Content class="z-[1100]"
+                            >Details</Tooltip.Content
+                        >
+                    </Tooltip.Root>
+                </Tooltip.Provider>
+                <Tooltip.Provider delayDuration={0}>
+                    <Tooltip.Root>
+                        <Tooltip.Trigger>
+                            {#snippet child({ props })}
+                                <a
+                                    {...props}
+                                    href={region.files.zip}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    class="hover:text-foreground cursor-pointer"
+                                    aria-label="Download raw data"
+                                >
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            {/snippet}
+                        </Tooltip.Trigger>
+                        <Tooltip.Content class="z-[1100]"
+                            >Download raw data</Tooltip.Content
+                        >
+                    </Tooltip.Root>
+                </Tooltip.Provider>
             </div>
 
             <div class="w-full mb-6">
@@ -548,10 +563,22 @@
                             <p>
                                 Display road segments coloured by bus lane
                                 prioritization criteria:
-                                <i
-                                    class="fa fa-circle-info ml-1"
-                                    title="Frequency and speed initially set to median values"
-                                ></i>
+                                <Tooltip.Provider delayDuration={0}>
+                                    <Tooltip.Root>
+                                        <Tooltip.Trigger>
+                                            {#snippet child({ props })}
+                                                <i
+                                                    {...props}
+                                                    class="fa fa-circle-info ml-1 text-muted-foreground hover:text-foreground"
+                                                ></i>
+                                            {/snippet}
+                                        </Tooltip.Trigger>
+                                        <Tooltip.Content class="z-[1100]"
+                                            >Frequency and speed initially set
+                                            to median values</Tooltip.Content
+                                        >
+                                    </Tooltip.Root>
+                                </Tooltip.Provider>
                             </p>
                             <ul class="space-y-3">
                                 <li class="flex items-center gap-2">
@@ -811,447 +838,10 @@
 </div>
 
 <!-- Right Details Panel -->
-{#if selectedWayId && geoData && geoData.wayData[selectedWayId]}
-    {@const way = geoData.wayData[selectedWayId]}
-    <div
-        id="details-panel"
-        class="absolute top-4 right-4 z-[1000] flex flex-col w-[400px] h-fit max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-6 overflow-y-auto"
-    >
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-bold text-primary m-0">Way Details</h3>
-            <Button
-                variant="ghost"
-                size="icon"
-                onclick={() => (selectedWayId = undefined)}
-                class="rounded-full"
-            >
-                <i class="fas fa-times"></i>
-            </Button>
-        </div>
-
-        <div class="space-y-6 flex-1">
-            <section>
-                <div class="flex items-center gap-2 mb-2">
-                    <span
-                        class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
-                        >OSM ID</span
-                    >
-                    <a
-                        href="https://www.openstreetmap.org/way/{selectedWayId}"
-                        target="_blank"
-                        class="text-xs font-mono text-blue-500 hover:underline"
-                    >
-                        {selectedWayId}
-                        <i class="fas fa-external-link-alt ml-1"></i>
-                    </a>
-                </div>
-                <h4 class="text-lg font-semibold">
-                    {way.name || "Unnamed Way"}
-                </h4>
-            </section>
-
-            <div class="grid grid-cols-2 gap-3">
-                <!-- Bus Frequency Card -->
-                <div
-                    class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
-                >
-                    {#if true}
-                        {@const freq = way.hour_frequency?.[criteria_hour] ?? 0}
-                        {@const freqCensus =
-                            geoData.metadata.data_census.frequency_hour[
-                                criteria_hour
-                            ]}
-                        {@const freqColor = freqCensus
-                            ? getColorFromGradient(
-                                  freq,
-                                  freqCensus.min,
-                                  freqCensus.max,
-                                  COLOR_GRADIENT,
-                              )
-                            : null}
-                        <p
-                            class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
-                        >
-                            Buses/h ({criteria_hour}:00)
-                        </p>
-                        <p class="text-lg font-bold">
-                            {freq}
-                        </p>
-                        {#if freqColor}
-                            <div
-                                class="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-xl"
-                                style="background-color: {freqColor}"
-                            ></div>
-                        {/if}
-                    {/if}
-                </div>
-
-                <!-- Bus Lane Card -->
-                <div
-                    class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
-                >
-                    <p
-                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
-                    >
-                        Bus Lane
-                    </p>
-                    <p class="text-sm font-bold">
-                        {way.is_bus_lane ? "Yes" : "No"}
-                    </p>
-                    {#if way.is_bus_lane}
-                        <div
-                            class="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-xl"
-                            style="background-color: {COLOR_TEAL}"
-                        ></div>
-                    {/if}
-                </div>
-
-                <!-- Lanes/Direction Card -->
-                <div
-                    class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
-                >
-                    {#if true}
-                        {@const lanesDir = way.n_lanes_direction ?? 0}
-                        {@const lanesCensus =
-                            geoData.metadata.data_census.lanes}
-                        {@const lanesColor = lanesCensus
-                            ? getColorFromGradient(
-                                  lanesDir,
-                                  lanesCensus.min,
-                                  lanesCensus.max,
-                                  COLOR_GRADIENT,
-                              )
-                            : null}
-                        <p
-                            class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
-                        >
-                            Lanes/Dir
-                        </p>
-                        <p class="text-lg font-bold">
-                            {lanesDir || "N/A"}
-                        </p>
-                        {#if lanesColor}
-                            <div
-                                class="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-xl"
-                                style="background-color: {lanesColor}"
-                            ></div>
-                        {/if}
-                    {/if}
-                </div>
-
-                <!-- Average Speed Card -->
-                {#if way.speed_avg}
-                    <div
-                        class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
-                    >
-                        {#if true}
-                            {@const speed = way.speed_avg}
-                            {@const speedCensus =
-                                geoData.metadata.data_census.speed_avg}
-                            {@const speedColor = speedCensus
-                                ? getColorFromGradient(
-                                      speed,
-                                      speedCensus.min,
-                                      speedCensus.max,
-                                      COLOR_GRADIENT_RED.slice().reverse(),
-                                  )
-                                : null}
-                            <p
-                                class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
-                            >
-                                Avg Speed
-                            </p>
-                            <p class="text-lg font-bold">
-                                {speed.toFixed(1)}
-                                <span class="text-[10px] font-normal">km/h</span
-                                >
-                            </p>
-                            {#if speedColor}
-                                <div
-                                    class="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-xl"
-                                    style="background-color: {speedColor}"
-                                ></div>
-                            {/if}
-                        {/if}
-                    </div>
-                {/if}
-
-                <!-- Total Lanes Card -->
-                <div
-                    class="p-3 bg-zinc-50/80 dark:bg-zinc-950/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
-                >
-                    <p
-                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
-                    >
-                        Total Lanes
-                    </p>
-                    <p class="text-sm font-semibold text-muted-foreground">
-                        <span class="text-foreground font-bold"
-                            >{way.n_lanes ?? "N/A"}</span
-                        >
-                        <span class="text-[9px]"
-                            >({way.n_lanes_circulation ?? 0} circulation + {way.n_lanes_parking ??
-                                0} parking)</span
-                        >
-                    </p>
-                </div>
-
-                <!-- Directions Card -->
-                <div
-                    class="p-3 bg-zinc-50/80 dark:bg-zinc-950/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
-                >
-                    <p
-                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
-                    >
-                        Nr Directions
-                    </p>
-                    <p class="text-sm font-bold">{way.n_directions ?? "N/A"}</p>
-                </div>
-
-                <!-- Extension Card -->
-                <div
-                    class="p-3 bg-zinc-50/80 dark:bg-zinc-950/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
-                >
-                    <p
-                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
-                    >
-                        Extension
-                    </p>
-                    <p class="text-sm font-bold">
-                        {way.length_m.toFixed(1)}
-                        <span class="text-[10px] font-normal">meters</span>
-                    </p>
-                </div>
-            </div>
-
-            {#if way.shapes && way.shapes.length > 0}
-                <section class="space-y-3">
-                    <h5 class="text-sm font-bold border-b pb-1">
-                        Associated Routes
-                    </h5>
-                    <div class="flex flex-wrap gap-2">
-                        {#each way.shapes as shape_id}
-                            {@const route = geoData.shapes[shape_id]}
-                            {@const routeColor = route?.route_color
-                                ? `${route.route_color}`
-                                : null}
-                            <span
-                                class="px-2 py-1 text-[10px] font-bold rounded border"
-                                style={routeColor
-                                    ? `background-color: ${routeColor}22; border-color: ${routeColor}44; color: ${routeColor};`
-                                    : ""}
-                            >
-                                {route?.route_short_name || shape_id}
-                            </span>
-                        {/each}
-                    </div>
-                </section>
-            {/if}
-
-            <section
-                class="space-y-3 p-4 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50"
-            >
-                <h5 class="text-sm font-bold flex items-center gap-2">
-                    <i class="fas fa-chart-bar text-primary/70"></i>
-                    24h Transit Frequency
-                </h5>
-                <div
-                    class="flex items-end gap-[2px] h-24 pt-2 border-l border-b border-muted-foreground/30 px-1"
-                >
-                    {#each Array(24) as _, i}
-                        {@const freq = way.hour_frequency?.[i] || 0}
-                        {@const maxFreq =
-                            Math.max(
-                                ...Object.values(
-                                    way.hour_frequency || { 0: 1 },
-                                ),
-                            ) || 1}
-                        {@const height = Math.max((freq / maxFreq) * 100, 2)}
-                        {@const hourFreqCensus =
-                            geoData.metadata.data_census.frequency_hour[i]}
-                        {@const barColor = hourFreqCensus
-                            ? getColorFromGradient(
-                                  freq,
-                                  hourFreqCensus.min,
-                                  hourFreqCensus.max,
-                                  COLOR_GRADIENT,
-                              )
-                            : "var(--primary)"}
-                        <div
-                            class="flex-1 transition-colors rounded-t-[1px] relative group"
-                            style="height: {height}%; background-color: {barColor}88;"
-                            title="{i}:00 - {freq} buses"
-                        >
-                            <div
-                                class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-foreground text-background text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20"
-                            >
-                                {i}:00: {freq} buses
-                            </div>
-                        </div>
-                    {/each}
-                </div>
-                <div
-                    class="flex justify-between text-[9px] text-muted-foreground font-mono uppercase tracking-tighter mt-1"
-                >
-                    <span>0h</span>
-                    <span>6h</span>
-                    <span>12h</span>
-                    <span>18h</span>
-                    <span>23h</span>
-                </div>
-            </section>
-        </div>
-    </div>
-{/if}
+<PanelWayDetails bind:selectedWayId {geoData} {criteria_hour} />
 
 <!-- Route Details Panel (shown when a shape is selected and no way is selected) -->
-{#if selected_shape_id && selected_shape_id !== "all" && geoData && !selectedWayId}
-    {@const shape = geoData.shapes[selected_shape_id]}
-    {@const shapeColor = shape?.route_color ?? "var(--primary)"}
-    {@const shapeWayIds = Object.entries(geoData.wayData)
-        .filter(([, wd]: [string, any]) => wd?.shapes?.includes(selected_shape_id))
-        .map(([id]) => id)}
-    {@const shapeWays = shapeWayIds.map((id) => geoData!.wayData[id]).filter(Boolean)}
-    {@const scheduleEntries = shape?.schedule ? Object.entries(shape.schedule).map(([h, v]) => ({ hour: parseInt(h), count: v as number })) : []}
-    {@const maxSchedule = scheduleEntries.length > 0 ? Math.max(...scheduleEntries.map((e) => e.count)) : 1}
-    {@const speedValues = shapeWays.map((w: any) => w.speed_avg).filter((v: any) => v !== null && v !== undefined)}
-    {@const lanesValues = shapeWays.map((w: any) => w.n_lanes_direction).filter((v: any) => v !== null && v !== undefined && v > 0)}
-    {@const extTotal = shapeWays.reduce((acc: number, w: any) => acc + (w.length_m ?? 0), 0)}
-    {@const extBusLane = shapeWays.filter((w: any) => w.is_bus_lane).reduce((acc: number, w: any) => acc + (w.length_m ?? 0), 0)}
-    {@const extNoBusLane = extTotal - extBusLane}
-    <div
-        id="route-details-panel"
-        class="absolute top-4 right-4 z-[1000] flex flex-col w-[380px] h-fit max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-5 overflow-y-auto gap-4"
-    >
-        <!-- Header -->
-        <div class="flex items-start justify-between gap-2">
-            <div>
-                <div class="flex items-center gap-2 mb-0.5">
-                    <div class="w-3 h-3 rounded-full shrink-0" style="background-color: {shapeColor}"></div>
-                    <span class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Route {shape?.route_short_name}</span>
-                </div>
-                <h3 class="text-base font-bold text-foreground leading-snug">{shape?.route_long_name}</h3>
-                <p class="text-xs text-muted-foreground mt-0.5">{shape?.direction_id ? "↙ Descending" : "↗ Ascending"} · {shapeWayIds.length} road segments</p>
-            </div>
-            <Button
-                variant="ghost"
-                size="icon"
-                onclick={() => (selected_shape_id = "all")}
-                class="rounded-full shrink-0"
-            >
-                <i class="fas fa-times"></i>
-            </Button>
-        </div>
-
-        <!-- 24h Frequency Chart -->
-        {#if scheduleEntries.length > 0}
-            <section class="space-y-2 p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50">
-                <h5 class="text-xs font-bold flex items-center gap-1.5 uppercase tracking-wider text-muted-foreground">
-                    <i class="fas fa-chart-bar" style="color: {shapeColor}"></i>
-                    Scheduled Departures / Hour
-                </h5>
-                <div class="flex items-end gap-[2px] h-20 border-l border-b border-muted-foreground/30 px-1 pt-2">
-                    {#each Array(24) as _, i}
-                        {@const entry = scheduleEntries.find((e) => e.hour === i)}
-                        {@const count = entry?.count ?? 0}
-                        {@const height = count > 0 ? Math.max((count / maxSchedule) * 100, 8) : 0}
-                        <div
-                            class="flex-1 rounded-t-[1px] relative group transition-colors"
-                            style="height: {height}%; background-color: {count > 0 ? shapeColor + 'bb' : 'transparent'};"
-                            title="{i}:00 – {count} dep."
-                        >
-                            {#if count > 0}
-                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-foreground text-background text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20">
-                                    {i}:00: {count}
-                                </div>
-                            {/if}
-                        </div>
-                    {/each}
-                </div>
-                <div class="flex justify-between text-[9px] text-muted-foreground font-mono uppercase tracking-tighter">
-                    <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span>
-                </div>
-            </section>
-        {/if}
-
-        <!-- Aggregated Indicators Grid -->
-        {#if shapeWays.length > 0}
-            <section class="space-y-2">
-                <h5 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Road Segment Indicators</h5>
-                <div class="grid grid-cols-3 gap-2">
-                    <!-- Speed indicators -->
-                    {#if speedValues.length > 0}
-                        {@const speedMin = Math.min(...speedValues)}
-                        {@const speedMax = Math.max(...speedValues)}
-                        {@const speedAvg = speedValues.reduce((a: number, b: number) => a + b, 0) / speedValues.length}
-                        <div class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center">
-                            <p class="text-[9px] font-bold uppercase text-muted-foreground mb-1">Min Speed</p>
-                            <p class="text-sm font-bold">{speedMin.toFixed(1)}<span class="text-[9px] font-normal"> km/h</span></p>
-                        </div>
-                        <div class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center">
-                            <p class="text-[9px] font-bold uppercase text-muted-foreground mb-1">Avg Speed</p>
-                            <p class="text-sm font-bold">{speedAvg.toFixed(1)}<span class="text-[9px] font-normal"> km/h</span></p>
-                        </div>
-                        <div class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center">
-                            <p class="text-[9px] font-bold uppercase text-muted-foreground mb-1">Max Speed</p>
-                            <p class="text-sm font-bold">{speedMax.toFixed(1)}<span class="text-[9px] font-normal"> km/h</span></p>
-                        </div>
-                    {/if}
-
-                    <!-- Lanes indicators -->
-                    {#if lanesValues.length > 0}
-                        {@const lanesMin = Math.min(...lanesValues)}
-                        {@const lanesMax = Math.max(...lanesValues)}
-                        {@const lanesAvg = lanesValues.reduce((a: number, b: number) => a + b, 0) / lanesValues.length}
-                        <div class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center">
-                            <p class="text-[9px] font-bold uppercase text-muted-foreground mb-1">Min Lanes/Dir</p>
-                            <p class="text-sm font-bold">{lanesMin}</p>
-                        </div>
-                        <div class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center">
-                            <p class="text-[9px] font-bold uppercase text-muted-foreground mb-1">Avg Lanes/Dir</p>
-                            <p class="text-sm font-bold">{lanesAvg.toFixed(1)}</p>
-                        </div>
-                        <div class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center">
-                            <p class="text-[9px] font-bold uppercase text-muted-foreground mb-1">Max Lanes/Dir</p>
-                            <p class="text-sm font-bold">{lanesMax}</p>
-                        </div>
-                    {/if}
-                </div>
-
-                <!-- Extension bars -->
-                <div class="space-y-2 mt-1">
-                    <div class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 space-y-2">
-                        <p class="text-[9px] font-bold uppercase text-muted-foreground">Route Extension</p>
-                        <div class="space-y-1.5">
-                            <div>
-                                <div class="flex justify-between text-[10px] mb-0.5">
-                                    <span class="text-muted-foreground">With bus lane</span>
-                                    <span class="font-semibold">{(extBusLane / 1000).toFixed(2)} km ({extTotal > 0 ? ((extBusLane / extTotal) * 100).toFixed(0) : 0}%)</span>
-                                </div>
-                                <div class="h-2 rounded-full bg-muted overflow-hidden">
-                                    <div class="h-full rounded-full bg-teal-500" style="width: {extTotal > 0 ? (extBusLane / extTotal) * 100 : 0}%"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-[10px] mb-0.5">
-                                    <span class="text-muted-foreground">Without bus lane</span>
-                                    <span class="font-semibold">{(extNoBusLane / 1000).toFixed(2)} km ({extTotal > 0 ? ((extNoBusLane / extTotal) * 100).toFixed(0) : 0}%)</span>
-                                </div>
-                                <div class="h-2 rounded-full bg-muted overflow-hidden">
-                                    <div class="h-full rounded-full bg-orange-400" style="width: {extTotal > 0 ? (extNoBusLane / extTotal) * 100 : 0}%"></div>
-                                </div>
-                            </div>
-                            <div class="flex justify-between text-[10px] pt-1 border-t border-border/50">
-                                <span class="text-muted-foreground font-semibold">Total</span>
-                                <span class="font-bold">{(extTotal / 1000).toFixed(2)} km</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        {/if}
-    </div>
-{/if}
+<PanelRouteDetails bind:selected_shape_id {geoData} {selectedWayId} />
 
 <!-- Map caption -->
 {#if active_layer !== undefined && !any_modal_open && !selectedWayId}
