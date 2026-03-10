@@ -1,218 +1,163 @@
 # Aggregate prioritization results for multiple agencies
 
 library(sf)
-library(dplyr) # For coalesce
+library(dplyr)
+library(jsonlite)
+library(purrr)
 
-p_lisboa = st_read("dev/web_version/lisboa_rt/2026-02-04/prioritization_lisboa_rt_gtfs2026-02-04_run20260207_extended.gpkg")
-View(p_lisboa)
+# Define input regions and output directory
+# You can customize these variables as needed
+regions <- c("lisboa_rt", "aml_rt")
+gtfs_day <- "2026-02-04"
 
-prioritizations = list(
-  st_read("dev/web_version/lisboa_rt/2026-02-04/prioritization_lisboa_rt_gtfs2026-02-04_run20260207_extended.gpkg"),
-  st_read("dev/web_version/aml_rt/2026-02-04/prioritization_aml_rt_gtfs2026-02-04_run20260210_extended.gpkg")
+# Note: specify your run dates here
+runs <- list(
+  "lisboa_rt" = "20260310",
+  "aml_rt" = "20260210"
 )
 
+input_base_dir <- "web_data"
+output_dir <- sprintf("web_data/unified_rt/%s", gtfs_day)
 
-all_data <- bind_rows(prioritizations)
-
-aggregated <- all_data %>%
-  group_by(way_osm_id, hour) %>%
-  summarise(
-    geom = first(geom),
-    is_bus_lane = any(is_bus_lane, na.rm = TRUE),
-    n_lanes = max(n_lanes, na.rm = TRUE),
-    n_directions = max(n_directions, na.rm = TRUE),
-    n_lanes_direction = max(n_lanes_direction, na.rm = TRUE),
-    
-    routes = paste(na.omit(routes), collapse = ";"),
-    frequency = sum(frequency, na.rm = TRUE),
-    
-    speed_count = sum(speed_count, na.rm = TRUE),
-    
-    speed_avg = if (sum(speed_count, na.rm = TRUE) > 0) {
-      sum(speed_avg * speed_count, na.rm = TRUE) /
-        sum(speed_count, na.rm = TRUE)
-    } else {
-      NA_real_
-    },
-    .groups = "drop"
-  )
-
-View(aggregated |> st_drop_geometry())
-
-names(aggregated)
-
-
-# Get n_lanes, n_directions and n_lanes_direction from merge with the original data
-aggregated_complete = aggregated |> 
-  left_join(
-    all_data |> st_drop_geometry() |> select(way_osm_id, n_lanes, n_directions, n_lanes_direction, is_bus_lane), 
-    by = "way_osm_id",
-    multiple="first"
-  )
-    
-# Add GTFS data
-# Replace route_id with route names, considering that prioritization$routes has multiple route_ids separated by ";"
-gtfs_aml = tidytransit::read_gtfs("dev/web_version/AML.zip")
-gtfs_lisboa = tidytransit::read_gtfs("dev/web_version/Lisboa.zip")
-route_names_aml = gtfs_aml$routes[, c("route_id", "route_short_name", "route_long_name")]
-route_names_lisboa = gtfs_lisboa$routes[, c("route_id", "route_short_name", "route_long_name")]
-route_names = bind_rows(route_names_aml, route_names_lisboa) |> distinct()
-
-prioritization = aggregated_complete
-prioritization = prioritization |>
-  mutate(row_n = row_number())
-prioritization_routes = prioritization |>
-  st_drop_geometry() |>
-  tidyr::separate_rows(routes, sep = ";")
-routes_covered = prioritization_routes |>
-  select(routes) |>
-  distinct()
-routes_covered = routes_covered |>
-  left_join(route_names, by = c("routes" = "route_id")) |>
-  mutate(
-    route_name = ifelse(!is.na(route_short_name) & route_short_name != "", route_short_name, route_long_name)
-  ) |>
-  select(routes, route_name)
-prioritization_routes = prioritization_routes |>
-  left_join(routes_covered, by = c("routes" = "routes"))
-prioritization_routes_grouped = prioritization_routes |>
-  group_by(row_n) |>
-  summarise(
-    route_names = paste(unique(route_name), collapse = ";"),
-    .groups = "drop"
-  )
-prioritization = prioritization |>
-  left_join(prioritization_routes_grouped, by = c("row_n" = "row_n")) |>
-  select(-row_n)
-View(prioritization|>st_drop_geometry())
-
-st_write(prioritization, "dev/web_version/unified_rt/prioritization_aml_lisboa_rt_gtfs2026-02-04_run20260210_extended.gpkg", delete_dsn = TRUE)
-geojson_file = "dev/web_version/unified_rt/prioritization_aml_lisboa_rt_gtfs2026-02-04_run20260210_extended.geojson"
-st_write(prioritization, geojson_file, append=FALSE, delete_dsn = TRUE)
-
-# Open geojson with jsonlite, to extend with technical metadata
-geojson_data = jsonlite::read_json(geojson_file, digits=NA) # To avoid precision loss in coordinates
-
-dataCensus = function (numberArray) {
-  return(list(
-    min = min(numberArray, na.rm=TRUE),
-    max = max(numberArray, na.rm=TRUE),
-    p25 = as.numeric(quantile(numberArray, 0.25, na.rm=TRUE)),
-    p75 = as.numeric(quantile(numberArray, 0.75, na.rm=TRUE)),
-    mean = mean(numberArray, na.rm=TRUE),
-    median = as.numeric(median(numberArray, na.rm=TRUE)),
-    variance = var(numberArray, na.rm=TRUE),
-    sd = sd(numberArray, na.rm=TRUE)
-  ))
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
 }
 
-rt_list = list(
-  url = "", # To be edited manually
-  period = "02-06/02/2026 (Carris), 13-19/01/2025 (Carris Metropolitana)",
-  stop_buffer_size = 15
-)
-
-census_frequency_hour = list()
-for(h in 0:23) {
-  prioritization_hour = prioritization |> filter(hour == h)
-  census_frequency_hour[[as.character(h)]] = dataCensus(prioritization_hour$frequency)
+# Helper to construct path
+get_file_path <- function(region, gtfs_day, run_date, prefix, ext) {
+  sprintf("%s/%s/%s/%s_%s_gtfs%s_run%s.%s", input_base_dir, region, gtfs_day, prefix, region, gtfs_day, run_date, ext)
 }
 
-metadata = list(
-  region = "Lisboa Metro Area, Portugal",
-  gtfs = list(
-    date = "2026-02-04",
-    url = "#"
-  ),
-  osm_query = list(
-    list(
-      key = "route",
-      value = "bus",
-      key_exact = TRUE
-    ),
-    list(
-      key = "network",
-      value = list("Carris", "Carris Metropolitana"),
-      key_exact = TRUE
-    )
-  ),
-  prioritization = list(
-    routes_missing = "52E;18E;54E;28E;12E;24E;15E;25E;51E;53E;1109;1110;1125;1219;1253;1504;1622;1624;1717;1998;1999;2021;2040;2104;2105;2106;2107;2117;2123;2124;2125;2134;2143;2145;2149;2150;2212;2315;2501;2625;2627;2650;2651;2652;2653;2711;2713;2722;2736;2745;2750;2752;2753;2755;2756;2758;2765;2782;2785;2797;2821;2850;2901;2907;2912;2913;2914;3220;3223;3513;3519;3520;3522;3542;3543;3640;3650;4303;4408;4418;4464;4470;4471;4605",
-    routes_covered = 791 + 151,
-    routes_total = 947 + 175
-  ),
-  data_census = list(
-    frequency = dataCensus(prioritization$frequency),
-    frequency_hour = census_frequency_hour,
-    speed_avg = dataCensus(prioritization$speed_avg),
-    lanes = dataCensus(prioritization$n_lanes_direction)
-  ),
-  rt = rt_list,
-  execution = list(
-    moment = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-    script = "dev/web_version.R",
-    git_commit = system("git rev-parse HEAD", intern=TRUE)
-  ),
-  environment = list(
-    r = R.version.string,
-    GTFShift = as.character(packageVersion("GTFShift")),
-    os = Sys.info()[["sysname"]],
-    os_release = Sys.info()[["release"]]
-  )
-)
+# 1. Merge Ways (Geometries)
+message("Merging ways (geometries)...")
+ways_list <- list()
+for (region in regions) {
+  gpkg_path <- get_file_path(region, gtfs_day, runs[[region]], "ways", "gpkg")
+  if (file.exists(gpkg_path)) {
+    ways_list[[region]] <- st_read(gpkg_path, quiet = TRUE)
+  } else {
+    warning(sprintf("File missing: %s", gpkg_path))
+  }
+}
 
-geojson_data$metadata <- metadata
-# Save at geojson_file.replace(".geojson", "_with_metadata.geojson")
-geojson_file_metadata = gsub(".geojson$", "_with_metadata.geojson", geojson_file)
-jsonlite::write_json(
-  geojson_data,
-  geojson_file_metadata,
-  auto_unbox = TRUE,
-  digits=NA # To avoid precision loss in coordinates
-)
-
-
-library(mapview)
-aml = sf::st_read("https://github.com/U-Shift/MQAT/raw/refs/heads/main/geo/MUNICIPIOSgeo.gpkg", quiet = TRUE)
-
-concelho = aml |> filter(Concelho == "Seixal") |> st_bbox()
-# mapview(seixal)
-
-prioritization_0800 = prioritization |> filter(hour==8) |> st_crop(concelho)
-p50_frequency = quantile(prioritization_0800$frequency, 0.75, na.rm=TRUE)
-p50_speed = quantile(prioritization_0800$speed_avg, 0.75, na.rm=TRUE)
-
-mapview::mapview(
-  prioritization_0800 |> filter(is_bus_lane & (frequency<p50_frequency | (is.na(n_lanes) | n_lanes_direction<=1) | speed_avg<=p50_speed)),
-  layer.name=sprintf("Bus lane with -%d bus/h OR -2 lane/dir OR %.2f km/h or - avg. speed", p50_frequency, p50_speed),
-  color="#DAD887",
-  homebutton=FALSE,
-  lwd=3
+if (length(ways_list) > 0) {
+  all_ways <- bind_rows(ways_list)
+  # Drop duplicates by way_osm_id
+  unified_ways <- all_ways |> distinct(way_osm_id, .keep_all = TRUE)
   
-) + mapview::mapview(
-  prioritization_0800 |> filter(is_bus_lane & frequency>=p50_frequency & !is.na(n_lanes) & n_lanes_direction>1 & speed_avg>p50_speed),
-  layer.name=sprintf("Bus lane with +%d bus/h AND +1 lane/dir AND +%.2f km/h avg.speed", p50_frequency-1, p50_speed),
-  color="#3BC1A8",
-  homebutton=FALSE,
-  lwd=3
-) + mapview::mapview(
-  prioritization_0800 |> filter(!is_bus_lane & frequency>=p50_frequency & !is.na(n_lanes) & n_lanes_direction>1 & speed_avg<=p50_speed),
-  layer.name=sprintf("NO bus lane with +%d bus/h AND +1 lane/dir AND %.2f km/h or - avg.speed", p50_frequency-1, p50_speed),
-  color="#F63049",
-  homebutton=FALSE,
-  lwd=3
+  st_write(unified_ways, sprintf("%s/ways_unified_rt_gtfs%s_run%s.gpkg", output_dir, gtfs_day, gsub("-", "", Sys.Date())), append=FALSE, delete_dsn=TRUE)
+  st_write(unified_ways, sprintf("%s/ways_unified_rt_gtfs%s_run%s.geojson", output_dir, gtfs_day, gsub("-", "", Sys.Date())), append=FALSE, delete_dsn=TRUE)
+}
+
+# 2. Merge Way Data (JSON)
+message("Merging way data...")
+merged_ways_json <- list()
+for (region in regions) {
+  json_path <- get_file_path(region, gtfs_day, runs[[region]], "way_data", "json")
+  if (file.exists(json_path)) {
+    way_data <- read_json(json_path)
+    
+    for (way_id in names(way_data)) {
+      way <- way_data[[way_id]]
+      if (is.null(merged_ways_json[[way_id]])) {
+        merged_ways_json[[way_id]] <- way
+      } else {
+        # Combine hourly frequencies
+        for (hour in names(way$hour_frequency)) {
+          if (is.null(merged_ways_json[[way_id]]$hour_frequency[[hour]])) {
+            merged_ways_json[[way_id]]$hour_frequency[[hour]] <- way$hour_frequency[[hour]]
+          } else {
+            merged_ways_json[[way_id]]$hour_frequency[[hour]] <- merged_ways_json[[way_id]]$hour_frequency[[hour]] + way$hour_frequency[[hour]]
+          }
+        }
+        # Combine arrays
+        merged_ways_json[[way_id]]$routes <- unique(c(merged_ways_json[[way_id]]$routes, way$routes))
+        merged_ways_json[[way_id]]$shapes <- unique(c(merged_ways_json[[way_id]]$shapes, way$shapes))
+      }
+    }
+  }
+}
+
+json_string <- toJSON(
+  merged_ways_json, 
+  na = "null", 
+  auto_unbox = TRUE, 
+  pretty = TRUE
+)
+write(json_string, sprintf("%s/way_data_unified_rt_gtfs%s_run%s.json", output_dir, gtfs_day, gsub("-", "", Sys.Date())))
+
+# 3. Merge Route Data (JSON)
+message("Merging route data...")
+merged_routes_json <- list()
+for (region in regions) {
+  json_path <- get_file_path(region, gtfs_day, runs[[region]], "route_data", "json")
+  if (file.exists(json_path)) {
+    route_data <- read_json(json_path)
+    for (route_id in names(route_data)) {
+      merged_routes_json[[route_id]] <- route_data[[route_id]]
+    }
+  }
+}
+write_json(
+  merged_routes_json,
+  sprintf("%s/route_data_unified_rt_gtfs%s_run%s.json", output_dir, gtfs_day, gsub("-", "", Sys.Date())),
+  auto_unbox = TRUE,
+  digits=NA 
 )
 
-
-
-mapview::mapview(
-  # Filter inside bbox seixal
-  prioritizations[[2]] |> filter(hour==8) |> st_crop(seixal),
-  zcol = "speed_avg",
-  layer.name = "Average speed per lane",
-  maxfeatures = nrow(prioritizations[[2]])
+# 4. Merge Shape Data (JSON)
+message("Merging shape data...")
+merged_shapes_json <- list()
+for (region in regions) {
+  json_path <- get_file_path(region, gtfs_day, runs[[region]], "shape_data", "json")
+  if (file.exists(json_path)) {
+    shape_data <- read_json(json_path)
+    for (shape_id in names(shape_data)) {
+      merged_shapes_json[[shape_id]] <- shape_data[[shape_id]]
+    }
+  }
+}
+write_json(
+  merged_shapes_json,
+  sprintf("%s/shape_data_unified_rt_gtfs%s_run%s.json", output_dir, gtfs_day, gsub("-", "", Sys.Date())),
+  auto_unbox = TRUE,
+  digits=NA 
 )
 
+# 5. Build Unified Metadata
+message("Building unified metadata...")
+metadata_list <- list()
+for (region in regions) {
+  json_path <- get_file_path(region, gtfs_day, runs[[region]], "metadata", "json")
+  if (file.exists(json_path)) {
+    metadata_list[[region]] <- read_json(json_path)
+  }
+}
 
+if (length(metadata_list) > 0) {
+  # Build a baseline from the first metadata doc
+  unified_metadata <- list(
+    region = "Unified Metro Area",
+    gtfs = list(
+      date = gtfs_day,
+      url = paste(sapply(metadata_list, function(x) x$gtfs$url), collapse = "; ")
+    ),
+    osm_query = metadata_list[[1]]$osm_query,
+    execution = list(
+      moment = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+      script = "prioritize_unify.R",
+      git_commit = system("git rev-parse HEAD", intern=TRUE)
+    ),
+    environment = metadata_list[[1]]$environment,
+    source_regions = regions
+  )
+  
+  write_json(
+    unified_metadata,
+    sprintf("%s/metadata_unified_rt_gtfs%s_run%s.json", output_dir, gtfs_day, gsub("-", "", Sys.Date())),
+    auto_unbox = TRUE,
+    digits=NA
+  )
+}
 
-
+message("Done!")
