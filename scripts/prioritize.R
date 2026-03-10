@@ -91,6 +91,9 @@ for(i in 1:nrow(regions)) {
     prioritization = rt_extend_prioritization(
       lane_prioritization = prioritization,
       rt_collection = rt_collection_filtered
+    ) |> mutate(
+      # Round all columns that start with speed_ to 2 decimals
+      across(starts_with("speed_"), ~ round(., 2))
     )
   }
 
@@ -106,7 +109,7 @@ for(i in 1:nrow(regions)) {
     # Calculate lenght in meters
     mutate(length_m = st_length(geometry)) |>
     # Drop units
-    mutate(length_m = as.numeric(length_m))
+    mutate(length_m = round(as.numeric(length_m), digits=2))
   
   # > 4.2. Store prioritization as json, grouping by way_osm_id, each grouped by hour
   nested_data <- lapply(split(prioritization |> 
@@ -211,16 +214,16 @@ for(i in 1:nrow(regions)) {
   
   dataCensus = function (numberArray) {
     return(list(
-      min = min(numberArray, na.rm=TRUE),
-      max = max(numberArray, na.rm=TRUE),
-      p5 = as.numeric(quantile(numberArray, 0.05, na.rm=TRUE)),
-      p25 = as.numeric(quantile(numberArray, 0.25, na.rm=TRUE)),
-      p75 = as.numeric(quantile(numberArray, 0.75, na.rm=TRUE)),
-      p95 = as.numeric(quantile(numberArray, 0.95, na.rm=TRUE)),
-      mean = mean(numberArray, na.rm=TRUE),
-      median = as.numeric(median(numberArray, na.rm=TRUE)),
-      variance = var(numberArray, na.rm=TRUE),
-      sd = sd(numberArray, na.rm=TRUE)
+      min = round(min(numberArray, na.rm=TRUE), digits=2),
+      max = round(max(numberArray, na.rm=TRUE), digits=2),
+      p5 = round(as.numeric(quantile(numberArray, 0.05, na.rm=TRUE)), digits=2),
+      p25 = round(as.numeric(quantile(numberArray, 0.25, na.rm=TRUE)), digits=2),
+      p75 = round(as.numeric(quantile(numberArray, 0.75, na.rm=TRUE)), digits=2),
+      p95 = round(as.numeric(quantile(numberArray, 0.95, na.rm=TRUE)), digits=2),
+      mean = round(mean(numberArray, na.rm=TRUE), digits=2),
+      median = round(as.numeric(median(numberArray, na.rm=TRUE)), digits=2),
+      variance = round(var(numberArray, na.rm=TRUE), digits=2),
+      sd = round(sd(numberArray, na.rm=TRUE), digits=2)
     ))
   }
 
