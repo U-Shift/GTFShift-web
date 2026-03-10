@@ -171,7 +171,8 @@
                             </p>
                             <p class="text-lg font-bold">
                                 {speed.toFixed(1)}
-                                <span class="text-[10px] font-normal">km/h</span>
+                                <span class="text-[10px] font-normal">km/h</span
+                                >
                             </p>
                             {#if speedColor}
                                 <div
@@ -229,6 +230,22 @@
                         <span class="text-[10px] font-normal">meters</span>
                     </p>
                 </div>
+
+                <!-- Speed count -->
+                <div
+                    class="p-3 bg-zinc-50/80 dark:bg-zinc-950/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm"
+                >
+                    <p
+                        class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
+                    >
+                        Speed count
+                    </p>
+                    <p class="text-sm font-bold">
+                        {way.speed_count}
+                        <span class="text-[10px] font-normal">measurements</span
+                        >
+                    </p>
+                </div>
             </div>
 
             {#if way.shapes && way.shapes.length > 0}
@@ -249,7 +266,8 @@
                                             <button
                                                 {...props}
                                                 onclick={() => {
-                                                    selected_shape_id = shape_id;
+                                                    selected_shape_id =
+                                                        shape_id;
                                                     selectedWayId = undefined;
                                                 }}
                                                 class="px-2 py-1 text-[10px] font-bold rounded border cursor-pointer hover:brightness-90 transition-all text-left"
@@ -257,12 +275,18 @@
                                                     ? `background-color: ${routeColor}22; border-color: ${routeColor}44; color: ${routeColor};`
                                                     : ""}
                                             >
-                                                {route?.route_short_name || shape_id}
+                                                {route?.route_short_name ||
+                                                    shape_id}
                                             </button>
                                         {/snippet}
                                     </Tooltip.Trigger>
                                     <Tooltip.Content class="z-[1100]">
-                                        <p>{route?.route_short_name}: {route?.route_long_name} ({route?.direction_id ? "DESC" : "ASC"})</p>
+                                        <p>
+                                            {route?.route_short_name}: {route?.route_long_name}
+                                            ({route?.direction_id
+                                                ? "DESC"
+                                                : "ASC"})
+                                        </p>
                                     </Tooltip.Content>
                                 </Tooltip.Root>
                             </Tooltip.Provider>

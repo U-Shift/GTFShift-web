@@ -150,6 +150,15 @@
                                             >Avg speed <small>(km/h)</small
                                             ></ThSort
                                         >
+                                        <ThSort
+                                            {table}
+                                            field={(r) =>
+                                                r.properties.speed_count}
+                                            class="px-4 py-2 text-left font-bold"
+                                            >Speed count <small
+                                                >(nr measurements)</small
+                                            ></ThSort
+                                        >
                                     {/if}
                                     <ThSort
                                         {table}
@@ -236,6 +245,10 @@
                                                     1,
                                                 ) || "-"}</td
                                             >
+                                            <td class="px-4 py-2"
+                                                >{row.properties
+                                                    .speed_count}</td
+                                            >
                                         {/if}
                                         <td class="px-4 py-2"
                                             >{row.properties.length_m.toFixed(
@@ -244,40 +257,68 @@
                                         >
                                         <td class="px-4 py-2 max-w-[300px]">
                                             {#if row.properties.shapes && row.properties.shapes.length > 0}
-                                                <div class="flex flex-wrap gap-1">
+                                                <div
+                                                    class="flex flex-wrap gap-1"
+                                                >
                                                     {#each row.properties.shapes as shape_id}
-                                                        {@const route = geoData.shapes[shape_id]}
-                                                        {@const routeColor = route?.route_color
-                                                            ? `${route.route_color}`
-                                                            : null}
-                                                        <Tooltip.Provider delayDuration={0}>
+                                                        {@const route =
+                                                            geoData.shapes[
+                                                                shape_id
+                                                            ]}
+                                                        {@const routeColor =
+                                                            route?.route_color
+                                                                ? `${route.route_color}`
+                                                                : null}
+                                                        <Tooltip.Provider
+                                                            delayDuration={0}
+                                                        >
                                                             <Tooltip.Root>
-                                                                <Tooltip.Trigger>
-                                                                    {#snippet child({ props })}
+                                                                <Tooltip.Trigger
+                                                                >
+                                                                    {#snippet child({
+                                                                        props,
+                                                                    })}
                                                                         <button
                                                                             {...props}
                                                                             onclick={() => {
                                                                                 open = false;
-                                                                                if (onRouteSelect) onRouteSelect(shape_id);
+                                                                                if (
+                                                                                    onRouteSelect
+                                                                                )
+                                                                                    onRouteSelect(
+                                                                                        shape_id,
+                                                                                    );
                                                                             }}
                                                                             class="px-2 py-0.5 text-[10px] font-bold rounded border cursor-pointer hover:brightness-90 transition-all text-left"
                                                                             style={routeColor
                                                                                 ? `background-color: ${routeColor}22; border-color: ${routeColor}44; color: ${routeColor};`
                                                                                 : ""}
                                                                         >
-                                                                            {route?.route_short_name || shape_id}
+                                                                            {route?.route_short_name ||
+                                                                                shape_id}
                                                                         </button>
                                                                     {/snippet}
                                                                 </Tooltip.Trigger>
-                                                                <Tooltip.Content class="z-[1100]">
-                                                                    <p>{route?.route_short_name}: {route?.route_long_name} ({route?.direction_id ? "DESC" : "ASC"})</p>
+                                                                <Tooltip.Content
+                                                                    class="z-[1100]"
+                                                                >
+                                                                    <p>
+                                                                        {route?.route_short_name}:
+                                                                        {route?.route_long_name}
+                                                                        ({route?.direction_id
+                                                                            ? "DESC"
+                                                                            : "ASC"})
+                                                                    </p>
                                                                 </Tooltip.Content>
                                                             </Tooltip.Root>
                                                         </Tooltip.Provider>
                                                     {/each}
                                                 </div>
                                             {:else}
-                                                <span class="text-muted-foreground">-</span>
+                                                <span
+                                                    class="text-muted-foreground"
+                                                    >-</span
+                                                >
                                             {/if}
                                         </td>
                                     </tr>
