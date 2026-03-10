@@ -100,7 +100,7 @@ for(i in 1:nrow(regions)) {
   # 4. Build data for dashboard 
   # > 4.1. Store ways geometries
   ways = prioritization |> 
-    distinct(way_osm_id, geometry) |>
+    distinct(way_osm_id, geometry)
   st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE)
   st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.geojson", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append=FALSE)
   

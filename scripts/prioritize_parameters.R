@@ -83,6 +83,19 @@ regions = rbind( # Cascais
 #   )
 # )
 
+regions = rbind( # NYC, MTA
+  regions,
+  data.frame(
+    name = "nyc_mta",
+    gtfs_url = "https://rrgtfsfeeds.s3.amazonaws.com/gtfs_busco.zip",
+    gtfs_day = Sys.Date(),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
+    )))
+  )
+)
+
 # Helpers
 
 manipulate_carris_met = function(gtfs) {
