@@ -41,13 +41,13 @@ regions = rbind( # CarrisMetropolitana
   data.frame(
     name = "aml_rt",
     name_long = "Lisboa Metro Area, Portugal",
-    gtfs_url = "dev/AML_20260205.zip",
+    gtfs_url = "data/AML_20260205.zip",
     gtfs_day = "2026-02-04",
     gtfs_manipulate = "manipulate_carris_met",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
-    )))
+    ))),
     rt_interval = "02-06/02/2026",
     rt_collection = I(list(sf::st_read("data/cmet_20250113_20250119_updates.csv") |>
                              mutate(

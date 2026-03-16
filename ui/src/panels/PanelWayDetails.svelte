@@ -72,8 +72,8 @@
                         {@const freqColor = freqCensus
                             ? getColorFromGradient(
                                   freq,
-                                  freqCensus.min,
-                                  freqCensus.max,
+                                  freqCensus.p5,
+                                  freqCensus.p95,
                                   COLOR_GRADIENT,
                               )
                             : null}
@@ -125,8 +125,8 @@
                         {@const lanesColor = lanesCensus
                             ? getColorFromGradient(
                                   lanesDir,
-                                  lanesCensus.min,
-                                  lanesCensus.max,
+                                  lanesCensus.p5,
+                                  lanesCensus.p95,
                                   COLOR_GRADIENT,
                               )
                             : null}
@@ -159,8 +159,8 @@
                             {@const speedColor = speedCensus
                                 ? getColorFromGradient(
                                       speed,
-                                      speedCensus.min,
-                                      speedCensus.max,
+                                      speedCensus.p5,
+                                      speedCensus.p95,
                                       COLOR_GRADIENT_RED.slice().reverse(),
                                   )
                                 : null}
@@ -319,8 +319,8 @@
                         {@const barColor = hourFreqCensus
                             ? getColorFromGradient(
                                   freq,
-                                  hourFreqCensus.min,
-                                  hourFreqCensus.max,
+                                  hourFreqCensus.p5,
+                                  hourFreqCensus.p95,
                                   COLOR_GRADIENT,
                               )
                             : "var(--primary)"}

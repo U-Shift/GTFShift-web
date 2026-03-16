@@ -26,18 +26,18 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
+    import { getColorFromGradient } from "../lib/utils";
+
     function getFreqStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
         const freq = props?.hour_frequency?.[criteriaHour] || 0;
-        const colorIndex = Math.min(
-            Math.ceil(
-                (freq * COLOR_GRADIENT.length) /
-                    (geoData.metadata.data_census.frequency_hour[criteriaHour]
-                        ?.max || 1),
-            ),
-            COLOR_GRADIENT.length - 1,
+        const color = getColorFromGradient(
+            freq,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5 || 0,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95 || 1,
+            COLOR_GRADIENT
         );
-        return { color: COLOR_GRADIENT[colorIndex], weight: 3.5 };
+        return { color, weight: 3.5 };
     }
 
     $effect(() => {

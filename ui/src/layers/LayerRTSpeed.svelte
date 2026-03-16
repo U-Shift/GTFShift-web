@@ -26,25 +26,22 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
+    import { getColorFromGradient } from "../lib/utils";
+
     function getSpeedStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
         const speed_avg = props?.speed_avg || undefined;
-        const colorIndex =
-            speed_avg !== undefined
-                ? Math.min(
-                      Math.ceil(
-                          (speed_avg * COLOR_GRADIENT_RED.length) /
-                              (geoData.metadata.data_census.speed_avg?.max ||
-                                  1),
-                      ),
-                      COLOR_GRADIENT_RED.length - 1,
-                  )
-                : undefined;
+        let color = COLOR_GRAY;
+        if (speed_avg !== undefined) {
+            color = getColorFromGradient(
+                speed_avg,
+                geoData.metadata.data_census.speed_avg?.p5 || 0,
+                geoData.metadata.data_census.speed_avg?.p95 || 1,
+                COLOR_GRADIENT_RED.slice().reverse()
+            );
+        }
         return {
-            color:
-                colorIndex !== undefined
-                    ? COLOR_GRADIENT_RED.slice().reverse()[colorIndex]
-                    : COLOR_GRAY,
+            color,
             weight: 3.5,
         };
     }

@@ -221,7 +221,7 @@
 
 <div
     id="controls-panel"
-    class="absolute top-4 left-4 z-[1010] flex flex-col items-start w-[calc(100vw-2rem)] sm:w-[350px] max-h-[calc(100vh-8rem)] sm:max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-4 overflow-y-auto h-fit"
+    class="absolute top-4 left-4 z-[1010] flex flex-col items-start w-[calc(100vw-2rem)] sm:w-[350px] max-h-[70vh] sm:max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-4 overflow-y-auto h-fit"
     style={geoData
         ? "background-image: url('./static/logo/background_blur_transparent.png'); background-size: auto 7vw; background-position: top right; background-repeat: no-repeat;"
         : ""}
@@ -311,16 +311,29 @@
                     >
                         <div class="flex items-start gap-3">
                             <div
-                                class="region-icon mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors"
+                                class="region-icon mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors overflow-hidden"
                                 style="background-color: {r.color}1a; color: {r.color};"
                             >
-                                <i class="fas fa-map-location-dot text-sm"></i>
+                                {#if r.logo}
+                                    <img
+                                        src={r.logo}
+                                        alt={r.name}
+                                        class="h-5 w-5 object-contain grayscale brightness-0 dark:invert"
+                                    />
+                                {:else}
+                                    <i class="fas fa-map-location-dot text-sm"
+                                    ></i>
+                                {/if}
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p
                                     class="text-sm font-semibold text-foreground leading-tight truncate"
                                 >
                                     {r.name}
+                                </p>
+                                <p class="text-xs text-muted-foreground mt-0.5">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>
+                                    {r.region}
                                 </p>
                                 <p class="text-xs text-muted-foreground mt-0.5">
                                     <i class="fas fa-calendar-alt mr-1"
@@ -351,7 +364,12 @@
             <div
                 class="flex items-center gap-3 text-sm text-muted-foreground mb-4"
             >
-                <span>Data for {region.date}</span>
+                <p class="mr-auto">
+                    <i class="fas fa-map-marker-alt mr-1"></i>
+                    {region.region}<br />
+                    <i class="fas fa-calendar-alt mr-1"></i>
+                    {region.date}
+                </p>
                 <Tooltip.Provider delayDuration={0}>
                     <Tooltip.Root>
                         <Tooltip.Trigger>
@@ -436,14 +454,12 @@
                         <div
                             class="flex items-center justify-between w-full border rounded-md px-3 py-2 text-sm bg-background/50 hover:bg-accent transition-colors"
                         >
-                            <div
-                                class="flex items-center gap-2 overflow-hidden"
-                            >
+                            <div class="flex items-center gap-2">
                                 {#if selected_shape_id === "all"}
                                     <div
                                         class="w-2 h-2 rounded-full bg-muted-foreground shrink-0"
                                     ></div>
-                                    <span class="truncate">All Network</span>
+                                    <span>All Network</span>
                                 {:else}
                                     {@const opt = routeOptions.find(
                                         (o) => o.id === selected_shape_id,
@@ -453,13 +469,11 @@
                                             class="w-2 h-2 rounded-full shrink-0"
                                             style="background-color: {opt.color}"
                                         ></div>
-                                        <span class="truncate font-medium"
+                                        <span class="font-medium text-left"
                                             >{opt.label}</span
                                         >
                                     {:else}
-                                        <span class="truncate"
-                                            >Select Route</span
-                                        >
+                                        <span>Select Route</span>
                                     {/if}
                                 {/if}
                             </div>
@@ -511,14 +525,13 @@
                                             class="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-accent rounded-sm"
                                         >
                                             <div
-                                                class="flex items-center gap-3 overflow-hidden"
+                                                class="flex items-center gap-3"
                                             >
                                                 <div
                                                     class="w-2.5 h-2.5 rounded-full shrink-0"
                                                     style="background-color: {opt.color}"
                                                 ></div>
-                                                <span
-                                                    class="truncate font-medium"
+                                                <span class="font-medium"
                                                     >{opt.label}</span
                                                 >
                                             </div>
@@ -704,9 +717,9 @@
                                 frequency, from the <span
                                     style="color: {COLOR_GRADIENT[0]}"
                                     class="bg-black/50 font-bold px-1 rounded"
-                                    >lowest ({geoData.metadata.data_census
+                                    >P5 ({geoData.metadata.data_census
                                         .frequency_hour[criteria_hour]
-                                        ?.min})</span
+                                        ?.p5})</span
                                 >
                                 to the
                                 <span
@@ -714,9 +727,9 @@
                                         COLOR_GRADIENT.length - 1
                                     ]}"
                                     class="font-bold"
-                                    >highest ({geoData.metadata.data_census
+                                    >P95 ({geoData.metadata.data_census
                                         .frequency_hour[criteria_hour]
-                                        ?.max})</span
+                                        ?.p95})</span
                                 > number of buses per hour, considering:
                             </p>
                             <div class="flex items-center gap-2">
@@ -754,8 +767,8 @@
                                 number of lanes, from the <span
                                     style="color: {COLOR_GRADIENT[0]}"
                                     class="bg-black/50 font-bold px-1 rounded"
-                                    >lowest ({geoData.metadata.data_census.lanes
-                                        ?.min})</span
+                                    >P5 ({geoData.metadata.data_census.lanes
+                                        ?.p5})</span
                                 >
                                 to the
                                 <span
@@ -763,8 +776,8 @@
                                         COLOR_GRADIENT.length - 1
                                     ]}"
                                     class="font-bold"
-                                    >highest ({geoData.metadata.data_census
-                                        .lanes?.max})</span
+                                    >P95 ({geoData.metadata.data_census.lanes
+                                        ?.p95})</span
                                 > number of lanes per direction.
                             </p>
                             {#if geoData.metadata.data_census.lanes}
@@ -791,7 +804,7 @@
                                     by the average speed measured, from the <span
                                         style="color: {COLOR_GRADIENT_RED.slice().reverse()[0]}"
                                         class="font-bold"
-                                        >lowest ({geoData.metadata.data_census.speed_avg?.min?.toFixed(
+                                        >P5 ({geoData.metadata.data_census.speed_avg?.p5?.toFixed(
                                             2,
                                         )})</span
                                     >
@@ -801,7 +814,7 @@
                                             COLOR_GRADIENT_RED.length - 1
                                         ]}"
                                         class="bg-black/50 font-bold px-1 rounded"
-                                        >highest ({geoData.metadata.data_census.speed_avg?.max?.toFixed(
+                                        >P95 ({geoData.metadata.data_census.speed_avg?.p95?.toFixed(
                                             2,
                                         )})</span
                                     > values (km/h).
@@ -936,7 +949,7 @@
                         class="min-w-[40px] text-right text-xs text-muted-foreground"
                         >{geoData?.metadata.data_census.frequency_hour[
                             criteria_hour
-                        ]?.min}</span
+                        ]?.p5}</span
                     >
                     <div
                         class="flex-1 h-3 rounded border"
@@ -948,7 +961,7 @@
                         class="min-w-[40px] text-left text-xs text-muted-foreground"
                         >{geoData?.metadata.data_census.frequency_hour[
                             criteria_hour
-                        ]?.max}</span
+                        ]?.p95}</span
                     >
                 </div>
             </div>
@@ -960,7 +973,7 @@
                 <div class="flex gap-2 items-center">
                     <span
                         class="min-w-[40px] text-right text-xs text-muted-foreground"
-                        >{geoData?.metadata.data_census.lanes?.min}</span
+                        >{geoData?.metadata.data_census.lanes?.p5}</span
                     >
                     <div
                         class="flex-1 h-3 rounded border"
@@ -970,7 +983,7 @@
                     ></div>
                     <span
                         class="min-w-[40px] text-left text-xs text-muted-foreground"
-                        >{geoData?.metadata.data_census.lanes?.max}</span
+                        >{geoData?.metadata.data_census.lanes?.p95}</span
                     >
                 </div>
             </div>
@@ -984,9 +997,9 @@
                 <div class="flex gap-2 items-center">
                     <span
                         class="min-w-[40px] text-right text-xs text-muted-foreground"
-                        >{geoData?.metadata.data_census.speed_avg?.min &&
+                        >{geoData?.metadata.data_census.speed_avg?.p5 &&
                             Math.floor(
-                                geoData.metadata.data_census.speed_avg.min,
+                                geoData.metadata.data_census.speed_avg.p5,
                             )}</span
                     >
                     <div
@@ -998,9 +1011,9 @@
                     ></div>
                     <span
                         class="min-w-[40px] text-left text-xs text-muted-foreground"
-                        >{geoData?.metadata.data_census.speed_avg?.max &&
+                        >{geoData?.metadata.data_census.speed_avg?.p95 &&
                             Math.ceil(
-                                geoData.metadata.data_census.speed_avg.max,
+                                geoData.metadata.data_census.speed_avg.p95,
                             )}</span
                     >
                 </div>

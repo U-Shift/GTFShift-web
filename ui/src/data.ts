@@ -20,7 +20,9 @@ export const COLOR_GRADIENT_RED: string[] = ["#ffffcc", "#fffecb", "#fffec9", "#
 export const DB_REGIONS: DataRegion[] = [
     {
         id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260316',
-        name: 'Carris, Lisbon, PT',
+        name: 'Carris',
+        region: 'Lisbon, PT',
+        logo: './static/regions/carris.png',
         files: {
             ways: './data/lisbon/ways_lisboa_rt_gtfs2026-02-04_run20260316.geojson',
             way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-02-04_run20260316.json',
@@ -31,5 +33,21 @@ export const DB_REGIONS: DataRegion[] = [
         },
         date: 'Feb 2026',
         color: '#003f8f'
+    },
+    {
+        id: 'aml',
+        name: 'Carris Metropolitana',
+        region: 'Lisbon Metro Area, PT',
+        logo: './static/regions/carrismetropolitana.png',
+        files: {
+            ways: './data/aml/ways_aml_rt_gtfs2026-02-04_run20260316.geojson',
+            way_data: './data/aml/way_data_aml_rt_gtfs2026-02-04_run20260316.json',
+            metadata: './data/aml/metadata_aml_rt_gtfs2026-02-04_run20260316.json',
+            route_data: './data/aml/route_data_aml_rt_gtfs2026-02-04_run20260316.json',
+            shape_data: './data/aml/shape_data_aml_rt_gtfs2026-02-04_run20260316.json',
+            zip: './data/aml/aml.zip'
+        },
+        date: 'Feb 2026',
+        color: '#ffdd01'
     }
 ]
