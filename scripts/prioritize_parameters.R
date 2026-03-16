@@ -69,19 +69,20 @@ regions = rbind( # Cascais
     )))
   )
 )
-#
-# regions = rbind( # STCP
-#   regions,
-#   data.frame(
-#     name = "stcp",
-#     gtfs_url = data$URL[data$ID == "stcp"],
-#     gtfs_day = gsub("-", "", Sys.Date()),
-#     query = I(list(list(
-#       list(key = "route", value = c("bus"), key_exact = TRUE),
-#       list(key = "operator", value = "STCP", key_exact = TRUE)
-#     )))
-#   )
-# )
+
+regions = rbind( # STCP
+  regions,
+  data.frame(
+    name = "stcp",
+    name_long = "Porto, Portugal",
+    gtfs_url = data$URL[data$ID == "stcp"],
+    gtfs_day = gsub("-", "", Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "STCP", key_exact = TRUE)
+    )))
+  )
+)
 
 regions = rbind( # NYC, MTA
   regions,

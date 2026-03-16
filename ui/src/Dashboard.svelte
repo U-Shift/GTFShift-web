@@ -343,6 +343,20 @@
                                     <i class="fas fa-calendar-alt mr-1"
                                     ></i>{r.date}
                                 </p>
+                                {#if r.rt_data}
+                                    <p
+                                        class="text-xs text-muted-foreground mt-0.5"
+                                    >
+                                        <i class="fas fa-traffic-light mr-1"
+                                        ></i> With traffic conditions
+                                    </p>
+                                {:else}
+                                    <p
+                                        class="text-xs text-muted-foreground mt-0.5"
+                                    >
+                                        <i class="fas fa-road mr-1"></i> Static analysis
+                                    </p>
+                                {/if}
                             </div>
                             <i
                                 class="region-chevron fas fa-chevron-right text-xs text-muted-foreground transition-colors mt-1"
@@ -1121,7 +1135,4 @@
     />
 {/if}
 
-<ModalDetails
-    bind:open={action_modal_details_open}
-    {geoData}
-/>
+<ModalDetails bind:open={action_modal_details_open} {geoData} />

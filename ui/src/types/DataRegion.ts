@@ -2,6 +2,7 @@ export type DataRegion = {
     id: string;
     name: string;
     region: string;
+    rt_data: boolean;
     logo?: string;
     files: {
         ways: string;

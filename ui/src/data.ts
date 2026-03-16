@@ -22,6 +22,7 @@ export const DB_REGIONS: DataRegion[] = [
         id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260316',
         name: 'Carris',
         region: 'Lisbon, PT',
+        rt_data: true,
         logo: './static/regions/carris.png',
         files: {
             ways: './data/lisbon/ways_lisboa_rt_gtfs2026-02-04_run20260316.geojson',
@@ -38,6 +39,7 @@ export const DB_REGIONS: DataRegion[] = [
         id: 'aml',
         name: 'Carris Metropolitana',
         region: 'Lisbon Metro Area, PT',
+        rt_data: true,
         logo: './static/regions/carrismetropolitana.png',
         files: {
             ways: './data/aml/ways_aml_rt_gtfs2026-02-04_run20260316.geojson',
@@ -54,6 +56,7 @@ export const DB_REGIONS: DataRegion[] = [
         id: 'cascais',
         name: 'MobiCascais',
         region: 'Cascais, PT',
+        rt_data: false,
         logo: './static/regions/mobicascais.png',
         files: {
             ways: './data/cascais/ways_cascais_gtfs2026-03-16_run20260316.geojson',
