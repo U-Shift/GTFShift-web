@@ -1,6 +1,8 @@
 export type DataRegion = {
     id: string;
     name: string;
+    region: string;
+    logo?: string;
     files: {
         ways: string;
         way_data: string;

@@ -20,7 +20,9 @@ export const COLOR_GRADIENT_RED: string[] = ["#ffffcc", "#fffecb", "#fffec9", "#
 export const DB_REGIONS: DataRegion[] = [
     {
         id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260316',
-        name: 'Carris, Lisbon, PT',
+        name: 'Carris',
+        region: 'Lisbon, PT',
+        logo: './static/regions/carris.png',
         files: {
             ways: './data/lisbon/ways_lisboa_rt_gtfs2026-02-04_run20260316.geojson',
             way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-02-04_run20260316.json',
@@ -34,7 +36,9 @@ export const DB_REGIONS: DataRegion[] = [
     },
     {
         id: 'aml',
-        name: 'Carris Metropolitana, Lisbon Metro Area, PT',
+        name: 'Carris Metropolitana',
+        region: 'Lisbon Metro Area, PT',
+        logo: './static/regions/carrismetropolitana.png',
         files: {
             ways: './data/aml/ways_aml_rt_gtfs2026-02-04_run20260316.geojson',
             way_data: './data/aml/way_data_aml_rt_gtfs2026-02-04_run20260316.json',

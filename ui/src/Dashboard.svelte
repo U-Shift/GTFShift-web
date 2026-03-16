@@ -311,16 +311,29 @@
                     >
                         <div class="flex items-start gap-3">
                             <div
-                                class="region-icon mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors"
+                                class="region-icon mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors overflow-hidden"
                                 style="background-color: {r.color}1a; color: {r.color};"
                             >
-                                <i class="fas fa-map-location-dot text-sm"></i>
+                                {#if r.logo}
+                                    <img
+                                        src={r.logo}
+                                        alt={r.name}
+                                        class="h-5 w-5 object-contain grayscale brightness-0 dark:invert"
+                                    />
+                                {:else}
+                                    <i class="fas fa-map-location-dot text-sm"
+                                    ></i>
+                                {/if}
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p
                                     class="text-sm font-semibold text-foreground leading-tight truncate"
                                 >
                                     {r.name}
+                                </p>
+                                <p class="text-xs text-muted-foreground mt-0.5">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>
+                                    {r.region}
                                 </p>
                                 <p class="text-xs text-muted-foreground mt-0.5">
                                     <i class="fas fa-calendar-alt mr-1"
@@ -351,7 +364,12 @@
             <div
                 class="flex items-center gap-3 text-sm text-muted-foreground mb-4"
             >
-                <span>Data for {region.date}</span>
+                <p>
+                    <i class="fas fa-map-marker-alt mr-1"></i>
+                    {region.region} |
+                    <i class="fas fa-calendar-alt mr-1"></i>
+                    {region.date}
+                </p>
                 <Tooltip.Provider delayDuration={0}>
                     <Tooltip.Root>
                         <Tooltip.Trigger>
@@ -513,8 +531,7 @@
                                                     class="w-2.5 h-2.5 rounded-full shrink-0"
                                                     style="background-color: {opt.color}"
                                                 ></div>
-                                                <span
-                                                    class="font-medium"
+                                                <span class="font-medium"
                                                     >{opt.label}</span
                                                 >
                                             </div>
@@ -759,8 +776,8 @@
                                         COLOR_GRADIENT.length - 1
                                     ]}"
                                     class="font-bold"
-                                    >P95 ({geoData.metadata.data_census
-                                        .lanes?.p95})</span
+                                    >P95 ({geoData.metadata.data_census.lanes
+                                        ?.p95})</span
                                 > number of lanes per direction.
                             </p>
                             {#if geoData.metadata.data_census.lanes}
