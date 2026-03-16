@@ -160,7 +160,8 @@ for(i in 1:nrow(regions)) {
   gtfs_date = tidytransit::filter_feed_by_date(gtfs, extract_date=region$gtfs_day)
   routes = GTFShift::get_route_frequency_hourly(gtfs_date, date=region$gtfs_day) |>
     st_drop_geometry() |>
-    left_join(gtfs_date$routes |> select(route_id, route_long_name)) |>
+    select(-route_short_name) |>
+    left_join(gtfs_date$routes |> select(route_id, route_short_name, route_long_name)) |>
     left_join(gtfs$routes |> select(route_id, route_color, route_text_color), by="route_id")
   # If route_color does not start with "#", add suffix
   routes = routes |> mutate(

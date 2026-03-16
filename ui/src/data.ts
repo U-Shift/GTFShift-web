@@ -49,5 +49,21 @@ export const DB_REGIONS: DataRegion[] = [
         },
         date: 'Feb 2026',
         color: '#ffdd01'
+    },
+    {
+        id: 'cascais',
+        name: 'MobiCascais',
+        region: 'Cascais, PT',
+        logo: './static/regions/mobicascais.png',
+        files: {
+            ways: './data/cascais/ways_cascais_gtfs2026-03-16_run20260316.geojson',
+            way_data: './data/cascais/way_data_cascais_gtfs2026-03-16_run20260316.json',
+            metadata: './data/cascais/metadata_cascais_gtfs2026-03-16_run20260316.json',
+            route_data: './data/cascais/route_data_cascais_gtfs2026-03-16_run20260316.json',
+            shape_data: './data/cascais/shape_data_cascais_gtfs2026-03-16_run20260316.json',
+            zip: './data/cascais/cascais.zip'
+        },
+        date: 'Mar 2026',
+        color: '#31bcad'
     }
 ]

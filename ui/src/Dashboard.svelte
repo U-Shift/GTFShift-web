@@ -171,6 +171,7 @@
             );
             criteria_bus_frequency_enabled = true;
             criteria_n_lanes_direction_enabled = true;
+            criteria_avg_speed_enabled = display_rt;
             active_layer = DisplayOptions.PRIORITIZATION;
             open_accordion = DisplayOptions.PRIORITIZATION.toString();
 
