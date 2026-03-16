@@ -114,6 +114,10 @@
     const handleRegionChange = async (regionId: string) => {
         if (!regionId) return;
 
+        action_modal_about_open = false;
+        action_modal_data_open = false;
+        action_modal_details_open = false;
+
         region = DB_REGIONS.find((r: DataRegion) => r.id === regionId);
         if (!region || !map) return;
 
@@ -160,8 +164,6 @@
             );
 
             // Set criteria base values
-            action_modal_data_open = false;
-            action_modal_details_open = false;
             criteria_hour = 8;
             criteria_n_lanes_direction = 2;
             criteria_bus_frequency =
@@ -846,6 +848,9 @@
                     open_accordion = undefined;
                     selected_shape_id = "all";
                     selectedWayId = undefined;
+                    action_modal_about_open = false;
+                    action_modal_data_open = false;
+                    action_modal_details_open = false;
                 }}
                 class="flex-1"
             >
