@@ -51,7 +51,7 @@
     {@const extNoBusLane = extTotal - extBusLane}
     <div
         id="route-details-panel"
-        class="absolute top-4 right-4 z-[1000] flex flex-col w-[380px] h-fit max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-5 overflow-y-auto gap-4"
+        class="absolute top-4 left-4 right-4 sm:left-auto sm:right-4 z-[1010] flex flex-col w-[calc(100vw-2rem)] sm:w-[380px] h-fit max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-5 overflow-y-auto gap-4"
     >
         <!-- Header -->
         <div class="flex items-start justify-between gap-2">

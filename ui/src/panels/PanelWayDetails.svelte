@@ -23,7 +23,7 @@
     {@const way = geoData.wayData[selectedWayId]}
     <div
         id="details-panel"
-        class="absolute top-4 right-4 z-[1000] flex flex-col w-[400px] h-fit max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-6 overflow-y-auto"
+        class="absolute top-4 left-4 right-4 sm:left-auto sm:right-4 z-[1010] flex flex-col w-[calc(100vw-2rem)] sm:w-[400px] h-fit max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-6 overflow-y-auto"
     >
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-bold text-primary m-0">Way Details</h3>
