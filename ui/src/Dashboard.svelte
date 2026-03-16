@@ -436,14 +436,12 @@
                         <div
                             class="flex items-center justify-between w-full border rounded-md px-3 py-2 text-sm bg-background/50 hover:bg-accent transition-colors"
                         >
-                            <div
-                                class="flex items-center gap-2 overflow-hidden"
-                            >
+                            <div class="flex items-center gap-2">
                                 {#if selected_shape_id === "all"}
                                     <div
                                         class="w-2 h-2 rounded-full bg-muted-foreground shrink-0"
                                     ></div>
-                                    <span class="truncate">All Network</span>
+                                    <span>All Network</span>
                                 {:else}
                                     {@const opt = routeOptions.find(
                                         (o) => o.id === selected_shape_id,
@@ -453,13 +451,11 @@
                                             class="w-2 h-2 rounded-full shrink-0"
                                             style="background-color: {opt.color}"
                                         ></div>
-                                        <span class="truncate font-medium"
+                                        <span class="font-medium text-left"
                                             >{opt.label}</span
                                         >
                                     {:else}
-                                        <span class="truncate"
-                                            >Select Route</span
-                                        >
+                                        <span>Select Route</span>
                                     {/if}
                                 {/if}
                             </div>
@@ -511,14 +507,14 @@
                                             class="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-accent rounded-sm"
                                         >
                                             <div
-                                                class="flex items-center gap-3 overflow-hidden"
+                                                class="flex items-center gap-3"
                                             >
                                                 <div
                                                     class="w-2.5 h-2.5 rounded-full shrink-0"
                                                     style="background-color: {opt.color}"
                                                 ></div>
                                                 <span
-                                                    class="truncate font-medium"
+                                                    class="font-medium"
                                                     >{opt.label}</span
                                                 >
                                             </div>
