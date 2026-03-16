@@ -221,7 +221,7 @@
 
 <div
     id="controls-panel"
-    class="absolute top-4 left-4 z-[1010] flex flex-col items-start w-[calc(100vw-2rem)] sm:w-[350px] max-h-[calc(100vh-8rem)] sm:max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-4 overflow-y-auto h-fit"
+    class="absolute top-4 left-4 z-[1010] flex flex-col items-start w-[calc(100vw-2rem)] sm:w-[350px] max-h-[70vh] sm:max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-4 overflow-y-auto h-fit"
     style={geoData
         ? "background-image: url('./static/logo/background_blur_transparent.png'); background-size: auto 7vw; background-position: top right; background-repeat: no-repeat;"
         : ""}
