@@ -7,15 +7,15 @@
 {#if open}
     <!-- Backdrop -->
     <div
-        class="fixed inset-0 z-[999] bg-black/20 backdrop-blur-[1px]"
+        class="fixed inset-0 z-[2000] bg-black/20 backdrop-blur-[1px]"
         onclick={() => (open = false)}
         role="presentation"
     ></div>
 
     <!-- Panel: same margins as the left sidebar -->
     <div
-        class="fixed z-[1000] flex flex-col bg-background/95 backdrop-blur border rounded-xl shadow-xl overflow-hidden h-fit max-h-[calc(100vh-2rem)]"
-        style="top: 1rem; left: calc(1rem + 350px + 0.5rem); right: 1rem;"
+        class="fixed z-[2010] flex flex-col bg-background/95 backdrop-blur border rounded-xl shadow-xl overflow-hidden h-fit max-h-[calc(100vh-2rem)]
+               top-4 left-4 right-4 sm:left-[calc(1rem+350px+0.5rem)] sm:right-4"
     >
         <!-- Header -->
         <div
@@ -104,6 +104,7 @@
                             href="https://orcid.org/0009-0001-3489-1732"
                             target="_blank"
                             class="text-[#A6CE39] hover:opacity-80"
+                            aria-label="ORCID for Gonçalo Matos"
                         >
                             <i class="fab fa-orcid"></i>
                         </a>
@@ -117,6 +118,7 @@
                             href="https://orcid.org/0000-0002-5642-6006"
                             target="_blank"
                             class="text-[#A6CE39] hover:opacity-80"
+                            aria-label="ORCID for Rosa Félix"
                         >
                             <i class="fab fa-orcid"></i>
                         </a>

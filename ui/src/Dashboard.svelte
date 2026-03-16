@@ -199,13 +199,14 @@
     });
 
     const routeOptions = $derived.by(() => {
-        if (!geoData || !geoData.shapes) return [];
-        return Object.keys(geoData.shapes)
-            .map((s: any) => ({
+        const data = geoData;
+        if (!data || !data.shapes) return [];
+        return Object.keys(data.shapes)
+            .map((s: string) => ({
                 id: s,
-                label: `${geoData.shapes[s].route_short_name}: ${geoData.shapes[s].route_long_name} (${geoData.shapes[s].direction_id ? "DESC" : "ASC"})`,
-                short_name: geoData.shapes[s].route_short_name,
-                color: geoData.shapes[s].route_color,
+                label: `${data.shapes[s].route_short_name}: ${data.shapes[s].route_long_name} (${data.shapes[s].direction_id ? "DESC" : "ASC"})`,
+                short_name: data.shapes[s].route_short_name,
+                color: data.shapes[s].route_color,
             }))
             .sort((a, b) =>
                 a.short_name.localeCompare(b.short_name, undefined, {
@@ -429,7 +430,7 @@
                             {#snippet child({ props })}
                                 <a
                                     {...props}
-                                    href={region.files.zip}
+                                    href={region?.files.zip}
                                     target="_blank"
                                     rel="noreferrer"
                                     class="hover:text-foreground cursor-pointer"
@@ -1122,6 +1123,5 @@
 
 <ModalDetails
     bind:open={action_modal_details_open}
-    wayId={selectedWayId}
     {geoData}
 />

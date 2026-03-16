@@ -47,15 +47,15 @@
 {#if open}
     <!-- Backdrop -->
     <div
-        class="fixed inset-0 z-[999] bg-black/20 backdrop-blur-[1px]"
+        class="fixed inset-0 z-[2000] bg-black/20 backdrop-blur-[1px]"
         onclick={() => (open = false)}
         role="presentation"
     ></div>
 
     <!-- Panel: same margins as the left sidebar -->
     <div
-        class="fixed z-[1000] flex flex-col bg-background/95 backdrop-blur border rounded-xl shadow-xl overflow-hidden h-fit max-h-[calc(100vh-2rem)]"
-        style="top: 1rem; left: calc(1rem + 350px + 0.5rem); right: 1rem;"
+        class="fixed z-[2010] flex flex-col bg-background/95 backdrop-blur border rounded-xl shadow-xl overflow-hidden h-fit max-h-[calc(100vh-2rem)]
+               top-4 left-4 right-4 sm:left-[calc(1rem+350px+0.5rem)] sm:right-4"
     >
         <!-- Header -->
         <div
@@ -116,29 +116,23 @@
                                 <tr class="bg-muted/30">
                                     <th
                                         class="px-4 py-2 text-left font-medium text-muted-foreground"
-                                        >Shapes considered²</th
+                                        >Routes considered²</th
                                     >
                                     <td class="px-4 py-2">
                                         <kbd
                                             class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
                                         >
                                             {geoData.metadata.prioritization
-                                                .shapes_total -
-                                                geoData.metadata.prioritization
-                                                    .shapes_missing.length} of {geoData
+                                                .routes_covered} of {geoData
                                                 .metadata.prioritization
-                                                .shapes_total}
+                                                .routes_total}
                                             ({(
-                                                ((geoData.metadata
+                                                (geoData.metadata
                                                     .prioritization
-                                                    .shapes_total -
+                                                    .routes_covered /
                                                     geoData.metadata
                                                         .prioritization
-                                                        .shapes_missing
-                                                        .length) /
-                                                    geoData.metadata
-                                                        .prioritization
-                                                        .shapes_total) *
+                                                        .routes_total) *
                                                 100
                                             ).toFixed(2)}%)
                                         </kbd>
