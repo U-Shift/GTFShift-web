@@ -62,15 +62,15 @@
 {#if open}
     <!-- Backdrop -->
     <div
-        class="fixed inset-0 z-[999] bg-black/20 backdrop-blur-[1px]"
+        class="fixed inset-0 z-[2000] bg-black/20 backdrop-blur-[1px]"
         onclick={() => (open = false)}
         role="presentation"
     ></div>
 
     <!-- Panel: same margins as the left sidebar (1rem all around, starts after 350px sidebar) -->
     <div
-        class="fixed z-[1000] flex flex-col bg-background/95 backdrop-blur border rounded-xl shadow-xl overflow-hidden h-fit max-h-[calc(100vh-2rem)]"
-        style="top: 1rem; left: calc(1rem + 350px + 0.5rem); right: 1rem;"
+        class="fixed z-[2010] flex flex-col bg-background/95 backdrop-blur border rounded-xl shadow-xl overflow-hidden h-fit max-h-[calc(100vh-2rem)]
+               top-4 left-4 right-4 sm:left-[calc(1rem+350px+0.5rem)] sm:right-4"
     >
         <!-- Header -->
         <div
@@ -101,83 +101,41 @@
                         <table class="w-full text-sm">
                             <thead class="bg-muted/50 border-b sticky top-0">
                                 <tr>
-                                    <ThSort
-                                        {table}
-                                        field={(r) => r.properties.way_osm_id}
-                                        class="px-4 py-2 text-left font-bold"
-                                        >OSM ID</ThSort
-                                    >
-                                    <ThSort
-                                        {table}
-                                        field={(r) => r.properties.name}
-                                        class="px-4 py-2 text-left font-bold"
-                                        >Name</ThSort
-                                    >
-                                    <ThSort
-                                        {table}
-                                        field={(r) => r.properties.frequency}
-                                        class="px-4 py-2 text-left font-bold"
-                                        >Frequency <small>(Buses/h)</small
-                                        ></ThSort
-                                    >
-                                    <ThSort
-                                        {table}
-                                        field={(r) => r.properties.is_bus_lane}
-                                        class="px-4 py-2 text-left font-bold"
-                                        >Bus Lane</ThSort
-                                    >
-                                    <ThSort
-                                        {table}
-                                        field={(r) => r.properties.n_lanes}
-                                        class="px-4 py-2 text-left font-bold"
-                                        >Nr lanes <small
-                                            >(circulation + parking)</small
-                                        ></ThSort
-                                    >
-                                    <ThSort
-                                        {table}
-                                        field={(r) => r.properties.n_directions}
-                                        class="px-4 py-2 text-left font-bold"
-                                        >Nr directions</ThSort
-                                    >
-                                    <ThSort
-                                        {table}
-                                        field={(r) =>
-                                            r.properties.n_lanes_direction}
-                                        class="px-4 py-2 text-left font-bold"
-                                        >Nr lanes/dir</ThSort
-                                    >
+                                    <th class="px-4 py-2 text-left font-bold">
+                                        <ThSort {table} field={(r) => r.properties.way_osm_id}>OSM ID</ThSort>
+                                    </th>
+                                    <th class="px-4 py-2 text-left font-bold">
+                                        <ThSort {table} field={(r) => r.properties.name}>Name</ThSort>
+                                    </th>
+                                    <th class="px-4 py-2 text-left font-bold">
+                                        <ThSort {table} field={(r) => r.properties.frequency}>Frequency <small>(Buses/h)</small></ThSort>
+                                    </th>
+                                    <th class="px-4 py-2 text-left font-bold">
+                                        <ThSort {table} field={(r) => r.properties.is_bus_lane}>Bus Lane</ThSort>
+                                    </th>
+                                    <th class="px-4 py-2 text-left font-bold">
+                                        <ThSort {table} field={(r) => r.properties.n_lanes}>Nr lanes <small>(circulation + parking)</small></ThSort>
+                                    </th>
+                                    <th class="px-4 py-2 text-left font-bold">
+                                        <ThSort {table} field={(r) => r.properties.n_directions}>Nr directions</ThSort>
+                                    </th>
+                                    <th class="px-4 py-2 text-left font-bold">
+                                        <ThSort {table} field={(r) => r.properties.n_lanes_direction}>Nr lanes/dir</ThSort>
+                                    </th>
                                     {#if rt_data}
-                                        <ThSort
-                                            {table}
-                                            field={(r) =>
-                                                r.properties.speed_avg}
-                                            class="px-4 py-2 text-left font-bold"
-                                            >Avg speed <small>(km/h)</small
-                                            ></ThSort
-                                        >
-                                        <ThSort
-                                            {table}
-                                            field={(r) =>
-                                                r.properties.speed_count}
-                                            class="px-4 py-2 text-left font-bold"
-                                            >Speed count <small
-                                                >(nr measurements)</small
-                                            ></ThSort
-                                        >
+                                        <th class="px-4 py-2 text-left font-bold">
+                                            <ThSort {table} field={(r) => r.properties.speed_avg}>Avg speed <small>(km/h)</small></ThSort>
+                                        </th>
+                                        <th class="px-4 py-2 text-left font-bold">
+                                            <ThSort {table} field={(r) => r.properties.speed_count}>Speed count <small>(nr measurements)</small></ThSort>
+                                        </th>
                                     {/if}
-                                    <ThSort
-                                        {table}
-                                        field={(r) => r.properties.length_m}
-                                        class="px-4 py-2 text-left font-bold"
-                                        >Length <small>(m)</small></ThSort
-                                    >
-                                    <ThSort
-                                        {table}
-                                        field={(r) => r.properties.route_names}
-                                        class="px-4 py-2 text-left font-bold"
-                                        >Routes</ThSort
-                                    >
+                                    <th class="px-4 py-2 text-left font-bold">
+                                        <ThSort {table} field={(r) => r.properties.length_m}>Length <small>(m)</small></ThSort>
+                                    </th>
+                                    <th class="px-4 py-2 text-left font-bold">
+                                        <ThSort {table} field={(r) => r.properties.route_names}>Routes</ThSort>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y">
