@@ -31,5 +31,19 @@ export const DB_REGIONS: DataRegion[] = [
         },
         date: 'Feb 2026',
         color: '#003f8f'
+    },
+    {
+        id: 'aml',
+        name: 'Carris Metropolitana, Lisbon Metro Area, PT',
+        files: {
+            ways: './data/aml/ways_aml_rt_gtfs2026-02-04_run20260316.geojson',
+            way_data: './data/aml/way_data_aml_rt_gtfs2026-02-04_run20260316.json',
+            metadata: './data/aml/metadata_aml_rt_gtfs2026-02-04_run20260316.json',
+            route_data: './data/aml/route_data_aml_rt_gtfs2026-02-04_run20260316.json',
+            shape_data: './data/aml/shape_data_aml_rt_gtfs2026-02-04_run20260316.json',
+            zip: './data/aml/aml.zip'
+        },
+        date: 'Feb 2026',
+        color: '#ffdd01'
     }
 ]
