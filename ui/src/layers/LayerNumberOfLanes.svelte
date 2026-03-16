@@ -26,17 +26,18 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
+    import { getColorFromGradient } from "../lib/utils";
+
     function getLaneStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
         const n_lanes_direction = props?.n_lanes_direction || 0;
-        const colorIndex = Math.min(
-            Math.ceil(
-                (n_lanes_direction * COLOR_GRADIENT.length) /
-                    geoData.metadata.data_census.lanes.max,
-            ),
-            COLOR_GRADIENT.length - 1,
+        const color = getColorFromGradient(
+            n_lanes_direction,
+            geoData.metadata.data_census.lanes?.p5 || 0,
+            geoData.metadata.data_census.lanes?.p95 || 1,
+            COLOR_GRADIENT
         );
-        return { color: COLOR_GRADIENT[colorIndex], weight: 3.5 };
+        return { color, weight: 3.5 };
     }
 
     $effect(() => {

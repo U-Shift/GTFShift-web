@@ -704,9 +704,9 @@
                                 frequency, from the <span
                                     style="color: {COLOR_GRADIENT[0]}"
                                     class="bg-black/50 font-bold px-1 rounded"
-                                    >lowest ({geoData.metadata.data_census
+                                    >P5 ({geoData.metadata.data_census
                                         .frequency_hour[criteria_hour]
-                                        ?.min})</span
+                                        ?.p5})</span
                                 >
                                 to the
                                 <span
@@ -714,9 +714,9 @@
                                         COLOR_GRADIENT.length - 1
                                     ]}"
                                     class="font-bold"
-                                    >highest ({geoData.metadata.data_census
+                                    >P95 ({geoData.metadata.data_census
                                         .frequency_hour[criteria_hour]
-                                        ?.max})</span
+                                        ?.p95})</span
                                 > number of buses per hour, considering:
                             </p>
                             <div class="flex items-center gap-2">
@@ -754,8 +754,8 @@
                                 number of lanes, from the <span
                                     style="color: {COLOR_GRADIENT[0]}"
                                     class="bg-black/50 font-bold px-1 rounded"
-                                    >lowest ({geoData.metadata.data_census.lanes
-                                        ?.min})</span
+                                    >P5 ({geoData.metadata.data_census.lanes
+                                        ?.p5})</span
                                 >
                                 to the
                                 <span
@@ -763,8 +763,8 @@
                                         COLOR_GRADIENT.length - 1
                                     ]}"
                                     class="font-bold"
-                                    >highest ({geoData.metadata.data_census
-                                        .lanes?.max})</span
+                                    >P95 ({geoData.metadata.data_census
+                                        .lanes?.p95})</span
                                 > number of lanes per direction.
                             </p>
                             {#if geoData.metadata.data_census.lanes}
@@ -791,7 +791,7 @@
                                     by the average speed measured, from the <span
                                         style="color: {COLOR_GRADIENT_RED.slice().reverse()[0]}"
                                         class="font-bold"
-                                        >lowest ({geoData.metadata.data_census.speed_avg?.min?.toFixed(
+                                        >P5 ({geoData.metadata.data_census.speed_avg?.p5?.toFixed(
                                             2,
                                         )})</span
                                     >
@@ -801,7 +801,7 @@
                                             COLOR_GRADIENT_RED.length - 1
                                         ]}"
                                         class="bg-black/50 font-bold px-1 rounded"
-                                        >highest ({geoData.metadata.data_census.speed_avg?.max?.toFixed(
+                                        >P95 ({geoData.metadata.data_census.speed_avg?.p95?.toFixed(
                                             2,
                                         )})</span
                                     > values (km/h).
@@ -936,7 +936,7 @@
                         class="min-w-[40px] text-right text-xs text-muted-foreground"
                         >{geoData?.metadata.data_census.frequency_hour[
                             criteria_hour
-                        ]?.min}</span
+                        ]?.p5}</span
                     >
                     <div
                         class="flex-1 h-3 rounded border"
@@ -948,7 +948,7 @@
                         class="min-w-[40px] text-left text-xs text-muted-foreground"
                         >{geoData?.metadata.data_census.frequency_hour[
                             criteria_hour
-                        ]?.max}</span
+                        ]?.p95}</span
                     >
                 </div>
             </div>
@@ -960,7 +960,7 @@
                 <div class="flex gap-2 items-center">
                     <span
                         class="min-w-[40px] text-right text-xs text-muted-foreground"
-                        >{geoData?.metadata.data_census.lanes?.min}</span
+                        >{geoData?.metadata.data_census.lanes?.p5}</span
                     >
                     <div
                         class="flex-1 h-3 rounded border"
@@ -970,7 +970,7 @@
                     ></div>
                     <span
                         class="min-w-[40px] text-left text-xs text-muted-foreground"
-                        >{geoData?.metadata.data_census.lanes?.max}</span
+                        >{geoData?.metadata.data_census.lanes?.p95}</span
                     >
                 </div>
             </div>
@@ -984,9 +984,9 @@
                 <div class="flex gap-2 items-center">
                     <span
                         class="min-w-[40px] text-right text-xs text-muted-foreground"
-                        >{geoData?.metadata.data_census.speed_avg?.min &&
+                        >{geoData?.metadata.data_census.speed_avg?.p5 &&
                             Math.floor(
-                                geoData.metadata.data_census.speed_avg.min,
+                                geoData.metadata.data_census.speed_avg.p5,
                             )}</span
                     >
                     <div
@@ -998,9 +998,9 @@
                     ></div>
                     <span
                         class="min-w-[40px] text-left text-xs text-muted-foreground"
-                        >{geoData?.metadata.data_census.speed_avg?.max &&
+                        >{geoData?.metadata.data_census.speed_avg?.p95 &&
                             Math.ceil(
-                                geoData.metadata.data_census.speed_avg.max,
+                                geoData.metadata.data_census.speed_avg.p95,
                             )}</span
                     >
                 </div>
