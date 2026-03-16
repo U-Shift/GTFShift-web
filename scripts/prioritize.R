@@ -162,6 +162,11 @@ for(i in 1:nrow(regions)) {
     st_drop_geometry() |>
     left_join(gtfs_date$routes |> select(route_id, route_long_name)) |>
     left_join(gtfs$routes |> select(route_id, route_color, route_text_color), by="route_id")
+  # If route_color does not start with "#", add suffix
+  routes = routes |> mutate(
+    route_color = ifelse(!str_starts(route_color, "#"), paste0("#", route_color), route_color),
+    route_text_color = ifelse(!str_starts(route_text_color, "#"), paste0("#", route_text_color), route_text_color)
+  )
   nested_shapes <- lapply(split(routes, routes$shape_id), function(df) {
     
     # Extract static metadata associated with this shape
