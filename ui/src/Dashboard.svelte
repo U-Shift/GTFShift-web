@@ -221,7 +221,7 @@
 
 <div
     id="controls-panel"
-    class="absolute top-4 left-4 z-[1000] flex flex-col items-start w-[350px] max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-4 overflow-y-auto h-fit"
+    class="absolute top-4 left-4 z-[1010] flex flex-col items-start w-[calc(100vw-2rem)] sm:w-[350px] max-h-[calc(100vh-8rem)] sm:max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-4 overflow-y-auto h-fit"
     style={geoData
         ? "background-image: url('./static/logo/background_blur_transparent.png'); background-size: auto 7vw; background-position: top right; background-repeat: no-repeat;"
         : ""}
@@ -876,7 +876,7 @@
 {#if active_layer !== undefined && !any_modal_open && !selectedWayId}
     <div
         id="caption"
-        class="absolute bottom-6 right-6 z-[1000] flex flex-col gap-3 p-4 bg-background/95 backdrop-blur shadow-lg border rounded-xl text-sm w-[350px] max-h-[40vh] overflow-y-auto"
+        class="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 z-[1000] flex flex-col gap-3 p-4 bg-background/95 backdrop-blur shadow-lg border rounded-xl text-sm w-[calc(100vw-2rem)] sm:w-[350px] max-h-[30vh] sm:max-h-[40vh] overflow-y-auto"
     >
         {#if active_layer === DisplayOptions.PRIORITIZATION}
             <p class="flex items-start text-muted-foreground leading-tight">
