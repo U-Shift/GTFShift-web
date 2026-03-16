@@ -364,9 +364,9 @@
             <div
                 class="flex items-center gap-3 text-sm text-muted-foreground mb-4"
             >
-                <p>
+                <p class="mr-auto">
                     <i class="fas fa-map-marker-alt mr-1"></i>
-                    {region.region} |
+                    {region.region}<br />
                     <i class="fas fa-calendar-alt mr-1"></i>
                     {region.date}
                 </p>
