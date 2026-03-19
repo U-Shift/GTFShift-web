@@ -75,8 +75,8 @@ regions = rbind( # STCP
   data.frame(
     name = "stcp",
     name_long = "Porto, Portugal",
-    gtfs_url = data$URL[data$ID == "stcp"],
-    gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_url = "https://opendata.porto.digital/dataset/5275c986-592c-43f5-8f87-aabbd4e4f3a4/resource/72babf2b-8c56-4041-8141-e57e8efb5ffc/download/gtfs_static_02_03_2026.zip", # 02/03/2026
+    gtfs_day = Sys.Date(),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "STCP", key_exact = TRUE)

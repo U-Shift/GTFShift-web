@@ -68,5 +68,22 @@ export const DB_REGIONS: DataRegion[] = [
         },
         date: 'Mar 2026',
         color: '#31bcad'
+    },
+    {
+        id: 'porto',
+        name: 'STCP',
+        region: 'Porto, PT',
+        rt_data: false,
+        logo: './static/regions/stcp.png',
+        files: {
+            ways: './data/porto/ways_stcp_gtfs2026-03-16_run20260316.geojson',
+            way_data: './data/porto/way_data_stcp_gtfs2026-03-16_run20260316.json',
+            metadata: './data/porto/metadata_stcp_gtfs2026-03-16_run20260316.json',
+            route_data: './data/porto/route_data_stcp_gtfs2026-03-16_run20260316.json',
+            shape_data: './data/porto/shape_data_stcp_gtfs2026-03-16_run20260316.json',
+            zip: './data/porto/porto.zip'
+        },
+        date: 'Mar 2026',
+        color: '#064d84'
     }
 ]
