@@ -4,7 +4,8 @@ library(stringr)
 
 library(osmdata)
 get_overpass_url()
-set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter")
+# set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter")
+set_overpass_url("https://overpass.private.coffee/api/interpreter") # 4 servers with 20 cores, 256GB RAM, SSD each
 get_overpass_url()
 
 # Refer to osm_match_parameters.R to define parameters before running this script!
@@ -20,7 +21,7 @@ for(i in 1:nrow(regions)) {
 
   gtfs = GTFShift::load_feed(region$gtfs_url)
   assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
-  # tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output, region$name, region$gtfs_day))
+  tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output, region$name, region$gtfs_day))
 
   gtfs_shapes = tidytransit::shapes_as_sf(gtfs$shapes)
   bbox = sf::st_bbox(gtfs_shapes)
@@ -65,12 +66,18 @@ nrow(shapes_match_routes |> distinct(osm_id))
 
 result = shapes_match_routes |> sf::st_drop_geometry()
 # View(result)
+summary(result)
 nrow(result)
 nrow(result |> filter(distance_diff<500 & points_diff<100))
 nrow(result |> filter(distance_diff<1000 & points_diff<500))
 nrow(result |> filter(distance_diff<1500 & points_diff<500))
 
-View(result |> filter(distance_diff>1000))
+# View(result |> filter(distance_diff<1000 & points_diff<500))
+# View(result |> filter(distance_diff>=1000))
+# View(result |> filter(distance_diff>=1000 | points_diff>=500))
+
+nrow(result |> filter(distance_diff>=1000 | points_diff>=500))
+
 # View(shapes_match_routes |> filter(distance_diff<500 & points_diff<100))
 
 summary(shapes_match_routes)
@@ -90,11 +97,15 @@ routes = gtfs$routes |>
   sf::st_as_sf()
 
 routes
-mapview::mapview(routes, zcol="osm_id")
+# mapview::mapview(routes, zcol="osm_id")
 
 # > Draw original shapes for those routes
 routes_original = routes |> sf::st_drop_geometry() |>
     left_join(gtfs_shapes, by="shape_id") |>
     sf::st_as_sf()
 
-mapview::mapview(routes_original, zcol="osm_id")
+# mapview::mapview(routes_original, zcol="osm_id")
+
+osm_id_debug = '2931353'
+mapview::mapview(routes |> filter(osm_id==osm_id_debug), layer.name="OSM route", color="red") +
+  mapview::mapview(routes_original |> filter(osm_id==osm_id_debug), layer.name="GTFS route", color="blue")
