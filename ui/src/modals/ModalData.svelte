@@ -50,7 +50,7 @@
             if (data_filtered) {
                 if (!table) {
                     table = new TableHandler([] as Feature[], {
-                        rowsPerPage: 20,
+                        rowsPerPage: 10,
                     });
                 }
                 table.setRows([...data_filtered]);
@@ -101,41 +101,72 @@
                         <table class="w-full text-sm">
                             <thead class="bg-muted/50 border-b sticky top-0">
                                 <tr>
-                                    <th class="px-4 py-2 text-left font-bold">
-                                        <ThSort {table} field={(r) => r.properties.way_osm_id}>OSM ID</ThSort>
-                                    </th>
-                                    <th class="px-4 py-2 text-left font-bold">
-                                        <ThSort {table} field={(r) => r.properties.name}>Name</ThSort>
-                                    </th>
-                                    <th class="px-4 py-2 text-left font-bold">
-                                        <ThSort {table} field={(r) => r.properties.frequency}>Frequency <small>(Buses/h)</small></ThSort>
-                                    </th>
-                                    <th class="px-4 py-2 text-left font-bold">
-                                        <ThSort {table} field={(r) => r.properties.is_bus_lane}>Bus Lane</ThSort>
-                                    </th>
-                                    <th class="px-4 py-2 text-left font-bold">
-                                        <ThSort {table} field={(r) => r.properties.n_lanes}>Nr lanes <small>(circulation + parking)</small></ThSort>
-                                    </th>
-                                    <th class="px-4 py-2 text-left font-bold">
-                                        <ThSort {table} field={(r) => r.properties.n_directions}>Nr directions</ThSort>
-                                    </th>
-                                    <th class="px-4 py-2 text-left font-bold">
-                                        <ThSort {table} field={(r) => r.properties.n_lanes_direction}>Nr lanes/dir</ThSort>
-                                    </th>
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.way_osm_id}
+                                        >OSM ID</ThSort
+                                    >
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.name}
+                                        >Name</ThSort
+                                    >
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.frequency}
+                                        >Frequency <small>(Buses/h)</small
+                                        ></ThSort
+                                    >
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.is_bus_lane}
+                                        >Bus Lane</ThSort
+                                    >
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.n_lanes}
+                                        >Nr lanes <small
+                                            >(circulation + parking)</small
+                                        ></ThSort
+                                    >
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.n_directions}
+                                        >Nr directions</ThSort
+                                    >
+                                    <ThSort
+                                        {table}
+                                        field={(r) =>
+                                            r.properties.n_lanes_direction}
+                                        >Nr lanes/dir</ThSort
+                                    >
                                     {#if rt_data}
-                                        <th class="px-4 py-2 text-left font-bold">
-                                            <ThSort {table} field={(r) => r.properties.speed_avg}>Avg speed <small>(km/h)</small></ThSort>
-                                        </th>
-                                        <th class="px-4 py-2 text-left font-bold">
-                                            <ThSort {table} field={(r) => r.properties.speed_count}>Speed count <small>(nr measurements)</small></ThSort>
-                                        </th>
+                                        <ThSort
+                                            {table}
+                                            field={(r) =>
+                                                r.properties.speed_avg}
+                                            >Avg speed <small>(km/h)</small
+                                            ></ThSort
+                                        >
+                                        <ThSort
+                                            {table}
+                                            field={(r) =>
+                                                r.properties.speed_count}
+                                            >Speed count <small
+                                                >(nr measurements)</small
+                                            ></ThSort
+                                        >
                                     {/if}
-                                    <th class="px-4 py-2 text-left font-bold">
-                                        <ThSort {table} field={(r) => r.properties.length_m}>Length <small>(m)</small></ThSort>
-                                    </th>
-                                    <th class="px-4 py-2 text-left font-bold">
-                                        <ThSort {table} field={(r) => r.properties.route_names}>Routes</ThSort>
-                                    </th>
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.length_m}
+                                        >Length <small>(m)</small></ThSort
+                                    >
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.route_names}
+                                        >Routes</ThSort
+                                    >
                                 </tr>
                             </thead>
                             <tbody class="divide-y">
@@ -304,4 +335,40 @@
         white-space: nowrap !important;
         font-weight: bold;
     }
+    :global(.svelte-simple-datatable th:nth-child(1)) {
+        width: 8rem;
+    } /* OSM ID */
+    :global(.svelte-simple-datatable th:nth-child(2)) {
+        min-width: 200px;
+    } /* Name */
+    :global(.svelte-simple-datatable th:nth-child(3)) {
+        width: 7rem;
+    } /* Frequency */
+    :global(.svelte-simple-datatable th:nth-child(4)) {
+        width: 6rem;
+    } /* Bus Lane */
+    :global(.svelte-simple-datatable th:nth-child(5)) {
+        width: 8rem;
+        text-align: center;
+    } /* Nr lanes */
+    :global(.svelte-simple-datatable th:nth-child(6)) {
+        width: 7rem;
+        text-align: center;
+    } /* Nr directions */
+    :global(.svelte-simple-datatable th:nth-child(7)) {
+        width: 6rem;
+        text-align: center;
+    } /* Nr lanes/dir */
+    :global(.svelte-simple-datatable th:nth-child(8)) {
+        width: 7rem;
+    } /* RT Speed or Length */
+    :global(.svelte-simple-datatable th:nth-child(9)) {
+        width: 8rem;
+    } /* RT Speed Count or Routes */
+    :global(.svelte-simple-datatable th:nth-last-child(2)) {
+        width: 6rem;
+    } /* Always Length */
+    :global(.svelte-simple-datatable th:last-child) {
+        min-width: 300px;
+    } /* Always Routes */
 </style>
