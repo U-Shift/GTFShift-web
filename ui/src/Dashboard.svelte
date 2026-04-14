@@ -196,6 +196,21 @@
             return;
 
         console.log("Filtering by shape:", selected_shape_id);
+
+        // Deselect prioritization filters when a specific route is selected
+        if (selected_shape_id && selected_shape_id !== "all") {
+            untrack(() => {
+                criteria_bus_frequency_enabled = false;
+                criteria_n_lanes_direction_enabled = false;
+                if (display_rt) criteria_avg_speed_enabled = false;
+            });
+        } else if (selected_shape_id == "all") {
+            untrack(() => {
+                criteria_bus_frequency_enabled = true;
+                criteria_n_lanes_direction_enabled = true;
+                if (display_rt) criteria_avg_speed_enabled = true;
+            });
+        }
     });
 
     const routeOptions = $derived.by(() => {
