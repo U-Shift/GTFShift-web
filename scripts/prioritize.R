@@ -49,7 +49,7 @@ for (i in 1:nrow(regions)) {
   }
 
   # Build OSM query
-  q <- opq(bbox = bbox)
+  q <- opq(bbox = bbox, timeout = 300) # Timeout to 5 minutes
   for (feat in region$query[[1]]) {
     q <- add_osm_feature(
       q,
@@ -195,7 +195,7 @@ for (i in 1:nrow(regions)) {
       return(NULL)
     }
     shape_metadata$stats <- GTFShift::get_prioritization_stats(
-      prioritization_shape |> distinct(way_osm_id, .keep_all = TRUE) |> rename(geom = geometry),
+      prioritization_shape |> distinct(way_osm_id, .keep_all = TRUE),
       weight = "length"
     )
     # Round all numeric values to 2 decimals
@@ -245,8 +245,7 @@ for (i in 1:nrow(regions)) {
   prioritization <- prioritization |>
     left_join(ways_length |> select(way_osm_id, length_m) |> st_drop_geometry(), by = "way_osm_id")
   prioritization_infrastructure <- prioritization |>
-    distinct(way_osm_id, .keep_all = TRUE) |>
-    rename(geom = geometry)
+    distinct(way_osm_id, .keep_all = TRUE)
 
   shapes_found <- unique(unlist(prioritization$shapes))
   shapes_missing <- unique(gtfs_date$shapes$shape_id) %>% setdiff(shapes_found)
