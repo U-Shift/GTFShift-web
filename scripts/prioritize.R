@@ -7,6 +7,7 @@ library(sf)
 library(mapview)
 library(jsonlite)
 library(osmdata)
+library(Hmisc) # For  Weighted Statistical Estimates
 get_overpass_url()
 set_overpass_url("https://overpass-api.de/api/interpreter/")
 set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter") # Crashes less and responds quicker than default one
@@ -241,6 +242,12 @@ for (i in 1:nrow(regions)) {
   )
 
   # > 4.4. Store metadata about execution details
+  prioritization <- prioritization |>
+    left_join(ways_length |> select(way_osm_id, length_m) |> st_drop_geometry(), by = "way_osm_id")
+  prioritization_infrastructure <- prioritization |>
+    distinct(way_osm_id, .keep_all = TRUE) |>
+    rename(geom = geometry)
+
   shapes_found <- unique(unlist(prioritization$shapes))
   shapes_missing <- unique(gtfs$shapes$shape_id) %>% setdiff(shapes_found)
 
@@ -261,18 +268,19 @@ for (i in 1:nrow(regions)) {
       as.list()
   })
 
-  dataCensus <- function(numberArray) {
+  dataCensus <- function(numberArray, weights) {
+    quantiles <- wtd.quantile(numberArray, weights = weights, probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
     return(list(
       min = round(min(numberArray, na.rm = TRUE), digits = 2),
       max = round(max(numberArray, na.rm = TRUE), digits = 2),
-      p5 = round(as.numeric(quantile(numberArray, 0.05, na.rm = TRUE)), digits = 2),
-      p25 = round(as.numeric(quantile(numberArray, 0.25, na.rm = TRUE)), digits = 2),
-      p75 = round(as.numeric(quantile(numberArray, 0.75, na.rm = TRUE)), digits = 2),
-      p95 = round(as.numeric(quantile(numberArray, 0.95, na.rm = TRUE)), digits = 2),
-      mean = round(mean(numberArray, na.rm = TRUE), digits = 2),
-      median = round(as.numeric(median(numberArray, na.rm = TRUE)), digits = 2),
-      variance = round(var(numberArray, na.rm = TRUE), digits = 2),
-      sd = round(sd(numberArray, na.rm = TRUE), digits = 2)
+      p5 = round(as.numeric(quantiles[1]), digits = 2),
+      p25 = round(as.numeric(quantiles[2]), digits = 2),
+      p75 = round(as.numeric(quantiles[4]), digits = 2),
+      p95 = round(as.numeric(quantiles[5]), digits = 2),
+      mean = round(wtd.mean(numberArray, weights = weights, na.rm = TRUE), digits = 2),
+      median = round(as.numeric(quantiles[3]), digits = 2),
+      variance = round(wtd.var(numberArray, weights = weights, na.rm = TRUE), digits = 2),
+      sd = round(sqrt(wtd.var(numberArray, weights = weights, na.rm = TRUE)), digits = 2)
     ))
   }
 
@@ -287,15 +295,12 @@ for (i in 1:nrow(regions)) {
   census_frequency_hour <- list()
   for (h in 0:23) {
     prioritization_hour <- prioritization |> filter(hour == h)
-    census <- dataCensus(prioritization_hour$frequency)
+    census <- dataCensus(prioritization_hour$frequency, prioritization_hour$length_m)
     if (!is.na(census$mean)) {
       census_frequency_hour[[as.character(h)]] <- census
     }
   }
 
-  prioritization_infrastructure <- prioritization |>
-    distinct(way_osm_id, .keep_all = TRUE) |>
-    rename(geom = geometry)
   metadata <- list(
     region = region$name_long,
     gtfs = list(
@@ -315,10 +320,12 @@ for (i in 1:nrow(regions)) {
       shapes_total = length(unique(gtfs$shapes$shape_id))
     ),
     data_census = list(
-      frequency = dataCensus(prioritization$frequency),
+      frequency = dataCensus(prioritization$frequency, prioritization$length_m),
       frequency_hour = census_frequency_hour,
-      speed_avg = NA,
-      lanes = dataCensus(prioritization_infrastructure$n_lanes_direction),
+      speed_avg_length = NA,
+      speed_avg_frequency = NA,
+      lanes_length = dataCensus(prioritization_infrastructure$n_lanes_direction, prioritization_infrastructure$length_m),
+      lanes_frequency = dataCensus(prioritization_infrastructure$n_lanes_direction, prioritization_infrastructure$frequency),
       prioritization_stats_length = lapply(
         GTFShift::get_prioritization_stats(prioritization_infrastructure, weight = "length"),
         function(x) {
@@ -354,7 +361,8 @@ for (i in 1:nrow(regions)) {
     )
   )
   if ("speed_avg" %in% colnames(prioritization_infrastructure)) {
-    metadata$data_census$speed_avg <- dataCensus(prioritization_infrastructure$speed_avg)
+    metadata$data_census$speed_avg_length <- dataCensus(prioritization_infrastructure$speed_avg, prioritization_infrastructure$length_m)
+    metadata$data_census$speed_avg_frequency <- dataCensus(prioritization_infrastructure$speed_avg, prioritization_infrastructure$frequency)
   }
   write_json(
     metadata,
