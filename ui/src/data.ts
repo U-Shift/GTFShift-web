@@ -25,11 +25,11 @@ export const DB_REGIONS: DataRegion[] = [
         rt_data: true,
         logo: './static/regions/carris.png',
         files: {
-            ways: './data/lisbon/ways_lisboa_rt_gtfs2026-02-04_run20260316.geojson',
-            way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-02-04_run20260316.json',
-            metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-02-04_run20260316.json',
-            route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-02-04_run20260316.json',
-            shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-02-04_run20260316.json',
+            ways: './data/lisbon/ways_lisboa_rt_gtfs2026-02-04_run20260414.geojson',
+            way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-02-04_run20260414.json',
+            metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-02-04_run20260414.json',
+            route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-02-04_run20260414.json',
+            shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-02-04_run20260414.json',
             zip: './data/lisbon/lisbon.zip'
         },
         date: 'Feb 2026',

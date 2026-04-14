@@ -169,7 +169,7 @@
             criteria_bus_frequency =
                 geoData.metadata.data_census.frequency.median;
             criteria_avg_speed = Math.floor(
-                geoData.metadata.data_census.speed_avg?.median ?? 0,
+                geoData.metadata.data_census.speed_avg_length?.median ?? 0,
             );
             criteria_bus_frequency_enabled = true;
             criteria_n_lanes_direction_enabled = true;
@@ -224,7 +224,7 @@
                 color: data.shapes[s].route_color,
             }))
             .sort((a, b) =>
-                a.short_name.localeCompare(b.short_name, undefined, {
+                a.label.localeCompare(b.label, undefined, {
                     numeric: true,
                 }),
             );
@@ -733,6 +733,28 @@
                                 class="font-bold">green</span
                             >
                         </p>
+                        {#if geoData.metadata.data_census.prioritization_stats_length}
+                            <p class="text-xs text-muted-foreground pt-2">
+                                There are {(
+                                    geoData.metadata.data_census
+                                        .prioritization_stats_length
+                                        .extension_bus_lane / 1000
+                                ).toFixed(2)} km of bus lanes, accounting for
+                                {(
+                                    (geoData.metadata.data_census
+                                        .prioritization_stats_length
+                                        .extension_bus_lane /
+                                        geoData.metadata.data_census
+                                            .prioritization_stats_length
+                                            .extension) *
+                                    100
+                                ).toFixed(2)}% of the {(
+                                    geoData.metadata.data_census
+                                        .prioritization_stats_length.extension /
+                                    1000
+                                ).toFixed(2)} km bus network
+                            </p>
+                        {/if}
                     </Accordion.Content>
                 </Accordion.Item>
 
@@ -778,8 +800,9 @@
                             </div>
                             {#if geoData.metadata.data_census.frequency_hour[criteria_hour]}
                                 <DataCensusTable
-                                    census={geoData.metadata.data_census
+                                    census_1={geoData.metadata.data_census
                                         .frequency_hour[criteria_hour]}
+                                    census_1_label="Length"
                                 />
                             {/if}
                         </div>
@@ -800,8 +823,8 @@
                                 number of lanes, from the <span
                                     style="color: {COLOR_GRADIENT[0]}"
                                     class="bg-black/50 font-bold px-1 rounded"
-                                    >P5 ({geoData.metadata.data_census.lanes
-                                        ?.p5})</span
+                                    >P5 ({geoData.metadata.data_census
+                                        .lanes_length?.p5})</span
                                 >
                                 to the
                                 <span
@@ -809,13 +832,18 @@
                                         COLOR_GRADIENT.length - 1
                                     ]}"
                                     class="font-bold"
-                                    >P95 ({geoData.metadata.data_census.lanes
-                                        ?.p95})</span
+                                    >P95 ({geoData.metadata.data_census
+                                        .lanes_length?.p95})</span
                                 > number of lanes per direction.
                             </p>
-                            {#if geoData.metadata.data_census.lanes}
+                            {#if geoData.metadata.data_census.lanes_length}
                                 <DataCensusTable
-                                    census={geoData.metadata.data_census.lanes}
+                                    census_1={geoData.metadata.data_census
+                                        .lanes_length}
+                                    census_2={geoData.metadata.data_census
+                                        .lanes_frequency}
+                                    census_1_label="Length"
+                                    census_2_label="Frequency"
                                 />
                             {/if}
                         </div>
@@ -837,7 +865,7 @@
                                     by the average speed measured, from the <span
                                         style="color: {COLOR_GRADIENT_RED.slice().reverse()[0]}"
                                         class="font-bold"
-                                        >P5 ({geoData.metadata.data_census.speed_avg?.p5?.toFixed(
+                                        >P5 ({geoData.metadata.data_census.speed_avg_length?.p5?.toFixed(
                                             2,
                                         )})</span
                                     >
@@ -847,15 +875,19 @@
                                             COLOR_GRADIENT_RED.length - 1
                                         ]}"
                                         class="bg-black/50 font-bold px-1 rounded"
-                                        >P95 ({geoData.metadata.data_census.speed_avg?.p95?.toFixed(
+                                        >P95 ({geoData.metadata.data_census.speed_avg_length?.p95?.toFixed(
                                             2,
                                         )})</span
                                     > values (km/h).
                                 </p>
-                                {#if geoData.metadata.data_census.speed_avg}
+                                {#if geoData.metadata.data_census.speed_avg_length}
                                     <DataCensusTable
-                                        census={geoData.metadata.data_census
-                                            .speed_avg}
+                                        census_1={geoData.metadata.data_census
+                                            .speed_avg_length}
+                                        census_2={geoData.metadata.data_census
+                                            .speed_avg_frequency}
+                                        census_1_label="Length"
+                                        census_2_label="Frequency"
                                     />
                                 {/if}
                             </div>
@@ -1009,7 +1041,7 @@
                 <div class="flex gap-2 items-center">
                     <span
                         class="min-w-[40px] text-right text-xs text-muted-foreground"
-                        >{geoData?.metadata.data_census.lanes?.p5}</span
+                        >{geoData?.metadata.data_census.lanes_length?.p5}</span
                     >
                     <div
                         class="flex-1 h-3 rounded border"
@@ -1019,7 +1051,7 @@
                     ></div>
                     <span
                         class="min-w-[40px] text-left text-xs text-muted-foreground"
-                        >{geoData?.metadata.data_census.lanes?.p95}</span
+                        >{geoData?.metadata.data_census.lanes_length?.p95}</span
                     >
                 </div>
             </div>
@@ -1033,9 +1065,10 @@
                 <div class="flex gap-2 items-center">
                     <span
                         class="min-w-[40px] text-right text-xs text-muted-foreground"
-                        >{geoData?.metadata.data_census.speed_avg?.p5 &&
+                        >{geoData?.metadata.data_census.speed_avg_length?.p5 &&
                             Math.floor(
-                                geoData.metadata.data_census.speed_avg.p5,
+                                geoData.metadata.data_census.speed_avg_length
+                                    .p5,
                             )}</span
                     >
                     <div
@@ -1047,9 +1080,10 @@
                     ></div>
                     <span
                         class="min-w-[40px] text-left text-xs text-muted-foreground"
-                        >{geoData?.metadata.data_census.speed_avg?.p95 &&
+                        >{geoData?.metadata.data_census.speed_avg_length?.p95 &&
                             Math.ceil(
-                                geoData.metadata.data_census.speed_avg.p95,
+                                geoData.metadata.data_census.speed_avg_length
+                                    .p95,
                             )}</span
                     >
                 </div>
