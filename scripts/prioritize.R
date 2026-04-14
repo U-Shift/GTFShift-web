@@ -250,6 +250,8 @@ for (i in 1:nrow(regions)) {
 
   shapes_found <- unique(unlist(prioritization$shapes))
   shapes_missing <- unique(gtfs$shapes$shape_id) %>% setdiff(shapes_found)
+  shapes_found_frequency <- sum((routes |> filter(shape_id %in% shapes_found))$frequency)
+  shapes_missing_frequency <- sum((routes |> filter(shape_id %in% shapes_missing))$frequency)
 
   routes_missing <- routes |>
     group_by(route_id) |>
@@ -317,7 +319,13 @@ for (i in 1:nrow(regions)) {
     prioritization = list(
       shapes_missing = shapes_missing,
       routes_missing = routes_missing_nested,
-      shapes_total = length(unique(gtfs$shapes$shape_id))
+      shapes_total = length(unique(gtfs$shapes$shape_id)),
+      shapes_found_n = length(shapes_found),
+      shapes_missing_n = length(shapes_missing),
+      shapes_found_frequency = shapes_found_frequency,
+      shapes_missing_frequency = shapes_missing_frequency,
+      rountes_missing_n = nrow(routes_missing),
+      routes_found_n = nrow(routes) - nrow(routes_missing)
     ),
     data_census = list(
       frequency = dataCensus(prioritization$frequency, prioritization$length_m),
