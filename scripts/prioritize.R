@@ -168,8 +168,8 @@ for (i in 1:nrow(regions)) {
   routes <- GTFShift::get_route_frequency_hourly(gtfs_date, date = region$gtfs_day) |>
     st_drop_geometry() |>
     select(-route_short_name) |>
-    left_join(gtfs_date$routes |> select(route_id, route_short_name, route_long_name)) |>
-    left_join(gtfs$routes |> select(route_id, route_color, route_text_color), by = "route_id")
+    left_join(gtfs$routes |> select(route_id, route_short_name, route_long_name), by = "route_id") |>
+    left_join(gtfs_date$routes |> select(route_id, route_color, route_text_color), by = "route_id")
   # If route_color does not start with "#", add suffix
   routes <- routes |> mutate(
     route_color = ifelse(!str_starts(route_color, "#"), paste0("#", route_color), route_color),
@@ -249,7 +249,7 @@ for (i in 1:nrow(regions)) {
     rename(geom = geometry)
 
   shapes_found <- unique(unlist(prioritization$shapes))
-  shapes_missing <- unique(gtfs$shapes$shape_id) %>% setdiff(shapes_found)
+  shapes_missing <- unique(gtfs_date$shapes$shape_id) %>% setdiff(shapes_found)
   shapes_found_frequency <- sum((routes |> filter(shape_id %in% shapes_found))$frequency)
   shapes_missing_frequency <- sum((routes |> filter(shape_id %in% shapes_missing))$frequency)
 
@@ -322,6 +322,7 @@ for (i in 1:nrow(regions)) {
       shapes_total = length(unique(gtfs$shapes$shape_id)),
       shapes_found_n = length(shapes_found),
       shapes_missing_n = length(shapes_missing),
+      shapes_total_frequency = sum(routes$frequency),
       shapes_found_frequency = shapes_found_frequency,
       shapes_missing_frequency = shapes_missing_frequency,
       rountes_missing_n = nrow(routes_missing),
