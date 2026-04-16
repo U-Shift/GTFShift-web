@@ -19,7 +19,8 @@ for (i in 1:nrow(regions)) {
   }
   message(sprintf("\n\nRunning for %s (%s)...", region$name, region$gtfs_day))
 
-  gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers)) region$gtfs_url_headers else NULL)
+  gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers)) unlist(region$gtfs_url_headers[[1]]) else NULL)
+  summary(gtfs)
   assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
   tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output, region$name, region$gtfs_day))
 

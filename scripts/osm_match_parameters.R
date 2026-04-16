@@ -3,7 +3,7 @@ output_root <- "osm_match"
 
 regions <- data.frame(
   name = character(),
-  gtfs = character(),
+  gtfs_url = character(),
   query = I(list())
 )
 data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
@@ -109,11 +109,11 @@ regions <- rbind( # STCP
   regions,
   data.frame(
     name = "stcp",
-    gtfs_url = "https://api.stcp.pt:8443/v1/ficheiros/real/stream/vehiclepositions",
-    gtfs_url_headers = c(
+    gtfs_url = "https://api.stcp.pt:8443/v1/ficheiros/estatico/ficheirozip",
+    gtfs_url_headers = I(list(list(
       "X-App-Id" = Sys.getenv("GTFS_STCP_KEY"),
       "X-Api-Key" = Sys.getenv("GTFS_STCP_SECRET")
-    ),
+    ))),
     gtfs_day = Sys.Date(),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
