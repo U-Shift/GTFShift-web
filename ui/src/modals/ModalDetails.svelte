@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { GeoPrioritization } from "../types/GeoPrioritization";
     import { Button } from "$lib/components/ui/button/index.js";
+    import * as Tooltip from "$lib/components/ui/tooltip/index.js";
     import hljs from "highlight.js/lib/core";
     import r from "highlight.js/lib/languages/r";
 
@@ -116,23 +117,127 @@
                                 <tr class="bg-muted/30">
                                     <th
                                         class="px-4 py-2 text-left font-medium text-muted-foreground"
-                                        >Routes considered²</th
+                                        >Route shapes considered²</th
+                                    >
+                                    <td class="px-4 py-2">
+                                        <div class="flex items-center gap-2">
+                                            <kbd
+                                                class="px-1.5 py-0.5 rounded text-xs font-mono bg-muted"
+                                            >
+                                                {geoData.metadata.prioritization
+                                                    .shapes_found_n} of {geoData
+                                                    .metadata.prioritization
+                                                    .shapes_total}
+                                                ({(
+                                                    (geoData.metadata
+                                                        .prioritization
+                                                        .shapes_found_n /
+                                                        geoData.metadata
+                                                            .prioritization
+                                                            .shapes_total) *
+                                                    100
+                                                ).toFixed(2)}%)
+                                            </kbd>
+                                            <Tooltip.Provider delayDuration={0}>
+                                                <Tooltip.Root>
+                                                    <Tooltip.Trigger>
+                                                        {#snippet child({
+                                                            props,
+                                                        })}
+                                                            <button
+                                                                {...props}
+                                                                class="text-muted-foreground hover:text-foreground cursor-help"
+                                                            >
+                                                                <i
+                                                                    class="fas fa-circle-info"
+                                                                ></i>
+                                                            </button>
+                                                        {/snippet}
+                                                    </Tooltip.Trigger>
+                                                    <Tooltip.Content
+                                                        class="z-[2100] max-w-[300px] p-3 text-xs"
+                                                    >
+                                                        <div
+                                                            class="space-y-2 max-h-[200px] overflow-y-auto pr-2"
+                                                        >
+                                                            <p
+                                                                class="font-bold border-b pb-1"
+                                                            >
+                                                                Missing
+                                                                Components
+                                                            </p>
+                                                            <div>
+                                                                <p
+                                                                    class="font-semibold"
+                                                                >
+                                                                    Shapes
+                                                                    missing:
+                                                                </p>
+                                                                <p class="mt-1">
+                                                                    {geoData.metadata.prioritization.shapes_missing.join(
+                                                                        ", ",
+                                                                    )}
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <p
+                                                                    class="font-semibold"
+                                                                >
+                                                                    Routes
+                                                                    missing:
+                                                                </p>
+                                                                <p class="mt-1">
+                                                                    {@html Object.keys(
+                                                                        geoData
+                                                                            .metadata
+                                                                            .prioritization
+                                                                            .routes_missing,
+                                                                    )
+                                                                        .map(
+                                                                            (
+                                                                                key,
+                                                                            ) => {
+                                                                                const route =
+                                                                                    geoData
+                                                                                        .metadata
+                                                                                        .prioritization
+                                                                                        .routes_missing[
+                                                                                        key
+                                                                                    ];
+                                                                                return `${key} (${route.n_shapes_missing}/${route.n_shapes} shapes missing)`;
+                                                                            },
+                                                                        )
+                                                                        .join(
+                                                                            "<br/>",
+                                                                        )}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </Tooltip.Content>
+                                                </Tooltip.Root>
+                                            </Tooltip.Provider>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="bg-muted/30">
+                                    <th
+                                        class="px-4 py-2 text-left font-medium text-muted-foreground"
+                                        >Service frequencies considered²</th
                                     >
                                     <td class="px-4 py-2">
                                         <kbd
                                             class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
                                         >
                                             {geoData.metadata.prioritization
-                                                .routes_covered} of {geoData
+                                                .shapes_found_frequency} of {geoData
                                                 .metadata.prioritization
-                                                .routes_total}
+                                                .shapes_total_frequency}
                                             ({(
-                                                (geoData.metadata
-                                                    .prioritization
-                                                    .routes_covered /
+                                                (geoData.metadata.prioritization
+                                                    .shapes_found_frequency /
                                                     geoData.metadata
                                                         .prioritization
-                                                        .routes_total) *
+                                                        .shapes_total_frequency) *
                                                 100
                                             ).toFixed(2)}%)
                                         </kbd>
@@ -208,7 +313,9 @@
                         target="_blank"
                         class="text-primary hover:underline"
                         >GTFShift::get_way_frequency_hourly()</a
-                    > to match routes with OSM ways.
+                    > to match routes with OSM ways, which requires that the OSM
+                    relation mapping is well defined for the transit routes. Routes
+                    that do not have an OSM match are ignored.
                 </p>
                 {#if geoData?.metadata.rt}
                     <p>

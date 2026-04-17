@@ -33,9 +33,9 @@
         const n_lanes_direction = props?.n_lanes_direction || 0;
         const color = getColorFromGradient(
             n_lanes_direction,
-            geoData.metadata.data_census.lanes?.p5 || 0,
-            geoData.metadata.data_census.lanes?.p95 || 1,
-            COLOR_GRADIENT
+            geoData.metadata.data_census.lanes_length?.p5 || 0,
+            geoData.metadata.data_census.lanes_length?.p95 || 1,
+            COLOR_GRADIENT,
         );
         return { color, weight: 3.5 };
     }
@@ -50,7 +50,11 @@
             (feature: Feature | undefined) => {
                 const wayId = feature?.properties?.way_osm_id;
                 const props = wayId ? geoData.wayData[wayId] : undefined;
-                if (selectedShapeId && selectedShapeId !== "all" && !props?.shapes?.includes(selectedShapeId)) {
+                if (
+                    selectedShapeId &&
+                    selectedShapeId !== "all" &&
+                    !props?.shapes?.includes(selectedShapeId)
+                ) {
                     return false;
                 }
                 return true;

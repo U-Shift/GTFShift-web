@@ -6,3 +6,6 @@ output/*
 */*.json
 
 web_data/*
+osm_match/*
+
+venv/*

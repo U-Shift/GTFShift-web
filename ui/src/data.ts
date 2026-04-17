@@ -1,7 +1,7 @@
 import type { DataRegion } from "./types/DataRegion";
 
 
-export const BASE_URL: string = 'http://localhost:5173/';
+export const BASE_URL: string = 'https://localhost:5173/';
 
 export const MAP_DARK: string = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png';
 export const MAP_LIGHT: string = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
@@ -22,13 +22,14 @@ export const DB_REGIONS: DataRegion[] = [
         id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260316',
         name: 'Carris',
         region: 'Lisbon, PT',
+        rt_data: true,
         logo: './static/regions/carris.png',
         files: {
-            ways: './data/lisbon/ways_lisboa_rt_gtfs2026-02-04_run20260316.geojson',
-            way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-02-04_run20260316.json',
-            metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-02-04_run20260316.json',
-            route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-02-04_run20260316.json',
-            shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-02-04_run20260316.json',
+            ways: './data/lisbon/ways_lisboa_rt_gtfs2026-02-04_run20260414.geojson',
+            way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-02-04_run20260414.json',
+            metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-02-04_run20260414.json',
+            route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-02-04_run20260414.json',
+            shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-02-04_run20260414.json',
             zip: './data/lisbon/lisbon.zip'
         },
         date: 'Feb 2026',
@@ -38,13 +39,14 @@ export const DB_REGIONS: DataRegion[] = [
         id: 'aml',
         name: 'Carris Metropolitana',
         region: 'Lisbon Metro Area, PT',
+        rt_data: true,
         logo: './static/regions/carrismetropolitana.png',
         files: {
-            ways: './data/aml/ways_aml_rt_gtfs2026-02-04_run20260316.geojson',
-            way_data: './data/aml/way_data_aml_rt_gtfs2026-02-04_run20260316.json',
-            metadata: './data/aml/metadata_aml_rt_gtfs2026-02-04_run20260316.json',
-            route_data: './data/aml/route_data_aml_rt_gtfs2026-02-04_run20260316.json',
-            shape_data: './data/aml/shape_data_aml_rt_gtfs2026-02-04_run20260316.json',
+            ways: './data/aml/ways_aml_rt_gtfs2026-02-04_run20260414.geojson',
+            way_data: './data/aml/way_data_aml_rt_gtfs2026-02-04_run20260414.json',
+            metadata: './data/aml/metadata_aml_rt_gtfs2026-02-04_run20260414.json',
+            route_data: './data/aml/route_data_aml_rt_gtfs2026-02-04_run20260414.json',
+            shape_data: './data/aml/shape_data_aml_rt_gtfs2026-02-04_run20260414.json',
             zip: './data/aml/aml.zip'
         },
         date: 'Feb 2026',
@@ -54,16 +56,17 @@ export const DB_REGIONS: DataRegion[] = [
         id: 'cascais',
         name: 'MobiCascais',
         region: 'Cascais, PT',
+        rt_data: false,
         logo: './static/regions/mobicascais.png',
         files: {
-            ways: './data/cascais/ways_cascais_gtfs2026-03-16_run20260316.geojson',
-            way_data: './data/cascais/way_data_cascais_gtfs2026-03-16_run20260316.json',
-            metadata: './data/cascais/metadata_cascais_gtfs2026-03-16_run20260316.json',
-            route_data: './data/cascais/route_data_cascais_gtfs2026-03-16_run20260316.json',
-            shape_data: './data/cascais/shape_data_cascais_gtfs2026-03-16_run20260316.json',
+            ways: './data/cascais/ways_cascais_gtfs2026-04-14_run20260414.geojson',
+            way_data: './data/cascais/way_data_cascais_gtfs2026-04-14_run20260414.json',
+            metadata: './data/cascais/metadata_cascais_gtfs2026-04-14_run20260414.json',
+            route_data: './data/cascais/route_data_cascais_gtfs2026-04-14_run20260414.json',
+            shape_data: './data/cascais/shape_data_cascais_gtfs2026-04-14_run20260414.json',
             zip: './data/cascais/cascais.zip'
         },
-        date: 'Mar 2026',
+        date: 'Apr 2026',
         color: '#31bcad'
     }
 ]

@@ -1,15 +1,14 @@
-
 # Parameters
-output_root = "web_data"
+output_root <- "osm_match"
 
-regions = data.frame(
+regions <- data.frame(
   name = character(),
-  gtfs = character(),
+  gtfs_url = character(),
   query = I(list())
 )
-data = read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
+data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
 
-regions = rbind( # AML
+regions <- rbind( # AML
   regions,
   data.frame(
     name = "AML",
@@ -22,7 +21,7 @@ regions = rbind( # AML
     )))
   )
 )
-regions = rbind( # Barreiro
+regions <- rbind( # Barreiro
   regions,
   data.frame(
     name = "barreiro",
@@ -34,7 +33,7 @@ regions = rbind( # Barreiro
     )))
   )
 )
-regions = rbind( # Braga
+regions <- rbind( # Braga
   regions,
   data.frame(
     name = "braga",
@@ -46,7 +45,7 @@ regions = rbind( # Braga
     )))
   )
 )
-regions = rbind( # Cascais
+regions <- rbind( # Cascais
   regions,
   data.frame(
     name = "cascais",
@@ -58,7 +57,7 @@ regions = rbind( # Cascais
     )))
   )
 )
-regions = rbind( # Funchal
+regions <- rbind( # Funchal
   regions,
   data.frame(
     name = "funchal",
@@ -70,7 +69,7 @@ regions = rbind( # Funchal
     )))
   )
 )
-regions = rbind( # Lagos
+regions <- rbind( # Lagos
   regions,
   data.frame(
     name = "lagos",
@@ -82,7 +81,7 @@ regions = rbind( # Lagos
     )))
   )
 )
-regions = rbind( # Lisboa
+regions <- rbind( # Lisboa
   regions,
   data.frame(
     name = "lisboa",
@@ -94,7 +93,7 @@ regions = rbind( # Lisboa
     )))
   )
 )
-regions = rbind( # Madrid
+regions <- rbind( # Madrid
   regions,
   data.frame(
     name = "madrid",
@@ -106,19 +105,23 @@ regions = rbind( # Madrid
     )))
   )
 )
-regions = rbind( # STCP
+regions <- rbind( # STCP
   regions,
   data.frame(
     name = "stcp",
-    gtfs_url = data$URL[data$ID == "stcp"],
-    gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_url = "https://api.stcp.pt:8443/v1/ficheiros/estatico/ficheirozip",
+    gtfs_url_headers = I(list(list(
+      "X-App-Id" = Sys.getenv("GTFS_STCP_KEY"),
+      "X-Api-Key" = Sys.getenv("GTFS_STCP_SECRET")
+    ))),
+    gtfs_day = Sys.Date(),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "STCP", key_exact = TRUE)
     )))
   )
 )
-regions = rbind( # Toulouse
+regions <- rbind( # Toulouse
   regions,
   data.frame(
     name = "toulouse",
@@ -131,7 +134,7 @@ regions = rbind( # Toulouse
   )
 )
 
-regions = rbind( # CP Portugal
+regions <- rbind( # CP Portugal
   regions,
   data.frame(
     name = "cp_pt",
@@ -148,31 +151,33 @@ regions = rbind( # CP Portugal
   )
 )
 
-regions = rbind( # NYC, Bronx
+regions <- rbind( # NYC, Bronx
   regions,
   data.frame(
     name = "nyc_bronx",
-    gtfs_url = "https://rrgtfsfeeds.s3.amazonaws.com/gtfs_bx.zip",
-    gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_url = "data/gtfs_bx.zip", # https://rrgtfsfeeds.s3.amazonaws.com/gtfs_bx.zip",
+    gtfs_day = Sys.Date(),
+    gtfs_manipulate = "manipulate_gtfs_bronx",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
     )))
   )
 )
-regions = rbind( # NYC, Brooklyn
+regions <- rbind( # NYC, Brooklyn
   regions,
   data.frame(
     name = "nyc_brooklyn",
-    gtfs_url = "https://rrgtfsfeeds.s3.amazonaws.com/gtfs_b.zip",
+    gtfs_url = "data/gtfs_b.zip", # https://rrgtfsfeeds.s3.amazonaws.com/gtfs_b.zip",
     gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_manipulate = "manipulate_gtfs_brooklyn",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
     )))
   )
 )
-regions = rbind( # NYC, Manhattan
+regions <- rbind( # NYC, Manhattan
   regions,
   data.frame(
     name = "nyc_manhattan",
@@ -184,7 +189,7 @@ regions = rbind( # NYC, Manhattan
     )))
   )
 )
-regions = rbind( # NYC, Queens 
+regions <- rbind( # NYC, Queens
   regions,
   data.frame(
     name = "nyc_queens",
@@ -196,7 +201,7 @@ regions = rbind( # NYC, Queens
     )))
   )
 )
-regions = rbind( # NYC, Staten Island
+regions <- rbind( # NYC, Staten Island
   regions,
   data.frame(
     name = "nyc_statenisland",
@@ -208,7 +213,7 @@ regions = rbind( # NYC, Staten Island
     )))
   )
 )
-regions = rbind( # NYC, MTA
+regions <- rbind( # NYC, MTA
   regions,
   data.frame(
     name = "nyc_mta",
@@ -221,30 +226,75 @@ regions = rbind( # NYC, MTA
   )
 )
 
+# Fuenlabrada, ES
+regions <- rbind(
+  regions,
+  data.frame(
+    name = "fuenlabrada",
+    gtfs_url = "https://api.control.optibus.co/opendata/v1/gtfs?uid=c-5cfcd2d1",
+    gtfs_day = Sys.Date(),
+    gtfs_manipulate = manipulate_gtfs_fuenlabrada,
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "EMT Fuenlabrada", key_exact = TRUE)
+    )))
+  )
+)
+
 
 # Helpers
 
-manipulate_gtfs_cp = function(gtfs) {
+manipulate_gtfs_cp <- function(gtfs) {
   # Method to manipulate GTFS routes names, to enable match with OSM names
   # See https://github.com/U-Shift/GTFShift/issues/35 for more details
-  
+
   # String replace service acronym in gtfs$routes$route_short_name by extended name
   # Example: "AP" by "Alfa Pendular",  "IC" by "Intercidades"
-  gtfs$routes$route_short_name = gsub("AP", "Alfa Pendular", gtfs$routes$route_short_name)
-  gtfs$routes$route_short_name = gsub("IC", "Intercidades", gtfs$routes$route_short_name)
-  gtfs$routes$route_short_name = gsub("IR", "InterR", gtfs$routes$route_short_name)
-  gtfs$routes$route_short_name = gsub("R", "Regional", gtfs$routes$route_short_name)
-  gtfs$routes$route_short_name = gsub("U", "Urbano", gtfs$routes$route_short_name)
-  
+  gtfs$routes$route_short_name <- gsub("AP", "Alfa Pendular", gtfs$routes$route_short_name)
+  gtfs$routes$route_short_name <- gsub("IC", "Intercidades", gtfs$routes$route_short_name)
+  gtfs$routes$route_short_name <- gsub("IR", "InterR", gtfs$routes$route_short_name)
+  gtfs$routes$route_short_name <- gsub("R", "Regional", gtfs$routes$route_short_name)
+  gtfs$routes$route_short_name <- gsub("U", "Urbano", gtfs$routes$route_short_name)
+
   # Extend gtfs$routes$route_short_name with origin/destination station names
-  gtfs$routes = gtfs$routes |> mutate(
-    from = str_split_fixed(route_id, "-", 3)[, 2],
-    to = str_split_fixed(route_id, "-", 3)[, 3]
-  ) |>
+  gtfs$routes <- gtfs$routes |>
+    mutate(
+      from = str_split_fixed(route_id, "-", 3)[, 2],
+      to = str_split_fixed(route_id, "-", 3)[, 3]
+    ) |>
     left_join(gtfs$stops |> select(stop_id, stop_name) |> rename(from_name = stop_name), by = c("from" = "stop_id")) |>
     left_join(gtfs$stops |> select(stop_id, stop_name) |> rename(to_name = stop_name), by = c("to" = "stop_id")) |>
     mutate(route_short_name = sprintf("%s %s %s", route_short_name, from_name, to_name))
-  
+
   return(gtfs)
 }
 
+
+manipulate_gtfs_bronx <- function(gtfs) { # https://en.wikipedia.org/wiki/List_of_bus_routes_in_the_Bronx
+  # Filter routes by region (route_id start characters)
+  routes_bronx <- gtfs$routes |>
+    filter(str_detect(route_short_name, "^Bx"))
+  trips_routes_bronx <- gtfs$trips |>
+    filter(route_id %in% routes_bronx$route_id)
+  gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_bronx$trip_id)
+
+  return(gtfs)
+}
+
+manipulate_gtfs_brooklyn <- function(gtfs) { # https://en.wikipedia.org/wiki/List_of_bus_routes_in_Brooklyn
+  # Filter routes by region (route_id start characters)
+  routes_brooklyn <- gtfs$routes |>
+    # MUst start with B followed by number (Bx should be ignored)
+    filter(str_detect(route_short_name, "^B[0-9]"))
+  trips_routes_brooklyn <- gtfs$trips |>
+    filter(route_id %in% routes_brooklyn$route_id)
+  gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_brooklyn$trip_id)
+
+  return(gtfs)
+}
+
+manipulate_gtfs_fuenlabrada <- function(gtfs) {
+  # Append "L" suffix to route_short_name
+  gtfs$routes$route_short_name <- paste0("L", gtfs$routes$route_short_name)
+  return(gtfs)
+}
