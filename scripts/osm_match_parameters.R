@@ -13,8 +13,8 @@ regions <- rbind( # AML
   data.frame(
     name = "AML",
     # For historical versions, refer to https://mobilitydatabase.org/feeds/gtfs/mdb-2027
-    gtfs_url = "dev/web_version/AML.zip",
-    gtfs_day = "2025-02-04",
+    gtfs_url = data$URL[data$ID == "AML"],
+    gtfs_day = Sys.Date(),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
@@ -85,8 +85,8 @@ regions <- rbind( # Lisboa
   regions,
   data.frame(
     name = "lisboa",
-    gtfs_url = "dev/web_version/Lisboa.zip",
-    gtfs_day = "2025-02-04",
+    gtfs_url = data$URL[data$ID == "lisboa"],
+    gtfs_day = Sys.Date(),
     query = I(list(list(
       list(key = "route", value = c("bus", "tram"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
@@ -241,6 +241,20 @@ regions <- rbind(
   )
 )
 
+# Rome, IT
+regions <- rbind(
+  regions,
+  data.frame(
+    name = "rome",
+    # For historical versions, refer to https://mobilitydatabase.org/feeds/gtfs_rt/mdb-1776
+    gtfs_url = "https://files.mobilitydatabase.org/mdb-1294/mdb-1294-202604210049/mdb-1294-202604210049.zip",
+    gtfs_day = Sys.Date(),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "ATAC", key_exact = TRUE)
+    )))
+  )
+)
 
 # Helpers
 

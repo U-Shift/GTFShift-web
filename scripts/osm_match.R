@@ -6,6 +6,7 @@ library(osmdata)
 get_overpass_url()
 # set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter")
 set_overpass_url("https://overpass.private.coffee/api/interpreter") # 4 servers with 20 cores, 256GB RAM, SSD each
+set_overpass_url("https://overpass-api.de/api/interpreter")
 get_overpass_url()
 
 # Refer to osm_match_parameters.R to define parameters before running this script!
@@ -22,7 +23,7 @@ for (i in 1:nrow(regions)) {
   gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers)) unlist(region$gtfs_url_headers[[1]]) else NULL)
   summary(gtfs)
   assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
-  tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output, region$name, region$gtfs_day))
+  # tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output, region$name, region$gtfs_day))
 
   gtfs_shapes <- tidytransit::shapes_as_sf(gtfs$shapes)
   bbox <- sf::st_bbox(gtfs_shapes)
