@@ -1,6 +1,16 @@
 # Parameters
 output_root <- "osm_match"
 
+# Get OSM extract to avoid API call
+library(osmextract)
+oe_download_directory()
+osm_file <- oe_download(
+  "https://download.geofabrik.de/europe/portugal-latest.osm.pbf",
+  file_basename = sprintf("%s_%s.osm.pbf", "PT", format(Sys.Date(), "%Y%m%d"))
+)
+osm_file
+
+# Define regions to analyse
 regions <- data.frame(
   name = character(),
   gtfs_url = character(),
@@ -14,7 +24,8 @@ regions <- rbind( # AML
     name = "AML",
     # For historical versions, refer to https://mobilitydatabase.org/feeds/gtfs/mdb-2027
     gtfs_url = data$URL[data$ID == "AML"],
-    gtfs_day = Sys.Date(),
+    gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_manipulate = "manipulate_gtfs_aml",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
@@ -257,7 +268,6 @@ regions <- rbind(
 )
 
 # Helpers
-
 manipulate_gtfs_cp <- function(gtfs) {
   # Method to manipulate GTFS routes names, to enable match with OSM names
   # See https://github.com/U-Shift/GTFShift/issues/35 for more details
@@ -280,6 +290,13 @@ manipulate_gtfs_cp <- function(gtfs) {
     left_join(gtfs$stops |> select(stop_id, stop_name) |> rename(to_name = stop_name), by = c("to" = "stop_id")) |>
     mutate(route_short_name = sprintf("%s %s %s", route_short_name, from_name, to_name))
 
+  return(gtfs)
+}
+
+manipulate_gtfs_aml <- function(gtfs) {
+  # Rename all shapes that start with [.*], remove that part
+  gtfs$shapes$shape_id <- gsub("^\\[[^]]*\\]\\s*", "", gtfs$shapes$shape_id)
+  gtfs$trips$shape_id <- gsub("^\\[[^]]*\\]\\s*", "", gtfs$trips$shape_id)
   return(gtfs)
 }
 
