@@ -244,7 +244,7 @@ regions <- rbind(
     name = "fuenlabrada",
     gtfs_url = "https://api.control.optibus.co/opendata/v1/gtfs?uid=c-5cfcd2d1",
     gtfs_day = Sys.Date(),
-    gtfs_manipulate = manipulate_gtfs_fuenlabrada,
+    gtfs_manipulate = "manipulate_gtfs_fuenlabrada",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "EMT Fuenlabrada", key_exact = TRUE)
@@ -263,6 +263,20 @@ regions <- rbind(
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "ATAC", key_exact = TRUE)
+    )))
+  )
+)
+
+# Ghelph, CA
+regions <- rbind(
+  regions,
+  data.frame(
+    name = "guelph",
+    gtfs_url = "http://guelph.ca/uploads/google/google_transit.zip",
+    gtfs_day = Sys.Date(),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Guelph Transit", key_exact = TRUE)
     )))
   )
 )
