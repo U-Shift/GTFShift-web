@@ -16,8 +16,8 @@ regions <- rbind( # Lisboa
   data.frame(
     name = "lisboa_rt",
     name_long = "Lisboa, Portugal",
-    gtfs_url = "data/Lisboa_20260205.zip",
-    gtfs_day = "2026-02-04",
+    gtfs_url = "osm_match/lisboa/gtfs_20260505/run_20260505_090741/gtfs_lisboa_2026-05-05.zip",
+    gtfs_day = "2026-05-05",
     gtfs_manipulate = "manipulate_carris_lx",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
@@ -29,7 +29,8 @@ regions <- rbind( # Lisboa
         lon = stringr::str_replace(lon, "c\\(", ""),
         lat = stringr::str_replace(lat, "\\)", ""),
         speed = as.numeric(speed)
-      ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326)))
+      ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326))),
+    geofabrik_region = "europe/portugal"
   )
 )
 
@@ -72,7 +73,11 @@ regions <- rbind( # STCP
   data.frame(
     name = "stcp",
     name_long = "Porto, Portugal",
-    gtfs_url = "https://opendata.porto.digital/dataset/5275c986-592c-43f5-8f87-aabbd4e4f3a4/resource/72babf2b-8c56-4041-8141-e57e8efb5ffc/download/gtfs_static_02_03_2026.zip", # 02/03/2026
+    gtfs_url = "https://api.stcp.pt:8443/v1/ficheiros/estatico/ficheirozip",
+    gtfs_url_headers = I(list(list(
+      "X-App-Id" = Sys.getenv("GTFS_STCP_KEY"),
+      "X-Api-Key" = Sys.getenv("GTFS_STCP_SECRET")
+    ))),
     gtfs_day = Sys.Date(),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
