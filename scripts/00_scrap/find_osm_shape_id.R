@@ -6,7 +6,10 @@ options(timeout = 60 * 60 * 2) # Seconds
 options("timeout")
 # Find neyworks with shape_id
 
-output_folder <- "00_scrap/results"
+# Load method get_osm_relations_bus from 00_scrap/osm_utils.R
+source("osm_utils.R")
+
+output_folder <- "results"
 if (!dir.exists(output_folder)) dir.create(output_folder)
 
 osm_regions <- c(
