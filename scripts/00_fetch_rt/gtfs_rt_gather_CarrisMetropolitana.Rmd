@@ -27,9 +27,9 @@ import pytz
 **Important!** Before running, make sure to have `stop_times.txt` GTFS file at `stop_times` folder, with both `.txt` and `.csv` extensions!
 
 ```{python}
-folder_path = "web_version/gtfsrt/CarrisMetropolitana"
-output_folder = "web_version/gtfsrt"
-stop_times = "web_version/gtfsrt/CarrisMetropolitana_stop_times.txt"
+folder_path = "../data/cmet_20260413_220260430_business/updates"
+output_folder = "../data/cmet_20260413_220260430_business"
+stop_times = "../data/cmet_20260413_220260430_business/stop_times.txt"
 
 SPEED_STOPPED = 6 # Only consider updates with <6km/h speed (100 meters difference in 1 min)
 timezone = pytz.timezone("Europe/Lisbon")
@@ -43,11 +43,14 @@ def process_json(data, filename, RECORDS):
     Placeholder function for processing JSON data.
     Modify this function to include your specific processing logic.
     """
-    print(f"> Processing {filename}...")
+    # print(f"> Processing {filename}...")
     # Your processing logic here
 
     for e in data:
         vehicle = e
+        # If not trip_id in vehicle, ignore update
+        if 'trip_id' not in vehicle:
+            continue
         # Add day to trip_id, so that it is unique per day
         day = filename.split('_')[0]  # Assuming filename format is like '20250401_123_0_6.json'
         trip_id = f"{day}_{vehicle['trip_id']}"
@@ -130,10 +133,10 @@ print(f"\nDONE! Processed {len(RECORDS)} individual trips, with an average numbe
 print("\n3. Generating CSV with updates...")
 with open(f'{output_folder}/updates.csv', 'w') as csv_file:  
     writer = csv.writer(csv_file)
-    writer.writerow(["trip_id", "route_id", "timestamp", "timestamp_formatted", "lat", "lon", "speed", "stop_id", "current_status"])
+    _ = writer.writerow(["trip_id", "route_id", "timestamp", "timestamp_formatted", "lat", "lon", "speed", "stop_id", "current_status"])
     for trip, data in RECORDS.items():
         for u in RECORDS[trip]['updates']:
-            writer.writerow([
+            _ = writer.writerow([
                 trip,
                 RECORDS[trip]['route_id'],
                 u['timestamp'],
