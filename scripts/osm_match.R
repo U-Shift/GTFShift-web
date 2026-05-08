@@ -13,15 +13,6 @@ library(osmdata)
 # Refer to osm_match_parameters.R to define parameters before running this script!
 output_root <- "osm_match"
 
-# Get OSM extract to avoid API call
-library(osmextract)
-oe_download_directory()
-osm_file <- oe_download(
-  "https://download.geofabrik.de/europe/portugal-latest.osm.pbf",
-  file_basename = sprintf("%s_%s.osm.pbf", "PT", format(Sys.Date(), "%Y%m%d"))
-)
-osm_file
-
 # Define regions to analyse
 regions <- data.frame(
   name = character(),
@@ -30,30 +21,32 @@ regions <- data.frame(
 )
 data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
 
-regions <- rbind( # Lisboa
+regions <- rbind(
   regions,
   data.frame(
-    name = "lisboa",
-    gtfs_url = data$URL[data$ID == "lisboa"],
-    gtfs_day = Sys.Date(),
+    name = "rome",
+    # For historical versions, refer to https://mobilitydatabase.org/feeds/gtfs_rt/mdb-1776
+    gtfs_url = "https://romamobilita.it/sites/default/files/rome_static_gtfs.zip",
+    gtfs_day = gsub("-", "", Sys.Date()),
     query = I(list(list(
-      list(key = "route", value = c("bus", "tram"), key_exact = TRUE),
-      list(key = "network", value = "Carris", key_exact = TRUE)
-    )))
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "ATAC", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/italy/centro"
   )
 )
 
 # main()
 for (i in 1:nrow(regions)) {
   region <- regions[i, ]
-  output_root <- sprintf("%s/%s/gtfs_%s", output_root, tolower(region$name), gsub("-", "", region$gtfs_day))
-  output <- sprintf("%s/run_%s", output_root, format(Sys.time(), "%Y%m%d_%H%M%S"))
+  output_region <- sprintf("%s/%s/gtfs_%s", output_root, tolower(region$name), gsub("-", "", region$gtfs_day))
+  output <- sprintf("%s/run_%s", output_region, format(Sys.time(), "%Y%m%d_%H%M%S"))
   if (!dir.exists(output)) {
     dir.create(output, recursive = TRUE)
   }
   message(sprintf("\n\nRunning for %s (%s)...", region$name, region$gtfs_day))
 
-  gtfs_file <- sprintf("%s/gtfs_%s_%s.zip", output_root, region$name, region$gtfs_day)
+  gtfs_file <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, region$gtfs_day)
   if (file.exists(gtfs_file)) {
     message("Loading gtfs from file...")
     gtfs <- GTFShift::load_feed(gtfs_file, create_transfers = FALSE)
@@ -68,7 +61,7 @@ for (i in 1:nrow(regions)) {
   if (!is.null(region$gtfs_manipulate)) {
     message("Manipulating gtfs...")
     gtfs <- get(region$gtfs_manipulate)(gtfs)
-    gtfs_file_manipulated <- sprintf("%s/gtfs_%s_%s_manipulated.zip", output_root, region$name, region$gtfs_day)
+    gtfs_file_manipulated <- sprintf("%s/gtfs_%s_%s_manipulated.zip", output_region, region$name, region$gtfs_day)
     if (!file.exists(gtfs_file_manipulated)) {
       tidytransit::write_gtfs(gtfs, gtfs_file_manipulated)
     }
@@ -88,6 +81,16 @@ for (i in 1:nrow(regions)) {
     )
   }
   # assign(sprintf("q_%s_gtfs%s", region$name, region$gtfs_day), q)
+
+  # Get OSM extract to avoid API call
+  # osmextract::oe_download_directory()
+  if (is.null(region$geofabrik_region)) {
+    stop("Please define the geofabrik_region for this region in osm_match_parameters.R")
+  }
+  osm_file <- osmextract::oe_download(
+    sprintf("https://download.geofabrik.de/%s-latest.osm.pbf", region$geofabrik_region),
+    file_basename = sprintf("%s_%s.osm.pbf", str_replace_all(region$geofabrik_region, "/", "_"), format(Sys.Date(), "%Y%m%d"))
+  )
 
   # Match shapes geometry
   message("Matching shapes...")

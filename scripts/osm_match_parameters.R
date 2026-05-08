@@ -1,19 +1,11 @@
 # Parameters
 output_root <- "osm_match"
 
-# Get OSM extract to avoid API call
-library(osmextract)
-oe_download_directory()
-osm_file <- oe_download(
-  "https://download.geofabrik.de/europe/portugal-latest.osm.pbf",
-  file_basename = sprintf("%s_%s.osm.pbf", "PT", format(Sys.Date(), "%Y%m%d"))
-)
-osm_file
-
 # Define regions to analyse
 regions <- data.frame(
   name = character(),
   gtfs_url = character(),
+  geofabrik_region = character(),
   query = I(list())
 )
 data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
@@ -29,7 +21,8 @@ regions <- rbind( # AML
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "europe/portugal"
   )
 )
 regions <- rbind( # Barreiro
@@ -41,7 +34,8 @@ regions <- rbind( # Barreiro
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Transportes Coletivos do Barreiro", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "europe/portugal"
   )
 )
 regions <- rbind( # Braga
@@ -53,7 +47,8 @@ regions <- rbind( # Braga
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "Transportes Urbanos de Braga", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "europe/portugal"
   )
 )
 regions <- rbind( # Cascais
@@ -62,6 +57,7 @@ regions <- rbind( # Cascais
     name = "cascais",
     gtfs_url = data$URL[data$ID == "cascais"],
     gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_manipulate = "manipulate_gtfs_cascais",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "MobiCascais", key_exact = TRUE)
@@ -77,7 +73,8 @@ regions <- rbind( # Funchal
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "HF", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "europe/portugal"
   )
 )
 regions <- rbind( # Lagos
@@ -89,7 +86,8 @@ regions <- rbind( # Lagos
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "ONDA", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "europe/portugal"
   )
 )
 regions <- rbind( # Lisboa
@@ -101,19 +99,21 @@ regions <- rbind( # Lisboa
     query = I(list(list(
       list(key = "route", value = c("bus", "tram"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "europe/portugal"
   )
 )
 regions <- rbind( # Madrid
   regions,
   data.frame(
     name = "madrid",
-    gtfs_url = data$URL[data$ID == "madrid"],
+    gtfs_url = "https://servicios.emtmadrid.es:8443/gtfs/transitemt.zip",
     gtfs_day = gsub("-", "", Sys.Date()),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "Empresa Municipal de Transportes de Madrid", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "europe/spain/madrid"
   )
 )
 regions <- rbind( # STCP
@@ -129,7 +129,8 @@ regions <- rbind( # STCP
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "STCP", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "europe/portugal"
   )
 )
 regions <- rbind( # Toulouse
@@ -140,8 +141,9 @@ regions <- rbind( # Toulouse
     gtfs_day = gsub("-", "", Sys.Date()),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "Tisséo", key_exact = TRUE)
-    )))
+      list(key = "network", value = "Tisséo", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/france/midi-pyrenees"
   )
 )
 
@@ -158,7 +160,8 @@ regions <- rbind( # CP Portugal
     gtfs_match = "route_short_name",
     osm_match = "name",
     gtfs_manipulate = "manipulate_gtfs_cp",
-    gtfs_osm_match_exact = FALSE
+    gtfs_osm_match_exact = FALSE,
+    geofabrik_region = "europe/portugal"
   )
 )
 
@@ -172,9 +175,11 @@ regions <- rbind( # NYC, Bronx
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "north-america/us/new-york"
   )
 )
+
 regions <- rbind( # NYC, Brooklyn
   regions,
   data.frame(
@@ -248,7 +253,8 @@ regions <- rbind(
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "EMT Fuenlabrada", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "europe/spain/madrid"
   )
 )
 
@@ -258,12 +264,13 @@ regions <- rbind(
   data.frame(
     name = "rome",
     # For historical versions, refer to https://mobilitydatabase.org/feeds/gtfs_rt/mdb-1776
-    gtfs_url = "https://files.mobilitydatabase.org/mdb-1294/mdb-1294-202604210049/mdb-1294-202604210049.zip",
-    gtfs_day = Sys.Date(),
+    gtfs_url = "https://romamobilita.it/sites/default/files/rome_static_gtfs.zip",
+    gtfs_day = gsub("-", "", Sys.Date()),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "ATAC", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "europe/italy/centro"
   )
 )
 
@@ -277,7 +284,8 @@ regions <- rbind(
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Guelph Transit", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "north-america/canada/ontario"
   )
 )
 
@@ -311,6 +319,12 @@ manipulate_gtfs_aml <- function(gtfs) {
   # Rename all shapes that start with [.*], remove that part
   gtfs$shapes$shape_id <- gsub("^\\[[^]]*\\]\\s*", "", gtfs$shapes$shape_id)
   gtfs$trips$shape_id <- gsub("^\\[[^]]*\\]\\s*", "", gtfs$trips$shape_id)
+  return(gtfs)
+}
+
+manipulate_gtfs_cascais <- function(gtfs) {
+  # Change route_short_name from numeric to M%02d format (1 should become M01) to assure OSM ref match
+  gtfs$routes$route_short_name <- sprintf("M%02d", as.numeric(gtfs$routes$route_short_name))
   return(gtfs)
 }
 
