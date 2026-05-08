@@ -1,17 +1,28 @@
 library(dplyr)
+library(osmextract)
+
+# Change osmextract options("timeout") to 120 minutes
+options(timeout = 60 * 60 * 2) # Seconds
+options("timeout")
 # Find neyworks with shape_id
 
-output_folder <- "osm_scrap"
+output_folder <- "00_scrap/results"
 if (!dir.exists(output_folder)) dir.create(output_folder)
 
 osm_regions <- c(
-    "australia-oceania",
-    "africa",
-    "south-america"
+    # "australia-oceania",
+    # "africa",
+    # "south-america",
+    "asia",
+    "central-america",
+    "europe",
+    "north-america",
+    "antarctica"
 )
 
 for (osm_region in osm_regions) {
-    message(sprintf("Processing %s...", osm_region))
+    start_timestamp <- Sys.time()
+    message(sprintf("Processing %s, starting at %s...", osm_region, start_timestamp))
     # Download PBF
     osm_file <- osmextract::oe_download(
         sprintf("https://download.geofabrik.de/%s-latest.osm.pbf", osm_region),
@@ -74,5 +85,7 @@ for (osm_region in osm_regions) {
     write.csv(networks, sprintf("%s/networks_osm_%s.csv", output_folder, osm_region), row.names = FALSE)
     write.csv(operators, sprintf("%s/operators_osm_%s.csv", output_folder, osm_region), row.names = FALSE)
 
-    message("Done!")
+    end_timestamp <- Sys.time()
+    elapsed_time <- difftime(end_timestamp, start_timestamp, units = "mins")
+    message(sprintf("Done! Processing %s ended at %s and took %.2f minutes.\n", osm_region, end_timestamp, elapsed_time))
 }
