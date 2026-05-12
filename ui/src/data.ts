@@ -53,6 +53,40 @@ export const DB_REGIONS: DataRegion[] = [
         color: '#ffdd01'
     },
     {
+        id: 'aml_a1',
+        name: 'Carris Metropolitana (Area 1)',
+        region: 'Lisbon Metro Area, PT',
+        rt_data: true,
+        logo: './static/regions/carrismetropolitana.png',
+        files: {
+            ways: './data/aml_1/ways_aml_rt_area_1_gtfs2026-05-13_run20260512.geojson',
+            way_data: './data/aml_1/way_data_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
+            metadata: './data/aml_1/metadata_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
+            route_data: './data/aml_1/route_data_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
+            shape_data: './data/aml_1/shape_data_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
+            zip: './data/aml_1/aml.zip'
+        },
+        date: 'May 2026',
+        color: '#ffdd01'
+    },
+    {
+        id: 'aml_a2',
+        name: 'Carris Metropolitana (Area 2)',
+        region: 'Lisbon Metro Area, PT',
+        rt_data: true,
+        logo: './static/regions/carrismetropolitana.png',
+        files: {
+            ways: './data/aml_2/ways_aml_rt_area_2_gtfs2026-05-13_run20260512.geojson',
+            way_data: './data/aml_2/way_data_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
+            metadata: './data/aml_2/metadata_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
+            route_data: './data/aml_2/route_data_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
+            shape_data: './data/aml_2/shape_data_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
+            zip: './data/aml_2/aml.zip'
+        },
+        date: 'May 2026',
+        color: '#ffdd01'
+    },
+    {
         id: 'aml_a3',
         name: 'Carris Metropolitana (Area 3)',
         region: 'Lisbon Metro Area, PT',
