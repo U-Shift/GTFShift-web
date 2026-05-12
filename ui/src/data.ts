@@ -25,14 +25,14 @@ export const DB_REGIONS: DataRegion[] = [
         rt_data: true,
         logo: './static/regions/carris.png',
         files: {
-            ways: './data/lisbon/ways_lisboa_rt_gtfs2026-02-04_run20260414.geojson',
-            way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-02-04_run20260414.json',
-            metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-02-04_run20260414.json',
-            route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-02-04_run20260414.json',
-            shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-02-04_run20260414.json',
+            ways: './data/lisbon/ways_lisboa_rt_gtfs2026-05-13_run20260511.geojson',
+            way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-05-13_run20260511.json',
+            metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-05-13_run20260511.json',
+            route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-05-13_run20260511.json',
+            shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-05-13_run20260511.json',
             zip: './data/lisbon/lisbon.zip'
         },
-        date: 'Feb 2026',
+        date: 'May 2026',
         color: '#003f8f'
     },
     {
@@ -59,14 +59,48 @@ export const DB_REGIONS: DataRegion[] = [
         rt_data: false,
         logo: './static/regions/mobicascais.png',
         files: {
-            ways: './data/cascais/ways_cascais_gtfs2026-04-14_run20260414.geojson',
-            way_data: './data/cascais/way_data_cascais_gtfs2026-04-14_run20260414.json',
-            metadata: './data/cascais/metadata_cascais_gtfs2026-04-14_run20260414.json',
-            route_data: './data/cascais/route_data_cascais_gtfs2026-04-14_run20260414.json',
-            shape_data: './data/cascais/shape_data_cascais_gtfs2026-04-14_run20260414.json',
+            ways: './data/cascais/ways_cascais_gtfs2026-05-13_run20260512.geojson',
+            way_data: './data/cascais/way_data_cascais_gtfs2026-05-13_run20260512.json',
+            metadata: './data/cascais/metadata_cascais_gtfs2026-05-13_run20260512.json',
+            route_data: './data/cascais/route_data_cascais_gtfs2026-05-13_run20260512.json',
+            shape_data: './data/cascais/shape_data_cascais_gtfs2026-05-13_run20260512.json',
             zip: './data/cascais/cascais.zip'
         },
-        date: 'Apr 2026',
+        date: 'May 2026',
         color: '#31bcad'
+    },
+    {
+        id: 'porto',
+        name: 'STCP',
+        region: 'Porto, PT',
+        rt_data: true,
+        logo: './static/regions/stcp.png',
+        files: {
+            ways: './data/porto/ways_stcp_gtfs2026-05-13_run20260512.geojson',
+            way_data: './data/porto/way_data_stcp_gtfs2026-05-13_run20260512.json',
+            metadata: './data/porto/metadata_stcp_gtfs2026-05-13_run20260512.json',
+            route_data: './data/porto/route_data_stcp_gtfs2026-05-13_run20260512.json',
+            shape_data: './data/porto/shape_data_stcp_gtfs2026-05-13_run20260512.json',
+            zip: './data/porto/porto.zip'
+        },
+        date: 'May 2026',
+        color: '#0074c7'
+    },
+    {
+        id: 'barreiro',
+        name: 'Barreiro',
+        region: 'Barreiro, PT',
+        rt_data: false,
+        logo: './static/regions/tcb.png',
+        files: {
+            ways: './data/barreiro/ways_barreiro_gtfs2026-05-13_run20260512.geojson',
+            way_data: './data/barreiro/way_data_barreiro_gtfs2026-05-13_run20260512.json',
+            metadata: './data/barreiro/metadata_barreiro_gtfs2026-05-13_run20260512.json',
+            route_data: './data/barreiro/route_data_barreiro_gtfs2026-05-13_run20260512.json',
+            shape_data: './data/barreiro/shape_data_barreiro_gtfs2026-05-13_run20260512.json',
+            zip: './data/barreiro/barreiro.zip'
+        },
+        date: 'May 2026',
+        color: '#97d700'
     }
 ]
