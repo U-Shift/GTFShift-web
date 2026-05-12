@@ -391,9 +391,12 @@
     <!-- Form 2: Region display options -->
     {#if region !== undefined && geoData && !action_hide_form}
         <div class="w-full text-left flex-1" id="form">
-            <h5 class="text-lg font-semibold text-primary mb-1">
-                {region.name}
-            </h5>
+            <div class="flex items-center gap-2">
+                <img src={region.logo} class="h-5 w-5 object-contain" />
+                <h5 class="text-lg font-semibold text-primary mb-1">
+                    {region.name}
+                </h5>
+            </div>
             <div
                 class="flex items-center gap-3 text-sm text-muted-foreground mb-4"
             >
