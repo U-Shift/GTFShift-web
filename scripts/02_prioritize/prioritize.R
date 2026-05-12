@@ -94,6 +94,7 @@ for (i in 1:nrow(regions)) {
 
   # 3. Extend with real-time data if available
   if (!is.null(region$rt_collection) && !is.na(region$rt_collection)) {
+    message("Extending with real-time data...")
     rt_collection <- region$rt_collection[[1]]
     # Filter updates, to remove those close to bus stops
     gtfs_stops <- tidytransit::stops_as_sf(gtfs$stops, crs = 4326)

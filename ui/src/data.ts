@@ -53,6 +53,40 @@ export const DB_REGIONS: DataRegion[] = [
         color: '#ffdd01'
     },
     {
+        id: 'aml_a3',
+        name: 'Carris Metropolitana (Area 3)',
+        region: 'Lisbon Metro Area, PT',
+        rt_data: true,
+        logo: './static/regions/carrismetropolitana.png',
+        files: {
+            ways: './data/aml_3/ways_aml_rt_area_3_gtfs2026-05-13_run20260512.geojson',
+            way_data: './data/aml_3/way_data_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
+            metadata: './data/aml_3/metadata_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
+            route_data: './data/aml_3/route_data_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
+            shape_data: './data/aml_3/shape_data_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
+            zip: './data/aml_3/aml.zip'
+        },
+        date: 'May 2026',
+        color: '#ffdd01'
+    },
+    {
+        id: 'aml_a4',
+        name: 'Carris Metropolitana (Area 4)',
+        region: 'Lisbon Metro Area, PT',
+        rt_data: true,
+        logo: './static/regions/carrismetropolitana.png',
+        files: {
+            ways: './data/aml_4/ways_aml_rt_area_4_gtfs2026-05-13_run20260512.geojson',
+            way_data: './data/aml_4/way_data_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
+            metadata: './data/aml_4/metadata_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
+            route_data: './data/aml_4/route_data_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
+            shape_data: './data/aml_4/shape_data_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
+            zip: './data/aml_4/aml.zip'
+        },
+        date: 'May 2026',
+        color: '#ffdd01'
+    },
+    {
         id: 'cascais',
         name: 'MobiCascais',
         region: 'Cascais, PT',

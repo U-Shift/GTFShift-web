@@ -67,7 +67,7 @@ regions <- rbind( # CarrisMetropolitana, Area 1
       list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
     ))),
     rt_interval = "13-30/04/2026 (Business Days)",
-    rt_collection = I(list(sf::st_read("data/cmet_20260413_220260430_business/updates.csv") |>
+    rt_collection = I(list(sf::st_read("data/cmet_20260413_220260430_business_a1/updates.csv") |>
       mutate(
         speed = as.numeric(speed)
       ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326))),
@@ -88,7 +88,7 @@ regions <- rbind( # CarrisMetropolitana, Area 2
       list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
     ))),
     rt_interval = "13-30/04/2026 (Business Days)",
-    rt_collection = I(list(sf::st_read("data/cmet_20260413_220260430_business/updates.csv") |>
+    rt_collection = I(list(sf::st_read("data/cmet_20260413_220260430_business_a2/updates.csv") |>
       mutate(
         speed = as.numeric(speed)
       ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326))),
@@ -109,7 +109,7 @@ regions <- rbind( # CarrisMetropolitana, Area 3
       list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
     ))),
     rt_interval = "13-30/04/2026 (Business Days)",
-    rt_collection = I(list(sf::st_read("data/cmet_20260413_220260430_business/updates.csv") |>
+    rt_collection = I(list(sf::st_read("data/cmet_20260413_220260430_business_a3/updates.csv") |>
       mutate(
         speed = as.numeric(speed)
       ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326))),
@@ -130,7 +130,7 @@ regions <- rbind( # CarrisMetropolitana, Area 4
       list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
     ))),
     rt_interval = "13-30/04/2026 (Business Days)",
-    rt_collection = I(list(sf::st_read("data/cmet_20260413_220260430_business/updates.csv") |>
+    rt_collection = I(list(sf::st_read("data/cmet_20260413_220260430_business_a4/updates.csv") |>
       mutate(
         speed = as.numeric(speed)
       ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326))),

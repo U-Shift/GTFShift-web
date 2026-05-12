@@ -28,8 +28,11 @@ import pytz
 
 ```{python}
 folder_path = "../data/cmet_20260413_220260430_business/updates"
-output_folder = "../data/cmet_20260413_220260430_business"
-stop_times = "../data/cmet_20260413_220260430_business/stop_times.txt"
+output_folder = "../data/cmet_20260413_220260430_business_a4"
+agency_id = "44" # None 
+
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
 
 SPEED_STOPPED = 6 # Only consider updates with <6km/h speed (100 meters difference in 1 min)
 timezone = pytz.timezone("Europe/Lisbon")
@@ -50,6 +53,8 @@ def process_json(data, filename, RECORDS):
         vehicle = e
         # If not trip_id in vehicle, ignore update
         if 'trip_id' not in vehicle:
+            continue
+        if agency_id and 'agency_id' in vehicle and vehicle['agency_id'] != agency_id:
             continue
         # Add day to trip_id, so that it is unique per day
         day = filename.split('_')[0]  # Assuming filename format is like '20250401_123_0_6.json'
