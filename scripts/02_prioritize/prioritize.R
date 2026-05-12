@@ -38,7 +38,12 @@ for (i in 1:nrow(regions)) {
 
   if (!is.null(region$gtfs_manipulate)) {
     message("Manipulating GTFS with function: ", region$gtfs_manipulate)
+    message("Manipulating gtfs...")
     gtfs <- get(region$gtfs_manipulate)(gtfs)
+    gtfs_file_manipulated <- sprintf("%s/gtfs_%s_%s_manipulated.zip", output_region, region$name, region$gtfs_day)
+    if (!file.exists(gtfs_file_manipulated)) {
+      tidytransit::write_gtfs(gtfs, gtfs_file_manipulated)
+    }
     message("GTFS manipulation completed.")
   }
 

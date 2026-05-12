@@ -56,6 +56,17 @@
     }
 
     let region: DataRegion | undefined = $state(undefined);
+    let regionSearchQuery: string = $state("");
+
+    const filteredRegions = $derived.by(() => {
+        const query = regionSearchQuery.trim().toLowerCase();
+        if (!query) return DB_REGIONS;
+        return DB_REGIONS.filter(
+            (r: DataRegion) =>
+                r.name.toLowerCase().includes(query) ||
+                r.region.toLowerCase().includes(query),
+        );
+    });
 
     let active_layer: DisplayOptions | undefined = $state(undefined);
     let open_accordion: string | undefined = $state(undefined);
@@ -292,8 +303,32 @@
             <p class="text-xs text-muted-foreground mb-2">
                 Select the region you want to analyse
             </p>
+
+            <!-- Search bar -->
+            <div class="relative w-full mb-3 mt-2">
+                <i
+                    class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs pointer-events-none"
+                ></i>
+                <Input
+                    type="text"
+                    placeholder="Search region by name or location..."
+                    class="pl-9 pr-8 py-1 h-9 text-xs bg-background/50 focus-visible:ring-1 focus-visible:ring-primary/50"
+                    bind:value={regionSearchQuery}
+                />
+                {#if regionSearchQuery}
+                    <button
+                        type="button"
+                        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer"
+                        onclick={() => (regionSearchQuery = "")}
+                        aria-label="Clear search"
+                    >
+                        <i class="fas fa-times text-[10px]"></i>
+                    </button>
+                {/if}
+            </div>
+
             <div class="flex flex-col gap-2 mt-3">
-                {#each DB_REGIONS as r}
+                {#each filteredRegions as r}
                     <button
                         class="group relative w-full text-left rounded-xl border border-border bg-background transition-all duration-200 p-3 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                         onclick={() => handleRegionChange(r.id)}
@@ -384,6 +419,30 @@
                         ></div>
                     </button>
                 {/each}
+
+                {#if filteredRegions.length === 0}
+                    <div
+                        class="text-center py-6 border border-dashed rounded-xl bg-muted/20"
+                    >
+                        <i
+                            class="fas fa-map-marked-alt text-muted-foreground text-xl mb-2 block opacity-50"
+                        ></i>
+                        <p class="text-xs font-semibold text-foreground">
+                            No regions found
+                        </p>
+                        <p class="text-[10px] text-muted-foreground mt-0.5">
+                            Try searching for a different name or location
+                        </p>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            class="h-7 text-[10px] px-2.5 mt-3 gap-1 cursor-pointer"
+                            onclick={() => (regionSearchQuery = "")}
+                        >
+                            <i class="fas fa-undo text-[9px]"></i> Reset Search
+                        </Button>
+                    </div>
+                {/if}
             </div>
         </div>
     {/if}
