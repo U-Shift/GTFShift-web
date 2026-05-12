@@ -257,39 +257,27 @@
                                                                             .prioritization_hour[
                                                                             hh
                                                                         ]
-                                                                            .routes_found_n}{" "}
+                                                                            .shapes_found_n}{" "}
                                                                         of {" "}
                                                                         {geoData
                                                                             .metadata
                                                                             .prioritization_hour[
                                                                             hh
                                                                         ]
-                                                                            .routes_found_n +
-                                                                            geoData
-                                                                                .metadata
-                                                                                .prioritization_hour[
-                                                                                hh
-                                                                            ]
-                                                                                .routes_missing_n}{" "}
+                                                                            .shapes_total}{" "}
                                                                         ({(
                                                                             (geoData
                                                                                 .metadata
                                                                                 .prioritization_hour[
                                                                                 hh
                                                                             ]
-                                                                                .routes_found_n /
-                                                                                (geoData
+                                                                                .shapes_found_n /
+                                                                                geoData
                                                                                     .metadata
                                                                                     .prioritization_hour[
                                                                                     hh
                                                                                 ]
-                                                                                    .routes_found_n +
-                                                                                    geoData
-                                                                                        .metadata
-                                                                                        .prioritization_hour[
-                                                                                        hh
-                                                                                    ]
-                                                                                        .routes_missing_n)) *
+                                                                                    .shapes_total) *
                                                                             100
                                                                         ).toFixed(
                                                                             2,
@@ -448,6 +436,40 @@
                                             class="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono"
                                             >{geoData.metadata.environment
                                                 .r}</kbd
+                                        >
+                                        <kbd
+                                            class="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono"
+                                            >{geoData.metadata.environment.os}
+                                            {geoData.metadata.environment
+                                                .os_release}</kbd
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th
+                                        class="px-4 py-2 text-left font-medium text-muted-foreground"
+                                        >Execution details</th
+                                    >
+                                    <td class="px-4 py-2 flex flex-wrap gap-1">
+                                        <kbd
+                                            class="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono"
+                                            >Executed at {geoData.metadata
+                                                .execution.moment}</kbd
+                                        >
+                                        <a
+                                            href={"https://github.com/U-Shift/GTFShift-web/commit/" +
+                                                geoData.metadata.execution
+                                                    .git_commit}
+                                            target="_blank"
+                                            class="text-primary hover:underline leading-none"
+                                        >
+                                            <kbd
+                                                class="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono"
+                                                >U-Shift/GTFShift-web@{geoData.metadata.execution.git_commit.substring(
+                                                    0,
+                                                    7,
+                                                )}</kbd
+                                            ></a
                                         >
                                     </td>
                                 </tr>
