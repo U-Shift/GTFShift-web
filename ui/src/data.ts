@@ -34,6 +34,7 @@ export const DB_REGIONS: DataRegion[] = [
                 rt_data: true,
                 files: {
                     ways: './data/lisbon/ways_lisboa_rt_gtfs2026-05-13_run20260511.geojson',
+                    boundaries: './data/lisbon/prioritization_area_polygon_lisboa_rt_gtfs2026-05-13_run20260511.geojson',
                     way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-05-13_run20260511.json',
                     metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-05-13_run20260511.json',
                     route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-05-13_run20260511.json',
@@ -59,6 +60,7 @@ export const DB_REGIONS: DataRegion[] = [
                 rt_data: true,
                 files: {
                     ways: './data/aml/ways_aml_rt_gtfs2026-02-04_run20260414.geojson',
+                    boundaries: './data/aml/prioritization_area_polygon_aml_rt_gtfs2026-02-04_run20260414.geojson',
                     way_data: './data/aml/way_data_aml_rt_gtfs2026-02-04_run20260414.json',
                     metadata: './data/aml/metadata_aml_rt_gtfs2026-02-04_run20260414.json',
                     route_data: './data/aml/route_data_aml_rt_gtfs2026-02-04_run20260414.json',
@@ -73,6 +75,7 @@ export const DB_REGIONS: DataRegion[] = [
                 rt_data: true,
                 files: {
                     ways: './data/aml_1/ways_aml_rt_area_1_gtfs2026-05-13_run20260512.geojson',
+                    boundaries: './data/aml_1/prioritization_area_polygon_aml_rt_area_1_gtfs2026-05-13_run20260512.geojson',
                     way_data: './data/aml_1/way_data_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
                     metadata: './data/aml_1/metadata_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
                     route_data: './data/aml_1/route_data_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
@@ -87,6 +90,7 @@ export const DB_REGIONS: DataRegion[] = [
                 rt_data: true,
                 files: {
                     ways: './data/aml_2/ways_aml_rt_area_2_gtfs2026-05-13_run20260512.geojson',
+                    boundaries: './data/aml_2/prioritization_area_polygon_aml_rt_area_2_gtfs2026-05-13_run20260512.geojson',
                     way_data: './data/aml_2/way_data_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
                     metadata: './data/aml_2/metadata_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
                     route_data: './data/aml_2/route_data_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
@@ -101,6 +105,7 @@ export const DB_REGIONS: DataRegion[] = [
                 rt_data: true,
                 files: {
                     ways: './data/aml_3/ways_aml_rt_area_3_gtfs2026-05-13_run20260512.geojson',
+                    boundaries: './data/aml_3/prioritization_area_polygon_aml_rt_area_3_gtfs2026-05-13_run20260512.geojson',
                     way_data: './data/aml_3/way_data_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
                     metadata: './data/aml_3/metadata_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
                     route_data: './data/aml_3/route_data_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
@@ -115,6 +120,7 @@ export const DB_REGIONS: DataRegion[] = [
                 rt_data: true,
                 files: {
                     ways: './data/aml_4/ways_aml_rt_area_4_gtfs2026-05-13_run20260512.geojson',
+                    boundaries: './data/aml_4/prioritization_area_polygon_aml_rt_area_4_gtfs2026-05-13_run20260512.geojson',
                     way_data: './data/aml_4/way_data_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
                     metadata: './data/aml_4/metadata_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
                     route_data: './data/aml_4/route_data_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
@@ -140,6 +146,7 @@ export const DB_REGIONS: DataRegion[] = [
                 rt_data: false,
                 files: {
                     ways: './data/cascais/ways_cascais_gtfs2026-05-13_run20260512.geojson',
+                    boundaries: './data/cascais/prioritization_area_polygon_cascais_gtfs2026-05-13_run20260512.geojson',
                     way_data: './data/cascais/way_data_cascais_gtfs2026-05-13_run20260512.json',
                     metadata: './data/cascais/metadata_cascais_gtfs2026-05-13_run20260512.json',
                     route_data: './data/cascais/route_data_cascais_gtfs2026-05-13_run20260512.json',
@@ -165,6 +172,7 @@ export const DB_REGIONS: DataRegion[] = [
                 rt_data: true,
                 files: {
                     ways: './data/porto/ways_stcp_gtfs2026-05-13_run20260512.geojson',
+                    boundaries: './data/porto/prioritization_area_polygon_stcp_gtfs2026-05-13_run20260512.geojson',
                     way_data: './data/porto/way_data_stcp_gtfs2026-05-13_run20260512.json',
                     metadata: './data/porto/metadata_stcp_gtfs2026-05-13_run20260512.json',
                     route_data: './data/porto/route_data_stcp_gtfs2026-05-13_run20260512.json',
@@ -190,6 +198,7 @@ export const DB_REGIONS: DataRegion[] = [
                 rt_data: false,
                 files: {
                     ways: './data/barreiro/ways_barreiro_gtfs2026-05-13_run20260512.geojson',
+                    boundaries: './data/barreiro/prioritization_area_polygon_barreiro_gtfs2026-05-13_run20260512.geojson',
                     way_data: './data/barreiro/way_data_barreiro_gtfs2026-05-13_run20260512.json',
                     metadata: './data/barreiro/metadata_barreiro_gtfs2026-05-13_run20260512.json',
                     route_data: './data/barreiro/route_data_barreiro_gtfs2026-05-13_run20260512.json',

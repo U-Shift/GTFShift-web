@@ -21,7 +21,7 @@
         const newLayer = L.geoJSON(boundaryGeoJSON, {
             style: {
                 color: color,
-                weight: 2,
+                weight: 1,
                 dashArray: "6, 6",
                 fillOpacity: 0,
                 interactive: false,
