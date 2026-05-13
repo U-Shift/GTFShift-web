@@ -11,6 +11,7 @@
     import LayerTransitFrequency from "./layers/LayerTransitFrequency.svelte";
     import LayerNumberOfLanes from "./layers/LayerNumberOfLanes.svelte";
     import LayerRTSpeed from "./layers/LayerRTSpeed.svelte";
+    import LayerBoundaries from "./layers/LayerBoundaries.svelte";
     import DataCensusTable from "./components/DataCensusTable.svelte";
     import ModalData from "./modals/ModalData.svelte";
     import ModalDetails from "./modals/ModalDetails.svelte";
@@ -58,6 +59,8 @@
     let region: DataRegion | undefined = $state(undefined);
     let selected_layer: RegionLayer | undefined = $state(undefined);
     let selected_layer_id: string = $state("");
+    let boundaryGeoJSON: any = $state(null);
+    let show_boundaries: boolean = $state(true);
     let regionSearchQuery: string = $state("");
 
     const filteredRegions = $derived.by(() => {
@@ -141,25 +144,31 @@
 
         try {
             // Fetch and load new data model components
-            const [
-                waysRes,
-                wayDataRes,
-                metadataRes,
-                routeDataRes,
-                shapeDataRes,
-            ] = await Promise.all([
+            const fetchPromises: Promise<Response>[] = [
                 fetch(selected_layer.files.ways),
                 fetch(selected_layer.files.way_data),
                 fetch(selected_layer.files.metadata),
                 fetch(selected_layer.files.route_data),
                 fetch(selected_layer.files.shape_data),
-            ]);
+            ];
 
-            const ways = await waysRes.json();
-            const wayData = await wayDataRes.json();
-            const metadata = await metadataRes.json();
-            const routeData = await routeDataRes.json();
-            const shapeData = await shapeDataRes.json();
+            if (selected_layer.files.boundaries) {
+                fetchPromises.push(fetch(selected_layer.files.boundaries));
+            }
+
+            const results = await Promise.all(fetchPromises);
+
+            const ways = await results[0].json();
+            const wayData = await results[1].json();
+            const metadata = await results[2].json();
+            const routeData = await results[3].json();
+            const shapeData = await results[4].json();
+
+            if (selected_layer.files.boundaries && results[5]) {
+                boundaryGeoJSON = await results[5].json();
+            } else {
+                boundaryGeoJSON = null;
+            }
 
             geoData = {
                 features: ways.features,
@@ -471,7 +480,11 @@
         <div class="w-full text-left mb-4">
             <div class="flex items-center gap-2 mb-3">
                 {#if region.logo}
-                    <img src={region.logo} alt={region.name} class="h-6 w-6 object-contain" />
+                    <img
+                        src={region.logo}
+                        alt={region.name}
+                        class="h-6 w-6 object-contain"
+                    />
                 {/if}
                 <h5 class="text-lg font-semibold text-primary mb-1">
                     {region.name}
@@ -490,35 +503,50 @@
                         onmouseenter={(e) => {
                             const el = e.currentTarget as HTMLElement;
                             el.style.borderColor = region.color ?? "";
-                            el.style.backgroundColor = (region.color ?? "") + "0d";
-                            el.querySelector<HTMLElement>(".layer-accent")!.style.transform = "scaleX(1)";
+                            el.style.backgroundColor =
+                                (region.color ?? "") + "0d";
+                            el.querySelector<HTMLElement>(
+                                ".layer-accent",
+                            )!.style.transform = "scaleX(1)";
                         }}
                         onmouseleave={(e) => {
                             const el = e.currentTarget as HTMLElement;
                             el.style.borderColor = "";
                             el.style.backgroundColor = "";
-                            el.querySelector<HTMLElement>(".layer-accent")!.style.transform = "scaleX(0)";
+                            el.querySelector<HTMLElement>(
+                                ".layer-accent",
+                            )!.style.transform = "scaleX(0)";
                         }}
                     >
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold text-foreground leading-tight truncate">
+                                <p
+                                    class="text-sm font-semibold text-foreground leading-tight truncate"
+                                >
                                     {layer.name}
                                 </p>
                                 <p class="text-xs text-muted-foreground mt-1">
-                                    <i class="fas fa-calendar-alt mr-1"></i> {layer.date}
+                                    <i class="fas fa-calendar-alt mr-1"></i>
+                                    {layer.date}
                                 </p>
                                 {#if layer.rt_data}
-                                    <p class="text-xs text-muted-foreground mt-0.5">
-                                        <i class="fas fa-traffic-light mr-1"></i> With traffic conditions
+                                    <p
+                                        class="text-xs text-muted-foreground mt-0.5"
+                                    >
+                                        <i class="fas fa-traffic-light mr-1"
+                                        ></i> With traffic conditions
                                     </p>
                                 {:else}
-                                    <p class="text-xs text-muted-foreground mt-0.5">
+                                    <p
+                                        class="text-xs text-muted-foreground mt-0.5"
+                                    >
                                         <i class="fas fa-road mr-1"></i> Static analysis
                                     </p>
                                 {/if}
                             </div>
-                            <i class="fas fa-chevron-right text-xs text-muted-foreground mt-1 group-hover:text-primary transition-colors"></i>
+                            <i
+                                class="fas fa-chevron-right text-xs text-muted-foreground mt-1 group-hover:text-primary transition-colors"
+                            ></i>
                         </div>
                         <div
                             class="layer-accent absolute bottom-0 left-0 right-0 h-[2px] transition-transform duration-200 origin-left rounded-b-xl"
@@ -549,7 +577,11 @@
     {#if region !== undefined && geoData && !action_hide_form}
         <div class="w-full text-left flex-1" id="form">
             <div class="flex items-center gap-2">
-                <img src={region.logo} alt={region.name} class="h-5 w-5 object-contain" />
+                <img
+                    src={region.logo}
+                    alt={region.name}
+                    class="h-5 w-5 object-contain"
+                />
                 <h5 class="text-lg font-semibold text-primary mb-1">
                     {region.name}
                 </h5>
@@ -650,12 +682,17 @@
                             if (val) handleLayerChange(val);
                         }}
                     >
-                        <Select.Trigger class="w-full justify-between bg-background/50 hover:bg-accent transition-colors border">
+                        <Select.Trigger
+                            class="w-full justify-between bg-background/50 hover:bg-accent transition-colors border"
+                        >
                             <Select.Value placeholder="Select active layer" />
                         </Select.Trigger>
                         <Select.Content class="z-[1100]">
                             {#each region.layers as layer}
-                                <Select.Item value={layer.id} label={layer.name}>
+                                <Select.Item
+                                    value={layer.id}
+                                    label={layer.name}
+                                >
                                     {layer.name}
                                 </Select.Item>
                             {/each}
@@ -1282,11 +1319,44 @@
                 </div>
             </div>
         {/if}
+
+        {#if boundaryGeoJSON}
+            <div class="border-t pt-2 mt-1 flex items-center justify-between">
+                <span
+                    class="text-xs text-muted-foreground flex items-center gap-2"
+                >
+                    <i
+                        class="fa-solid fa-draw-polygon text-[11px]"
+                        style="color: {region.color}"
+                    ></i>
+                    Operations Area
+                </span>
+                <button
+                    class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 outline-none {show_boundaries
+                        ? 'bg-primary'
+                        : 'bg-muted'}"
+                    style="background-color: {show_boundaries
+                        ? region.color
+                        : ''};"
+                    onclick={() => (show_boundaries = !show_boundaries)}
+                    aria-label="Toggle analysis boundary"
+                >
+                    <span
+                        class="pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow-lg ring-0 transition duration-200 ease-in-out {show_boundaries
+                            ? 'translate-x-4'
+                            : 'translate-x-0.5'}"
+                    ></span>
+                </button>
+            </div>
+        {/if}
     </div>
 {/if}
 
-<!-- Map layers -->
 {#if region && geoData && active_layer !== undefined && map}
+    {#if boundaryGeoJSON && show_boundaries}
+        <LayerBoundaries {map} {boundaryGeoJSON} color={region.color} />
+    {/if}
+
     {#if active_layer === DisplayOptions.PRIORITIZATION}
         <LayerBusLanePrioritization
             {map}

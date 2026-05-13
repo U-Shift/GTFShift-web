@@ -9,6 +9,7 @@ export type RegionLayer = {
         metadata: string;
         route_data: string;
         shape_data: string;
+        boundaries?: string;
         zip: string; // Aggregated data
     };
 };

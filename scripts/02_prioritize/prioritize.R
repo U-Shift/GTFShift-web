@@ -13,6 +13,17 @@ library(Hmisc) # For  Weighted Statistical Estimates
 # Refer to prioritize_parameters.R to define parameters before running this script!
 
 # main()
+output <- "web_data"
+
+regions <- data.frame(
+  name = character(),
+  name_long = character(),
+  gtfs = character(),
+  query = I(list()),
+  rt_interval = character(),
+  rt_collection = I(list()) # sf object
+)
+
 stop_buffer_size <- 15 # meters
 
 if (!dir.exists(output)) {
@@ -90,6 +101,15 @@ for (i in 1:nrow(regions)) {
       ),
     sprintf("%s/prioritization_%s_gtfs%s_run%s.csv", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
     row.names = FALSE
+  )
+
+  prioritization_area_polygon <- prioritization |>
+    st_union() |>
+    st_convex_hull()
+
+  st_write(
+    prioritization_area_polygon,
+    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.shp", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
   )
 
   # 3. Extend with real-time data if available
