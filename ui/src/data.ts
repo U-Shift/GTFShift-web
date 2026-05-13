@@ -207,5 +207,31 @@ export const DB_REGIONS: DataRegion[] = [
                 }
             }
         ]
+    },
+    {
+        id: 'madrid',
+        name: 'EMT Madrid',
+        region: 'Madrid, ES',
+        rt_data: false,
+        logo: './static/regions/emt.png',
+        date: 'May 2026',
+        color: '#2c7abf',
+        layers: [
+            {
+                id: 'madrid',
+                name: 'All network',
+                date: 'May 2026',
+                rt_data: false,
+                files: {
+                    ways: './data/madrid/ways_madrid_gtfs2026-05-13_run20260513.geojson',
+                    way_data: './data/madrid/way_data_madrid_gtfs2026-05-13_run20260513.json',
+                    metadata: './data/madrid/metadata_madrid_gtfs2026-05-13_run20260513.json',
+                    route_data: './data/madrid/route_data_madrid_gtfs2026-05-13_run20260513.json',
+                    shape_data: './data/madrid/shape_data_madrid_gtfs2026-05-13_run20260513.json',
+                    boundaries: './data/madrid/prioritization_area_polygon_madrid_gtfs2026-05-13_run20260513.geojson',
+                    zip: './data/madrid/madrid.zip'
+                }
+            }
+        ]
     }
 ]
