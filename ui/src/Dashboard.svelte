@@ -205,8 +205,14 @@
         action_modal_details_open = false;
 
         region = DB_REGIONS.find((r: DataRegion) => r.id === regionId);
+        if (!region || !map) return;
+
         selected_layer = undefined;
         selected_layer_id = "";
+
+        if (region.layers && region.layers.length === 1) {
+            await handleLayerChange(region.layers[0].id);
+        }
     };
 
     // Effect to zoom to selected route
@@ -461,7 +467,7 @@
     {/if}
 
     <!-- Form 1.5: Select Layer -->
-    {#if region !== undefined && selected_layer === undefined}
+    {#if region !== undefined && selected_layer === undefined && region.layers && region.layers.length > 1}
         <div class="w-full text-left mb-4">
             <div class="flex items-center gap-2 mb-3">
                 {#if region.logo}
@@ -1087,6 +1093,9 @@
                 variant="outline"
                 size="sm"
                 onclick={() => {
+                    if (region && region.layers && region.layers.length === 1) {
+                        region = undefined;
+                    }
                     selected_layer = undefined;
                     selected_layer_id = "";
                     geoData = null;
