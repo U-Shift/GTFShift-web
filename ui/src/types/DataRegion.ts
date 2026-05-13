@@ -1,9 +1,8 @@
-export type DataRegion = {
+export type RegionLayer = {
     id: string;
     name: string;
-    region: string;
+    date: string;
     rt_data: boolean;
-    logo?: string;
     files: {
         ways: string;
         way_data: string;
@@ -12,6 +11,15 @@ export type DataRegion = {
         shape_data: string;
         zip: string; // Aggregated data
     };
+};
+
+export type DataRegion = {
+    id: string;
+    name: string;
+    region: string;
+    logo?: string;
+    rt_data: boolean;
     date: string;
     color: string;
+    layers: RegionLayer[];
 };
