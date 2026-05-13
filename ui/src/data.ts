@@ -29,7 +29,7 @@ export const DB_REGIONS: DataRegion[] = [
         layers: [
             {
                 id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260316',
-                name: 'All network (May 2026)',
+                name: 'All network',
                 date: 'May 2026',
                 rt_data: true,
                 files: {
@@ -54,7 +54,7 @@ export const DB_REGIONS: DataRegion[] = [
         layers: [
             {
                 id: 'aml',
-                name: 'All Network (Feb 2026)',
+                name: 'All Network',
                 date: 'Feb 2026',
                 rt_data: true,
                 files: {
@@ -68,7 +68,7 @@ export const DB_REGIONS: DataRegion[] = [
             },
             {
                 id: 'aml_a1',
-                name: 'Area 1 (May 2026)',
+                name: 'Area 1',
                 date: 'May 2026',
                 rt_data: true,
                 files: {
@@ -82,7 +82,7 @@ export const DB_REGIONS: DataRegion[] = [
             },
             {
                 id: 'aml_a2',
-                name: 'Area 2 (May 2026)',
+                name: 'Area 2',
                 date: 'May 2026',
                 rt_data: true,
                 files: {
@@ -96,7 +96,7 @@ export const DB_REGIONS: DataRegion[] = [
             },
             {
                 id: 'aml_a3',
-                name: 'Area 3 (May 2026)',
+                name: 'Area 3',
                 date: 'May 2026',
                 rt_data: true,
                 files: {
@@ -110,7 +110,7 @@ export const DB_REGIONS: DataRegion[] = [
             },
             {
                 id: 'aml_a4',
-                name: 'Area 4 (May 2026)',
+                name: 'Area 4',
                 date: 'May 2026',
                 rt_data: true,
                 files: {
@@ -135,7 +135,7 @@ export const DB_REGIONS: DataRegion[] = [
         layers: [
             {
                 id: 'cascais',
-                name: 'All network (May 2026)',
+                name: 'All network',
                 date: 'May 2026',
                 rt_data: false,
                 files: {
@@ -160,7 +160,7 @@ export const DB_REGIONS: DataRegion[] = [
         layers: [
             {
                 id: 'porto',
-                name: 'All network (May 2026)',
+                name: 'All network',
                 date: 'May 2026',
                 rt_data: true,
                 files: {
@@ -185,7 +185,7 @@ export const DB_REGIONS: DataRegion[] = [
         layers: [
             {
                 id: 'barreiro',
-                name: 'All network (May 2026)',
+                name: 'All network',
                 date: 'May 2026',
                 rt_data: false,
                 files: {
