@@ -54,7 +54,9 @@
                     </a>
                 </div>
                 <h4 class="text-lg font-semibold">
-                    {way.name || "Unnamed Way"}
+                    {way.name && way.name instanceof String
+                        ? way.name
+                        : "Unnamed Way"}
                 </h4>
             </section>
 
@@ -213,7 +215,9 @@
                     >
                         Nr Directions
                     </p>
-                    <p class="text-xs font-medium text-foreground">{way.n_directions ?? "N/A"}</p>
+                    <p class="text-xs font-medium text-foreground">
+                        {way.n_directions ?? "N/A"}
+                    </p>
                 </div>
 
                 <!-- Extension Card -->
@@ -227,7 +231,9 @@
                     </p>
                     <p class="text-xs font-medium text-foreground">
                         {way.length_m.toFixed(1)}
-                        <span class="text-[9px] text-muted-foreground">meters</span>
+                        <span class="text-[9px] text-muted-foreground"
+                            >meters</span
+                        >
                     </p>
                 </div>
 
@@ -242,7 +248,8 @@
                     </p>
                     <p class="text-xs font-medium text-foreground">
                         {way.speed_count ?? 0}
-                        <span class="text-[9px] text-muted-foreground">measurements</span
+                        <span class="text-[9px] text-muted-foreground"
+                            >measurements</span
                         >
                     </p>
                 </div>

@@ -407,7 +407,7 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p
-                                    class="text-sm font-semibold text-foreground leading-tight truncate"
+                                    class="text-sm font-semibold text-foreground leading-tight"
                                 >
                                     {r.name}
                                 </p>
@@ -519,7 +519,7 @@
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex-1 min-w-0">
                                 <p
-                                    class="text-sm font-semibold text-foreground leading-tight truncate"
+                                    class="text-sm font-semibold text-foreground leading-tight"
                                 >
                                     {layer.name}
                                 </p>
@@ -684,7 +684,9 @@
                             class="w-full justify-between bg-background/50 hover:bg-accent transition-colors border text-left"
                         >
                             <span class="truncate">
-                                {region.layers.find((l) => l.id === selected_layer_id)?.name ?? "Select active layer"}
+                                {region.layers.find(
+                                    (l) => l.id === selected_layer_id,
+                                )?.name ?? "Select active layer"}
                             </span>
                         </Select.Trigger>
                         <Select.Content class="z-[1100]">
