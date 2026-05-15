@@ -3,6 +3,7 @@ export type RegionLayer = {
     name: string;
     date: string;
     rt_data: boolean;
+    notes?: string;
     files: {
         ways: string;
         way_data: string;

@@ -500,9 +500,9 @@
                         disabled={loading !== undefined}
                         onmouseenter={(e) => {
                             const el = e.currentTarget as HTMLElement;
-                            el.style.borderColor = region.color ?? "";
+                            el.style.borderColor = region?.color ?? "";
                             el.style.backgroundColor =
-                                (region.color ?? "") + "0d";
+                                (region?.color ?? "") + "0d";
                             el.querySelector<HTMLElement>(
                                 ".layer-accent",
                             )!.style.transform = "scaleX(1)";
@@ -592,6 +592,15 @@
                     {region.region}<br />
                     <i class="fas fa-calendar-alt mr-1"></i>
                     {selected_layer?.date ?? region.date}
+                    {#if selected_layer?.notes}
+                        <br />
+                        <span
+                            class="text-[11px] italic mt-1 block leading-tight"
+                        >
+                            <i class="fas fa-circle-info mr-1"></i>
+                            {selected_layer.notes}
+                        </span>
+                    {/if}
                 </p>
                 <Tooltip.Provider delayDuration={0}>
                     <Tooltip.Root>
@@ -1329,7 +1338,7 @@
                 >
                     <i
                         class="fa-solid fa-draw-polygon text-[11px]"
-                        style="color: {region.color}"
+                        style="color: {region?.color}"
                     ></i>
                     Operations Area
                 </span>
@@ -1338,7 +1347,7 @@
                         ? 'bg-primary'
                         : 'bg-muted'}"
                     style="background-color: {show_boundaries
-                        ? region.color
+                        ? region?.color
                         : ''};"
                     onclick={() => (show_boundaries = !show_boundaries)}
                     aria-label="Toggle analysis boundary"

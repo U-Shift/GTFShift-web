@@ -30,6 +30,7 @@ export const DB_REGIONS: DataRegion[] = [
             {
                 id: 'aml_all',
                 name: 'Carris Metropolitana + Carris + TCB + MobiCascais',
+                notes: 'Speed data is only available for Carris and Carris Metropolitana.',
                 date: 'May 2026',
                 rt_data: false,
                 files: {
