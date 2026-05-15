@@ -109,7 +109,11 @@ for (i in 1:nrow(regions)) {
 
   st_write(
     prioritization_area_polygon,
-    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.shp", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
+    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
+  )
+  st_write(
+    prioritization_area_polygon,
+    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.geojson", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
   )
 
   # 3. Extend with real-time data if available
@@ -378,7 +382,8 @@ for (i in 1:nrow(regions)) {
       mean = round(wtd.mean(numberArray, weights = weights, na.rm = TRUE), digits = 2),
       median = round(as.numeric(quantiles[3]), digits = 2),
       variance = round(wtd.var(numberArray, weights = weights, na.rm = TRUE), digits = 2),
-      sd = round(sqrt(wtd.var(numberArray, weights = weights, na.rm = TRUE)), digits = 2)
+      sd = round(sqrt(wtd.var(numberArray, weights = weights, na.rm = TRUE)), digits = 2),
+      count = length(numberArray)
     ))
   }
 

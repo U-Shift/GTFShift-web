@@ -207,6 +207,53 @@ regions <- rbind( # NYC, MTA
   )
 )
 
+# Ghelph, CA
+regions <- rbind(
+  regions,
+  data.frame(
+    name = "guelph",
+    name_long = "Guelph, CA",
+    gtfs_url = "https://gismaps.guelph.ca/Pages/GTFS/google_transit.zip",
+    gtfs_day = "2026-04-29",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Guelph Transit", key_exact = TRUE)
+    ))),
+    geofabrik_region = "north-america/canada/ontario"
+  )
+)
+
+regions <- rbind( # Madrid
+  regions,
+  data.frame(
+    name = "madrid",
+    name_long = "Madrid, ES",
+    gtfs_url = "https://servicios.emtmadrid.es:8443/gtfs/transitemt.zip",
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "Empresa Municipal de Transportes de Madrid", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/spain/madrid"
+  )
+)
+
+regions <- rbind( # Fuenlabrada, ES
+  regions,
+  data.frame(
+    name = "fuenlabrada",
+    name_long = "Fuenlabrada, ES",
+    gtfs_url = "https://api.control.optibus.co/opendata/v1/gtfs?uid=c-5cfcd2d1",
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_manipulate = "manipulate_gtfs_fuenlabrada",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "EMT Fuenlabrada", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/spain/madrid"
+  )
+)
+
 # Helpers
 
 manipulate_carris_met <- function(gtfs) {
@@ -255,5 +302,11 @@ manipulate_carris_lx <- function(gtfs) {
     filter(route_id %in% routes_bus$route_id)
   gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_bus$trip_id)
 
+  return(gtfs)
+}
+
+manipulate_gtfs_fuenlabrada <- function(gtfs) {
+  # Append "L" suffix to route_short_name
+  gtfs$routes$route_short_name <- paste0("L", gtfs$routes$route_short_name)
   return(gtfs)
 }

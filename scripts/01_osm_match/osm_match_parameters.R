@@ -279,7 +279,7 @@ regions <- rbind(
   regions,
   data.frame(
     name = "guelph",
-    gtfs_url = "http://guelph.ca/uploads/google/google_transit.zip",
+    gtfs_url = "https://gismaps.guelph.ca/Pages/GTFS/google_transit.zip",
     gtfs_day = Sys.Date(),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
