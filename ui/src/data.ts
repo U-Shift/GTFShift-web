@@ -19,6 +19,47 @@ export const COLOR_GRADIENT_RED: string[] = ["#ffffcc", "#fffecb", "#fffec9", "#
 
 export const DB_REGIONS: DataRegion[] = [
     {
+        id: 'aml_unified',
+        name: 'Lisbon Metro Area',
+        region: 'Lisbon Metro Area, PT',
+        rt_data: false,
+        logo: './static/regions/navegante.png',
+        date: 'May 2026',
+        color: '#fd0',
+        layers: [
+            {
+                id: 'aml_all',
+                name: 'Carris Metropolitana + Carris + TCB + MobiCascais',
+                date: 'May 2026',
+                rt_data: false,
+                files: {
+                    ways: './data/aml_all/ways_aml_all_gtfs2026-05-13_run20260512_20260511.geojson',
+                    boundaries: './data/aml_all/prioritization_area_polygon_aml_all_gtfs2026-05-13_run20260512_20260511.geojson',
+                    way_data: './data/aml_all/way_data_aml_all_gtfs2026-05-13_run20260512_20260511.json',
+                    metadata: './data/aml_all/metadata_aml_all_gtfs2026-05-13_run20260512_20260511.json',
+                    route_data: './data/aml_all/route_data_aml_all_gtfs2026-05-13_run20260512_20260511.json',
+                    shape_data: './data/aml_all/shape_data_aml_all_gtfs2026-05-13_run20260512_20260511.json',
+                    zip: './data/aml_all/aml_all.zip'
+                }
+            },
+            {
+                id: 'aml_carris_cm',
+                name: "Carris Metropolitana + Carris",
+                date: 'May 2026',
+                rt_data: false,
+                files: {
+                    ways: './data/aml_carris_cm/ways_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.geojson',
+                    boundaries: './data/aml_carris_cm/prioritization_area_polygon_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.geojson',
+                    way_data: './data/aml_carris_cm/way_data_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.json',
+                    metadata: './data/aml_carris_cm/metadata_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.json',
+                    route_data: './data/aml_carris_cm/route_data_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.json',
+                    shape_data: './data/aml_carris_cm/shape_data_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.json',
+                    zip: './data/aml_carris_cm/aml_carris_cm.zip'
+                }
+            }
+        ]
+    },
+    {
         id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260316',
         name: 'Carris',
         region: 'Lisbon, PT',
@@ -54,18 +95,18 @@ export const DB_REGIONS: DataRegion[] = [
         color: '#ffdd01',
         layers: [
             {
-                id: 'aml',
-                name: 'All Network',
-                date: 'Feb 2026',
+                id: 'aml_1_2_3_4',
+                name: 'All network',
+                date: 'May 2026',
                 rt_data: true,
                 files: {
-                    ways: './data/aml/ways_aml_rt_gtfs2026-02-04_run20260414.geojson',
-                    boundaries: './data/aml/prioritization_area_polygon_aml_rt_gtfs2026-02-04_run20260414.geojson',
-                    way_data: './data/aml/way_data_aml_rt_gtfs2026-02-04_run20260414.json',
-                    metadata: './data/aml/metadata_aml_rt_gtfs2026-02-04_run20260414.json',
-                    route_data: './data/aml/route_data_aml_rt_gtfs2026-02-04_run20260414.json',
-                    shape_data: './data/aml/shape_data_aml_rt_gtfs2026-02-04_run20260414.json',
-                    zip: './data/aml/aml.zip'
+                    ways: './data/aml_1_2_3_4/ways_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.geojson',
+                    boundaries: './data/aml_1_2_3_4/prioritization_area_polygon_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.geojson',
+                    way_data: './data/aml_1_2_3_4/way_data_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.json',
+                    metadata: './data/aml_1_2_3_4/metadata_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.json',
+                    route_data: './data/aml_1_2_3_4/route_data_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.json',
+                    shape_data: './data/aml_1_2_3_4/shape_data_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.json',
+                    zip: './data/aml_1_2_3_4/aml.zip'
                 }
             },
             {
