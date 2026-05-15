@@ -22,7 +22,7 @@ export const DB_REGIONS: DataRegion[] = [
         id: 'aml_unified',
         name: 'Lisbon Metro Area',
         region: 'Lisbon Metro Area, PT',
-        rt_data: false,
+        rt_data: true,
         logo: './static/regions/navegante.png',
         date: 'May 2026',
         color: '#fd0',
@@ -32,7 +32,7 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'Carris Metropolitana + Carris + TCB + MobiCascais',
                 notes: 'Speed data is only available for Carris and Carris Metropolitana.',
                 date: 'May 2026',
-                rt_data: false,
+                rt_data: true,
                 files: {
                     ways: './data/aml_all/ways_aml_all_gtfs2026-05-13_run20260512_20260511.geojson',
                     boundaries: './data/aml_all/prioritization_area_polygon_aml_all_gtfs2026-05-13_run20260512_20260511.geojson',
@@ -47,7 +47,7 @@ export const DB_REGIONS: DataRegion[] = [
                 id: 'aml_carris_cm',
                 name: "Carris Metropolitana + Carris",
                 date: 'May 2026',
-                rt_data: false,
+                rt_data: true,
                 files: {
                     ways: './data/aml_carris_cm/ways_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.geojson',
                     boundaries: './data/aml_carris_cm/prioritization_area_polygon_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.geojson',
@@ -199,32 +199,6 @@ export const DB_REGIONS: DataRegion[] = [
         ]
     },
     {
-        id: 'porto',
-        name: 'STCP',
-        region: 'Porto, PT',
-        rt_data: true,
-        logo: './static/regions/stcp.png',
-        date: 'May 2026',
-        color: '#0074c7',
-        layers: [
-            {
-                id: 'porto',
-                name: 'All network',
-                date: 'May 2026',
-                rt_data: true,
-                files: {
-                    ways: './data/porto/ways_stcp_gtfs2026-05-13_run20260512.geojson',
-                    boundaries: './data/porto/prioritization_area_polygon_stcp_gtfs2026-05-13_run20260512.geojson',
-                    way_data: './data/porto/way_data_stcp_gtfs2026-05-13_run20260512.json',
-                    metadata: './data/porto/metadata_stcp_gtfs2026-05-13_run20260512.json',
-                    route_data: './data/porto/route_data_stcp_gtfs2026-05-13_run20260512.json',
-                    shape_data: './data/porto/shape_data_stcp_gtfs2026-05-13_run20260512.json',
-                    zip: './data/porto/porto.zip'
-                }
-            }
-        ]
-    },
-    {
         id: 'barreiro',
         name: 'Barreiro',
         region: 'Barreiro, PT',
@@ -246,6 +220,32 @@ export const DB_REGIONS: DataRegion[] = [
                     route_data: './data/barreiro/route_data_barreiro_gtfs2026-05-13_run20260512.json',
                     shape_data: './data/barreiro/shape_data_barreiro_gtfs2026-05-13_run20260512.json',
                     zip: './data/barreiro/barreiro.zip'
+                }
+            }
+        ]
+    },
+    {
+        id: 'porto',
+        name: 'STCP',
+        region: 'Porto, PT',
+        rt_data: true,
+        logo: './static/regions/stcp.png',
+        date: 'May 2026',
+        color: '#0074c7',
+        layers: [
+            {
+                id: 'porto',
+                name: 'All network',
+                date: 'May 2026',
+                rt_data: true,
+                files: {
+                    ways: './data/porto/ways_stcp_gtfs2026-05-13_run20260512.geojson',
+                    boundaries: './data/porto/prioritization_area_polygon_stcp_gtfs2026-05-13_run20260512.geojson',
+                    way_data: './data/porto/way_data_stcp_gtfs2026-05-13_run20260512.json',
+                    metadata: './data/porto/metadata_stcp_gtfs2026-05-13_run20260512.json',
+                    route_data: './data/porto/route_data_stcp_gtfs2026-05-13_run20260512.json',
+                    shape_data: './data/porto/shape_data_stcp_gtfs2026-05-13_run20260512.json',
+                    zip: './data/porto/porto.zip'
                 }
             }
         ]
