@@ -107,7 +107,7 @@ export const DB_REGIONS: DataRegion[] = [
                     metadata: './data/aml_1_2_3_4/metadata_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.json',
                     route_data: './data/aml_1_2_3_4/route_data_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.json',
                     shape_data: './data/aml_1_2_3_4/shape_data_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.json',
-                    zip: './data/aml_1_2_3_4/aml.zip'
+                    zip: './data/aml_1_2_3_4/aml_1_2_3_4.zip'
                 }
             },
             {
@@ -122,7 +122,7 @@ export const DB_REGIONS: DataRegion[] = [
                     metadata: './data/aml_1/metadata_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
                     route_data: './data/aml_1/route_data_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
                     shape_data: './data/aml_1/shape_data_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
-                    zip: './data/aml_1/aml.zip'
+                    zip: './data/aml_1/aml_1.zip'
                 }
             },
             {
@@ -137,7 +137,7 @@ export const DB_REGIONS: DataRegion[] = [
                     metadata: './data/aml_2/metadata_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
                     route_data: './data/aml_2/route_data_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
                     shape_data: './data/aml_2/shape_data_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
-                    zip: './data/aml_2/aml.zip'
+                    zip: './data/aml_2/aml_2.zip'
                 }
             },
             {
@@ -152,7 +152,7 @@ export const DB_REGIONS: DataRegion[] = [
                     metadata: './data/aml_3/metadata_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
                     route_data: './data/aml_3/route_data_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
                     shape_data: './data/aml_3/shape_data_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
-                    zip: './data/aml_3/aml.zip'
+                    zip: './data/aml_3/aml_3.zip'
                 }
             },
             {
@@ -167,7 +167,7 @@ export const DB_REGIONS: DataRegion[] = [
                     metadata: './data/aml_4/metadata_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
                     route_data: './data/aml_4/route_data_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
                     shape_data: './data/aml_4/shape_data_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
-                    zip: './data/aml_4/aml.zip'
+                    zip: './data/aml_4/aml_4.zip'
                 }
             }
         ]
