@@ -21,18 +21,18 @@ regions <- data.frame(
 )
 data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
 
-regions <- rbind(
+regions <- rbind( # Madrid
   regions,
   data.frame(
-    name = "rome",
-    # For historical versions, refer to https://mobilitydatabase.org/feeds/gtfs_rt/mdb-1776
-    gtfs_url = "https://romamobilita.it/sites/default/files/rome_static_gtfs.zip",
+    name = "madrid",
+    gtfs_url = "https://servicios.emtmadrid.es:8443/gtfs/transitemt.zip",
     gtfs_day = gsub("-", "", Sys.Date()),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "network", value = "ATAC", key_exact = TRUE)
+      list(key = "operator", value = "Empresa Municipal de Transportes de Madrid", key_exact = TRUE)
     ))),
-    geofabrik_region = "europe/italy/centro"
+    geofabrik_region = "europe/spain/madrid",
+    osm_stop_order_relaxed = TRUE
   )
 )
 
@@ -101,7 +101,8 @@ for (i in 1:nrow(regions)) {
     gtfs_osm_match_exact = if (!is.null(region$gtfs_osm_match_exact)) region$gtfs_osm_match_exact else TRUE,
     log_file = sprintf("%s/shapes_match_%s_gtfs%s_run%s.r.log", output, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
     osm_file = osm_file,
-    num_cores = max(1, parallel::detectCores() - 2)
+    num_cores = 1, # max(1, floor(parallel::detectCores() / 2))
+    osm_stop_order_relaxed = if (!is.null(region$osm_stop_order_relaxed)) region$osm_stop_order_relaxed else FALSE
   )
   # assign(sprintf("shapes_match_routes_%s_gtfs%s", region$name, region$gtfs_day), shapes_match_routes)
 

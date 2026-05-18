@@ -33,7 +33,7 @@ regions <- rbind( # Barreiro
     gtfs_day = gsub("-", "", Sys.Date()),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "network", value = "Transportes Coletivos do Barreiro", key_exact = TRUE)
+      list(key = "network", value = c("TCB", "Transportes Coletivos do Barreiro"), key_exact = TRUE)
     ))),
     geofabrik_region = "europe/portugal"
   )
@@ -113,7 +113,8 @@ regions <- rbind( # Madrid
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "Empresa Municipal de Transportes de Madrid", key_exact = TRUE)
     ))),
-    geofabrik_region = "europe/spain/madrid"
+    geofabrik_region = "europe/spain/madrid",
+    osm_stop_order_relaxed = TRUE
   )
 )
 regions <- rbind( # STCP
