@@ -9,19 +9,19 @@ library(Hmisc)
 
 # Define input regions and output directory
 # You can customize these variables as needed
-regions <- c("aml_rt_area_1", "aml_rt_area_2", "aml_rt_area_3", "aml_rt_area_4") # , "lisboa_rt") # , "cascais", "barreiro")
+regions <- c("aml_rt_area_1", "aml_rt_area_2", "aml_rt_area_3", "aml_rt_area_4", "lisboa_rt", "cascais", "barreiro")
 regions_name <- "Lisboa Metro Area, Portugal"
 runs <- list(
-  "aml_rt_area_1" = list(run = "20260512_150158", gtfs_day = "2026-05-13"),
-  "aml_rt_area_2" = list(run = "20260512_150630", gtfs_day = "2026-05-13"),
-  "aml_rt_area_3" = list(run = "20260512_151747", gtfs_day = "2026-05-13"),
-  "aml_rt_area_4" = list(run = "20260512_151954", gtfs_day = "2026-05-13")
-  # "lisboa_rt" = list(run = "20260511_155437", gtfs_day = "2026-05-13")
-  # "cascais" = list(run = "20260512_083832", gtfs_day = "2026-05-13"),
-  # "barreiro" = list(run = "20260512_123820", gtfs_day = "2026-05-13")
+  "aml_rt_area_1" = list(run = "20260518_190844", gtfs_day = "2026-05-20"),
+  "aml_rt_area_2" = list(run = "20260518_194948", gtfs_day = "2026-05-20"),
+  "aml_rt_area_3" = list(run = "20260518_203125", gtfs_day = "2026-05-20"),
+  "aml_rt_area_4" = list(run = "20260518_205250", gtfs_day = "2026-05-20"),
+  "lisboa_rt" = list(run = "20260518_185258", gtfs_day = "2026-05-20"),
+  "cascais" = list(run = "20260519_071746", gtfs_day = "2026-05-20"),
+  "barreiro" = list(run = "20260519_110700", gtfs_day = "2026-05-20")
 )
 output_name <- sprintf(
-  "aml_areass_1_2_3_4_gtfs%s_run%s",
+  "aml_all_gtfs%s_run%s",
   paste(unique(sapply(runs, function(x) x$gtfs_day)), collapse = "_"),
   paste(unique(sapply(runs, function(x) substr(x$run, 1, 8))), collapse = "_")
 )

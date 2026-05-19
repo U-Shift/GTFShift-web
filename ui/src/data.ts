@@ -34,28 +34,13 @@ export const DB_REGIONS: DataRegion[] = [
                 date: 'May 2026',
                 rt_data: true,
                 files: {
-                    ways: './data/aml_all/ways_aml_all_gtfs2026-05-13_run20260512_20260511.geojson',
-                    boundaries: './data/aml_all/prioritization_area_polygon_aml_all_gtfs2026-05-13_run20260512_20260511.geojson',
-                    way_data: './data/aml_all/way_data_aml_all_gtfs2026-05-13_run20260512_20260511.json',
-                    metadata: './data/aml_all/metadata_aml_all_gtfs2026-05-13_run20260512_20260511.json',
-                    route_data: './data/aml_all/route_data_aml_all_gtfs2026-05-13_run20260512_20260511.json',
-                    shape_data: './data/aml_all/shape_data_aml_all_gtfs2026-05-13_run20260512_20260511.json',
+                    ways: './data/aml_all/ways_aml_all_gtfs2026-05-20_run20260518_20260519.geojson',
+                    boundaries: './data/aml_all/prioritization_area_polygon_aml_all_gtfs2026-05-20_run20260518_20260519.geojson',
+                    way_data: './data/aml_all/way_data_aml_all_gtfs2026-05-20_run20260518_20260519.json',
+                    metadata: './data/aml_all/metadata_aml_all_gtfs2026-05-20_run20260518_20260519.json',
+                    route_data: './data/aml_all/route_data_aml_all_gtfs2026-05-20_run20260518_20260519.json',
+                    shape_data: './data/aml_all/shape_data_aml_all_gtfs2026-05-20_run20260518_20260519.json',
                     zip: './data/aml_all/aml_all.zip'
-                }
-            },
-            {
-                id: 'aml_carris_cm',
-                name: "Carris Metropolitana + Carris",
-                date: 'May 2026',
-                rt_data: true,
-                files: {
-                    ways: './data/aml_carris_cm/ways_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.geojson',
-                    boundaries: './data/aml_carris_cm/prioritization_area_polygon_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.geojson',
-                    way_data: './data/aml_carris_cm/way_data_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.json',
-                    metadata: './data/aml_carris_cm/metadata_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.json',
-                    route_data: './data/aml_carris_cm/route_data_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.json',
-                    shape_data: './data/aml_carris_cm/shape_data_aml_cm_carris_gtfs2026-05-13_run20260512_20260511.json',
-                    zip: './data/aml_carris_cm/aml_carris_cm.zip'
                 }
             }
         ]
@@ -75,12 +60,12 @@ export const DB_REGIONS: DataRegion[] = [
                 date: 'May 2026',
                 rt_data: true,
                 files: {
-                    ways: './data/lisbon/ways_lisboa_rt_gtfs2026-05-13_run20260511.geojson',
-                    boundaries: './data/lisbon/prioritization_area_polygon_lisboa_rt_gtfs2026-05-13_run20260511.geojson',
-                    way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-05-13_run20260511.json',
-                    metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-05-13_run20260511.json',
-                    route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-05-13_run20260511.json',
-                    shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-05-13_run20260511.json',
+                    ways: './data/lisbon/ways_lisboa_rt_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: './data/lisbon/prioritization_area_polygon_lisboa_rt_gtfs2026-05-20_run20260518.geojson',
+                    way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
+                    metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-05-20_run20260518.json',
+                    route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
+                    shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
                     zip: './data/lisbon/lisbon.zip'
                 }
             }
@@ -101,12 +86,12 @@ export const DB_REGIONS: DataRegion[] = [
                 date: 'May 2026',
                 rt_data: true,
                 files: {
-                    ways: './data/aml_1_2_3_4/ways_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.geojson',
-                    boundaries: './data/aml_1_2_3_4/prioritization_area_polygon_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.geojson',
-                    way_data: './data/aml_1_2_3_4/way_data_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.json',
-                    metadata: './data/aml_1_2_3_4/metadata_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.json',
-                    route_data: './data/aml_1_2_3_4/route_data_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.json',
-                    shape_data: './data/aml_1_2_3_4/shape_data_aml_areass_1_2_3_4_gtfs2026-05-13_run20260512.json',
+                    ways: './data/aml_1_2_3_4/ways_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: './data/aml_1_2_3_4/prioritization_area_polygon_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.geojson',
+                    way_data: './data/aml_1_2_3_4/way_data_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
+                    metadata: './data/aml_1_2_3_4/metadata_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
+                    route_data: './data/aml_1_2_3_4/route_data_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
+                    shape_data: './data/aml_1_2_3_4/shape_data_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
                     zip: './data/aml_1_2_3_4/aml_1_2_3_4.zip'
                 }
             },
@@ -116,12 +101,12 @@ export const DB_REGIONS: DataRegion[] = [
                 date: 'May 2026',
                 rt_data: true,
                 files: {
-                    ways: './data/aml_1/ways_aml_rt_area_1_gtfs2026-05-13_run20260512.geojson',
-                    boundaries: './data/aml_1/prioritization_area_polygon_aml_rt_area_1_gtfs2026-05-13_run20260512.geojson',
-                    way_data: './data/aml_1/way_data_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
-                    metadata: './data/aml_1/metadata_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
-                    route_data: './data/aml_1/route_data_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
-                    shape_data: './data/aml_1/shape_data_aml_rt_area_1_gtfs2026-05-13_run20260512.json',
+                    ways: './data/aml_1/ways_aml_rt_area_1_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: './data/aml_1/prioritization_area_polygon_aml_rt_area_1_gtfs2026-05-20_run20260518.geojson',
+                    way_data: './data/aml_1/way_data_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
+                    metadata: './data/aml_1/metadata_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
+                    route_data: './data/aml_1/route_data_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
+                    shape_data: './data/aml_1/shape_data_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
                     zip: './data/aml_1/aml_1.zip'
                 }
             },
@@ -131,12 +116,12 @@ export const DB_REGIONS: DataRegion[] = [
                 date: 'May 2026',
                 rt_data: true,
                 files: {
-                    ways: './data/aml_2/ways_aml_rt_area_2_gtfs2026-05-13_run20260512.geojson',
-                    boundaries: './data/aml_2/prioritization_area_polygon_aml_rt_area_2_gtfs2026-05-13_run20260512.geojson',
-                    way_data: './data/aml_2/way_data_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
-                    metadata: './data/aml_2/metadata_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
-                    route_data: './data/aml_2/route_data_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
-                    shape_data: './data/aml_2/shape_data_aml_rt_area_2_gtfs2026-05-13_run20260512.json',
+                    ways: './data/aml_2/ways_aml_rt_area_2_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: './data/aml_2/prioritization_area_polygon_aml_rt_area_2_gtfs2026-05-20_run20260518.geojson',
+                    way_data: './data/aml_2/way_data_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
+                    metadata: './data/aml_2/metadata_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
+                    route_data: './data/aml_2/route_data_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
+                    shape_data: './data/aml_2/shape_data_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
                     zip: './data/aml_2/aml_2.zip'
                 }
             },
@@ -146,12 +131,12 @@ export const DB_REGIONS: DataRegion[] = [
                 date: 'May 2026',
                 rt_data: true,
                 files: {
-                    ways: './data/aml_3/ways_aml_rt_area_3_gtfs2026-05-13_run20260512.geojson',
-                    boundaries: './data/aml_3/prioritization_area_polygon_aml_rt_area_3_gtfs2026-05-13_run20260512.geojson',
-                    way_data: './data/aml_3/way_data_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
-                    metadata: './data/aml_3/metadata_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
-                    route_data: './data/aml_3/route_data_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
-                    shape_data: './data/aml_3/shape_data_aml_rt_area_3_gtfs2026-05-13_run20260512.json',
+                    ways: './data/aml_3/ways_aml_rt_area_3_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: './data/aml_3/prioritization_area_polygon_aml_rt_area_3_gtfs2026-05-20_run20260518.geojson',
+                    way_data: './data/aml_3/way_data_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
+                    metadata: './data/aml_3/metadata_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
+                    route_data: './data/aml_3/route_data_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
+                    shape_data: './data/aml_3/shape_data_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
                     zip: './data/aml_3/aml_3.zip'
                 }
             },
@@ -161,12 +146,12 @@ export const DB_REGIONS: DataRegion[] = [
                 date: 'May 2026',
                 rt_data: true,
                 files: {
-                    ways: './data/aml_4/ways_aml_rt_area_4_gtfs2026-05-13_run20260512.geojson',
-                    boundaries: './data/aml_4/prioritization_area_polygon_aml_rt_area_4_gtfs2026-05-13_run20260512.geojson',
-                    way_data: './data/aml_4/way_data_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
-                    metadata: './data/aml_4/metadata_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
-                    route_data: './data/aml_4/route_data_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
-                    shape_data: './data/aml_4/shape_data_aml_rt_area_4_gtfs2026-05-13_run20260512.json',
+                    ways: './data/aml_4/ways_aml_rt_area_4_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: './data/aml_4/prioritization_area_polygon_aml_rt_area_4_gtfs2026-05-20_run20260518.geojson',
+                    way_data: './data/aml_4/way_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
+                    metadata: './data/aml_4/metadata_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
+                    route_data: './data/aml_4/route_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
+                    shape_data: './data/aml_4/shape_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
                     zip: './data/aml_4/aml_4.zip'
                 }
             }
@@ -187,12 +172,12 @@ export const DB_REGIONS: DataRegion[] = [
                 date: 'May 2026',
                 rt_data: false,
                 files: {
-                    ways: './data/cascais/ways_cascais_gtfs2026-05-13_run20260512.geojson',
-                    boundaries: './data/cascais/prioritization_area_polygon_cascais_gtfs2026-05-13_run20260512.geojson',
-                    way_data: './data/cascais/way_data_cascais_gtfs2026-05-13_run20260512.json',
-                    metadata: './data/cascais/metadata_cascais_gtfs2026-05-13_run20260512.json',
-                    route_data: './data/cascais/route_data_cascais_gtfs2026-05-13_run20260512.json',
-                    shape_data: './data/cascais/shape_data_cascais_gtfs2026-05-13_run20260512.json',
+                    ways: './data/cascais/ways_cascais_gtfs2026-05-20_run20260519.geojson',
+                    boundaries: './data/cascais/prioritization_area_polygon_cascais_gtfs2026-05-20_run20260519.geojson',
+                    way_data: './data/cascais/way_data_cascais_gtfs2026-05-20_run20260519.json',
+                    metadata: './data/cascais/metadata_cascais_gtfs2026-05-20_run20260519.json',
+                    route_data: './data/cascais/route_data_cascais_gtfs2026-05-20_run20260519.json',
+                    shape_data: './data/cascais/shape_data_cascais_gtfs2026-05-20_run20260519.json',
                     zip: './data/cascais/cascais.zip'
                 }
             }
@@ -213,12 +198,12 @@ export const DB_REGIONS: DataRegion[] = [
                 date: 'May 2026',
                 rt_data: false,
                 files: {
-                    ways: './data/barreiro/ways_barreiro_gtfs2026-05-13_run20260512.geojson',
-                    boundaries: './data/barreiro/prioritization_area_polygon_barreiro_gtfs2026-05-13_run20260512.geojson',
-                    way_data: './data/barreiro/way_data_barreiro_gtfs2026-05-13_run20260512.json',
-                    metadata: './data/barreiro/metadata_barreiro_gtfs2026-05-13_run20260512.json',
-                    route_data: './data/barreiro/route_data_barreiro_gtfs2026-05-13_run20260512.json',
-                    shape_data: './data/barreiro/shape_data_barreiro_gtfs2026-05-13_run20260512.json',
+                    ways: './data/barreiro/ways_barreiro_gtfs2026-05-20_run20260519.geojson',
+                    boundaries: './data/barreiro/prioritization_area_polygon_barreiro_gtfs2026-05-20_run20260519.geojson',
+                    way_data: './data/barreiro/way_data_barreiro_gtfs2026-05-20_run20260519.json',
+                    metadata: './data/barreiro/metadata_barreiro_gtfs2026-05-20_run20260519.json',
+                    route_data: './data/barreiro/route_data_barreiro_gtfs2026-05-20_run20260519.json',
+                    shape_data: './data/barreiro/shape_data_barreiro_gtfs2026-05-20_run20260519.json',
                     zip: './data/barreiro/barreiro.zip'
                 }
             }
@@ -239,12 +224,12 @@ export const DB_REGIONS: DataRegion[] = [
                 date: 'May 2026',
                 rt_data: true,
                 files: {
-                    ways: './data/porto/ways_stcp_gtfs2026-05-13_run20260512.geojson',
-                    boundaries: './data/porto/prioritization_area_polygon_stcp_gtfs2026-05-13_run20260512.geojson',
-                    way_data: './data/porto/way_data_stcp_gtfs2026-05-13_run20260512.json',
-                    metadata: './data/porto/metadata_stcp_gtfs2026-05-13_run20260512.json',
-                    route_data: './data/porto/route_data_stcp_gtfs2026-05-13_run20260512.json',
-                    shape_data: './data/porto/shape_data_stcp_gtfs2026-05-13_run20260512.json',
+                    ways: './data/porto/ways_stcp_gtfs2026-05-20_run20260519.geojson',
+                    boundaries: './data/porto/prioritization_area_polygon_stcp_gtfs2026-05-20_run20260519.geojson',
+                    way_data: './data/porto/way_data_stcp_gtfs2026-05-20_run20260519.json',
+                    metadata: './data/porto/metadata_stcp_gtfs2026-05-20_run20260519.json',
+                    route_data: './data/porto/route_data_stcp_gtfs2026-05-20_run20260519.json',
+                    shape_data: './data/porto/shape_data_stcp_gtfs2026-05-20_run20260519.json',
                     zip: './data/porto/porto.zip'
                 }
             }
@@ -265,12 +250,12 @@ export const DB_REGIONS: DataRegion[] = [
                 date: 'May 2026',
                 rt_data: false,
                 files: {
-                    ways: './data/madrid/ways_madrid_gtfs2026-05-13_run20260513.geojson',
-                    way_data: './data/madrid/way_data_madrid_gtfs2026-05-13_run20260513.json',
-                    metadata: './data/madrid/metadata_madrid_gtfs2026-05-13_run20260513.json',
-                    route_data: './data/madrid/route_data_madrid_gtfs2026-05-13_run20260513.json',
-                    shape_data: './data/madrid/shape_data_madrid_gtfs2026-05-13_run20260513.json',
-                    boundaries: './data/madrid/prioritization_area_polygon_madrid_gtfs2026-05-13_run20260513.geojson',
+                    ways: './data/madrid/ways_madrid_gtfs2026-05-20_run20260519.geojson',
+                    way_data: './data/madrid/way_data_madrid_gtfs2026-05-20_run20260519.json',
+                    metadata: './data/madrid/metadata_madrid_gtfs2026-05-20_run20260519.json',
+                    route_data: './data/madrid/route_data_madrid_gtfs2026-05-20_run20260519.json',
+                    shape_data: './data/madrid/shape_data_madrid_gtfs2026-05-20_run20260519.json',
+                    boundaries: './data/madrid/prioritization_area_polygon_madrid_gtfs2026-05-20_run20260519.geojson',
                     zip: './data/madrid/madrid.zip'
                 }
             }

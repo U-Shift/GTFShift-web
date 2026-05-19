@@ -14,21 +14,44 @@ library(Hmisc) # For  Weighted Statistical Estimates
 
 # main()
 output <- "web_data"
+data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
 
 regions <- data.frame(
   name = character(),
   name_long = character(),
   gtfs = character(),
-  query = I(list()),
-  rt_interval = character(),
-  rt_collection = I(list()) # sf object
+  query = I(list())
 )
+regions <- rbind( # Barreiro
+  regions,
+  data.frame(
+    name = "barreiro",
+    name_long = "Barreiro, Portugal",
+    gtfs_url = data$URL[data$ID == "barreiro"],
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = c("TCB", "Transportes Coletivos do Barreiro"), key_exact = TRUE)
+    ))),
+    rt_interval = "11-15/05/2026",
+    rt_collection = I(list(sf::st_read("data/barreiro_20260511_20260515/updates.csv") |>
+      mutate(
+        speed = as.numeric(speed)
+      ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326))),
+    geofabrik_region = "europe/portugal"
+  )
+)
+
 
 stop_buffer_size <- 15 # meters
 
 if (!dir.exists(output)) {
   dir.create(output, recursive = TRUE)
 }
+
+message("------------------------------------------------------------------------------------------------------------------------")
+message("\n\nRunning for regions:\n > ", paste(regions$name_long, collapse = "\n > "))
+message("------------------------------------------------------------------------------------------------------------------------\n\n")
 
 for (i in 1:nrow(regions)) {
   # 1. Load data for region
@@ -47,7 +70,7 @@ for (i in 1:nrow(regions)) {
   gtfs_shapes <- tidytransit::shapes_as_sf(gtfs$shapes)
   bbox <- sf::st_bbox(gtfs_shapes)
 
-  if (!is.null(region$gtfs_manipulate)) {
+  if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate)) {
     message("Manipulating GTFS with function: ", region$gtfs_manipulate)
     message("Manipulating gtfs...")
     gtfs <- get(region$gtfs_manipulate)(gtfs)

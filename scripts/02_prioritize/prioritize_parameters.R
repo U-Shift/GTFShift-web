@@ -164,8 +164,13 @@ regions <- rbind( # Barreiro
     gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "network", value = "Transportes Coletivos do Barreiro", key_exact = TRUE)
+      list(key = "network", value = c("TCB", "Transportes Coletivos do Barreiro"), key_exact = TRUE)
     ))),
+    rt_interval = "11-15/05/2026",
+    rt_collection = I(list(sf::st_read("data/barreiro_20260511_20260515/updates.csv") |>
+      mutate(
+        speed = as.numeric(speed)
+      ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326))),
     geofabrik_region = "europe/portugal"
   )
 )
