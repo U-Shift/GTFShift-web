@@ -30,7 +30,7 @@ export const DB_REGIONS: DataRegion[] = [
             {
                 id: 'aml_all',
                 name: 'Carris Metropolitana + Carris + TCB + MobiCascais',
-                notes: 'Speed data is only available for Carris and Carris Metropolitana.',
+                notes: 'Speed data is not available for MobiCascais.',
                 date: 'May 2026',
                 rt_data: true,
                 files: {
@@ -187,7 +187,7 @@ export const DB_REGIONS: DataRegion[] = [
         id: 'barreiro',
         name: 'Barreiro',
         region: 'Barreiro, PT',
-        rt_data: false,
+        rt_data: true,
         logo: './static/regions/tcb.png',
         date: 'May 2026',
         color: '#97d700',
@@ -196,7 +196,7 @@ export const DB_REGIONS: DataRegion[] = [
                 id: 'barreiro',
                 name: 'All network',
                 date: 'May 2026',
-                rt_data: false,
+                rt_data: true,
                 files: {
                     ways: './data/barreiro/ways_barreiro_gtfs2026-05-20_run20260519.geojson',
                     boundaries: './data/barreiro/prioritization_area_polygon_barreiro_gtfs2026-05-20_run20260519.geojson',
