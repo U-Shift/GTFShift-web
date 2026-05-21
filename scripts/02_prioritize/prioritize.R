@@ -22,26 +22,20 @@ regions <- data.frame(
   gtfs = character(),
   query = I(list())
 )
-regions <- rbind( # Barreiro
+regions <- rbind( # Toulouse, FR
   regions,
   data.frame(
-    name = "barreiro",
-    name_long = "Barreiro, Portugal",
-    gtfs_url = data$URL[data$ID == "barreiro"],
+    name = "toulouse",
+    name_long = "Toulouse, FR",
+    gtfs_url = "https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
     gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "network", value = c("TCB", "Transportes Coletivos do Barreiro"), key_exact = TRUE)
+      list(key = "network", value = "Tisséo", key_exact = TRUE)
     ))),
-    rt_interval = "11-15/05/2026",
-    rt_collection = I(list(sf::st_read("data/barreiro_20260511_20260515/updates.csv") |>
-      mutate(
-        speed = as.numeric(speed)
-      ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326))),
-    geofabrik_region = "europe/portugal"
+    geofabrik_region = "europe/france/midi-pyrenees"
   )
 )
-
 
 stop_buffer_size <- 15 # meters
 

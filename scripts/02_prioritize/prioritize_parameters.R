@@ -259,6 +259,21 @@ regions <- rbind( # Fuenlabrada, ES
   )
 )
 
+regions <- rbind( # Toulouse, FR
+  regions,
+  data.frame(
+    name = "toulouse",
+    name_long = "Toulouse, FR",
+    gtfs_url = "https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Tisséo", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/france/midi-pyrenees"
+  )
+)
+
 # Helpers
 
 manipulate_carris_met <- function(gtfs) {

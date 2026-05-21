@@ -16,8 +16,8 @@ osm_regions <- c(
     # "australia-oceania",
     # "africa",
     # "south-america",
-    "asia",
-    "central-america",
+    # "asia",
+    # "central-america",
     "europe",
     "north-america",
     "antarctica"

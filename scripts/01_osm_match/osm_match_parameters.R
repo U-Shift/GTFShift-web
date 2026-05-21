@@ -22,7 +22,8 @@ regions <- rbind( # AML
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
     ))),
-    geofabrik_region = "europe/portugal"
+    geofabrik_region = "europe/portugal",
+    osm_stop_order_relaxed = TRUE
   )
 )
 regions <- rbind( # Barreiro
@@ -100,7 +101,8 @@ regions <- rbind( # Lisboa
       list(key = "route", value = c("bus", "tram"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
     ))),
-    geofabrik_region = "europe/portugal"
+    geofabrik_region = "europe/portugal",
+    osm_stop_order_relaxed = TRUE
   )
 )
 regions <- rbind( # Madrid
@@ -144,7 +146,8 @@ regions <- rbind( # Toulouse
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Tisséo", key_exact = TRUE)
     ))),
-    geofabrik_region = "europe/france/midi-pyrenees"
+    geofabrik_region = "europe/france/midi-pyrenees",
+    osm_stop_order_relaxed = TRUE
   )
 )
 
@@ -177,7 +180,8 @@ regions <- rbind( # NYC, Bronx
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
     ))),
-    geofabrik_region = "north-america/us/new-york"
+    geofabrik_region = "north-america/us/new-york",
+    osm_stop_order_relaxed = TRUE
   )
 )
 

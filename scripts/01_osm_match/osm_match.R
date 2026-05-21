@@ -58,7 +58,7 @@ for (i in 1:nrow(regions)) {
   summary(gtfs)
   # assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
 
-  if (!is.null(region$gtfs_manipulate)) {
+  if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate)) {
     message("Manipulating gtfs...")
     gtfs <- get(region$gtfs_manipulate)(gtfs)
     gtfs_file_manipulated <- sprintf("%s/gtfs_%s_%s_manipulated.zip", output_region, region$name, region$gtfs_day)
@@ -101,7 +101,7 @@ for (i in 1:nrow(regions)) {
     gtfs_osm_match_exact = if (!is.null(region$gtfs_osm_match_exact)) region$gtfs_osm_match_exact else TRUE,
     log_file = sprintf("%s/shapes_match_%s_gtfs%s_run%s.r.log", output, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
     osm_file = osm_file,
-    num_cores = 1, # max(1, floor(parallel::detectCores() / 2))
+    num_cores = max(1, floor(parallel::detectCores() / 2)),
     osm_stop_order_relaxed = if (!is.null(region$osm_stop_order_relaxed)) region$osm_stop_order_relaxed else FALSE
   )
   # assign(sprintf("shapes_match_routes_%s_gtfs%s", region$name, region$gtfs_day), shapes_match_routes)
