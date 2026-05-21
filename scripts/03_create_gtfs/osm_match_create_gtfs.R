@@ -2,6 +2,8 @@ library(mapview)
 library(sf)
 library(dplyr)
 
+# Run with: $ Rscript 03_create_gtfs/osm_match_create_gtfs.R
+
 # Parameters
 output_root <- "osm_match"
 gtfs_regions <- data.frame(
@@ -11,13 +13,41 @@ gtfs_regions <- data.frame(
     run_hour = character()
 )
 
+# gtfs_regions <- bind_rows(
+#    gtfs_regions,
+#    data.frame(
+#        name = "lisboa",
+#        gtfs_date = "2026-05-05",
+#        run_date = "20260505",
+#        run_hour = "090741"
+#    )
+# )
+
+# gtfs_regions <- bind_rows(
+#    gtfs_regions,
+#    data.frame(
+#        name = "barreiro",
+#        gtfs_date = "20260518",
+#        run_date = "20260518",
+#        run_hour = "123051"
+#    )
+# )
+# gtfs_regions <- bind_rows(
+#    gtfs_regions,
+#    data.frame(
+#        name = "cascais",
+#        gtfs_date = "20260507",
+#        run_date = "20260507",
+#        run_hour = "113820"
+#    )
+# )
 gtfs_regions <- bind_rows(
     gtfs_regions,
     data.frame(
-        name = "lisboa",
-        gtfs_date = "20260519",
-        run_date = "20260519",
-        run_hour = "151258"
+        name = "AML",
+        gtfs_date = "20260506",
+        run_date = "20260506",
+        run_hour = "102712"
     )
 )
 
@@ -56,37 +86,15 @@ for (i in 1:nrow(gtfs_regions)) {
 
     # Replace shapes on GTFS
     message("> Starting conversion of OSM shapes from MULTILINESTRING to LINESTRING (takes some time...)")
-    osm_shapes_linestrings <- osm_shapes |>
-        # sample_n(10) |> # For debug only
-        rowwise() |>
-        mutate(geom = multiline_to_sorted_linestring(geom)$geometry) |>
-        st_set_geometry("geom")
-    # mapview(osm_shapes_linestrings |> filter(shape_id == shape_id_debug), zcol="shape_id")
-    shapes_gtfstools <- gtfstools::convert_sf_to_shapes(osm_shapes_linestrings |> st_transform(4326), calculate_distance = FALSE)
-    message(sprintf("> OSM MULTILINESTRING → LINESTRING → shapes.txt conversion generated %d points", nrow(shapes_gtfstools)))
+    osm_shapes_txt <- GTFShift::create_shapes_from_sf(osm_shapes, gtfs_filtered)
+    message(sprintf("> OSM MULTILINESTRING → LINESTRING → shapes.txt conversion generated %d points", nrow(osm_shapes_txt)))
 
     message("> Replacing GTFS shapes with OSM shapes and saving to new GTFS file")
-    gtfs_filtered$shapes <- shapes_gtfstools
+    gtfs_filtered$shapes <- osm_shapes_txt
     summary(gtfs_filtered)
 
     # Append _osm to gtfs_file
-    gtfs_file_osm <- sub(".zip", "_osm_alt.zip", gtfs_file)
+    gtfs_file_osm <- sub(".zip", "_osm.zip", gtfs_file)
     tidytransit::write_gtfs(gtfs_filtered, gtfs_file_osm)
     message(sprintf("> Saved to %s", gtfs_file_osm))
 }
-
-# Debug
-
-gtfs_filtered_sf <- tidytransit::shapes_as_sf(gtfs_filtered$shapes)
-mapview::mapview(shapes_gtfs, layer.name = "GTFS Shapes", color = "#fcc9b5", legend = FALSE) +
-    mapview::mapview(osm_shapes |> filter(shape_id == shape_id_debug), layer.name = "OSM Shapes", color = "#ff006e", legend = FALSE, hide = TRUE) +
-    mapview::mapview(gtfs_filtered_sf |> filter(shape_id == shape_id_debug), layer.name = "GTFS OSM Shapes", color = "#00b4c5", legend = FALSE, hide = TRUE)
-
-# Same, but filter by shape_id_debug
-shape_id_debug <- "201_2_DESC_shp"
-shape_id_debug <- gtfs_filtered$shapes |>
-    sample_n(1) |>
-    pull(shape_id)
-mapview::mapview(shapes_gtfs |> filter(shape_id == shape_id_debug), layer.name = "GTFS Shapes", color = "#fcc9b5") +
-    mapview::mapview(osm_shapes |> filter(shape_id == shape_id_debug), layer.name = "OSM Shapes", color = "#ff006e", hide = TRUE) +
-    mapview::mapview(gtfs_filtered_sf |> filter(shape_id == shape_id_debug), layer.name = "GTFS OSM Shapes", color = "#00b4c5", hide = TRUE)
