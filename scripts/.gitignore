@@ -10,3 +10,5 @@ osm_match/*
 
 venv/*
 osm_scrap/*
+
+osm_gtfs/*

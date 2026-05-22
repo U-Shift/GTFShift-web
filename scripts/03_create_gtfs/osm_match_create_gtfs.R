@@ -5,71 +5,82 @@ library(dplyr)
 # Run with: $ Rscript 03_create_gtfs/osm_match_create_gtfs.R
 
 # Parameters
-output_root <- "osm_match"
+output_root <- "osm_gtfs"
+data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
 gtfs_regions <- data.frame(
     name = character(),
-    gtfs_date = character(),
-    run_date = character(),
-    run_hour = character()
+    gtfs_url = character(),
+    osm_match = character()
 )
 
-# gtfs_regions <- bind_rows(
-#    gtfs_regions,
-#    data.frame(
-#        name = "lisboa",
-#        gtfs_date = "2026-05-05",
-#        run_date = "20260505",
-#        run_hour = "090741"
-#    )
-# )
+manipulate_gtfs_aml <- function(gtfs) {
+    # Rename all shapes that start with [.*], remove that part
+    gtfs$shapes$shape_id <- gsub("^\\[[^]]*\\]\\s*", "", gtfs$shapes$shape_id)
+    gtfs$trips$shape_id <- gsub("^\\[[^]]*\\]\\s*", "", gtfs$trips$shape_id)
+    return(gtfs)
+}
 
-# gtfs_regions <- bind_rows(
-#    gtfs_regions,
-#    data.frame(
-#        name = "barreiro",
-#        gtfs_date = "20260518",
-#        run_date = "20260518",
-#        run_hour = "123051"
-#    )
-# )
-# gtfs_regions <- bind_rows(
-#    gtfs_regions,
-#    data.frame(
-#        name = "cascais",
-#        gtfs_date = "20260507",
-#        run_date = "20260507",
-#        run_hour = "113820"
-#    )
-# )
 gtfs_regions <- bind_rows(
     gtfs_regions,
     data.frame(
         name = "AML",
-        gtfs_date = "20260506",
-        run_date = "20260506",
-        run_hour = "102712"
+        gtfs_url = data$URL[data$ID == "AML"],
+        gtfs_manipulate = "manipulate_gtfs_aml",
+        osm_match = "osm_match/aml/gtfs_20260506/run_20260506_102712/shapes_match_AML_gtfs20260506_run20260506.gpkg"
+    )
+)
+gtfs_regions <- bind_rows(
+    gtfs_regions,
+    data.frame(
+        name = "barreiro",
+        gtfs_url = data$URL[data$ID == "barreiro"],
+        osm_match = "osm_match/barreiro/gtfs_20260518/run_20260518_123051/shapes_match_barreiro_gtfs20260518_run20260518.gpkg"
+    )
+)
+gtfs_regions <- bind_rows(
+    gtfs_regions,
+    data.frame(
+        name = "cascais",
+        gtfs_url = data$URL[data$ID == "cascais"],
+        osm_match = "osm_match/cascais/gtfs_20260507/run_20260507_113820/shapes_match_cascais_gtfs20260507_run20260507.gpkg"
+    )
+)
+gtfs_regions <- bind_rows(
+    gtfs_regions,
+    data.frame(
+        name = "lisboa",
+        gtfs_url = data$URL[data$ID == "lisboa"],
+        osm_match = "osm_match/lisboa/gtfs_20260505/run_20260505_090741/shapes_match_lisboa_gtfs2026-05-05_run20260505.gpkg"
     )
 )
 
+
 # main()
+output_dir <- sprintf("%s/%s/run_%s", output_root, tolower(paste(gtfs_regions$name, collapse = "_")), format(Sys.time(), "%Y%m%d_%H%M%S"))
+if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+
+unified_gtfs <- c()
 for (i in 1:nrow(gtfs_regions)) {
-    region_name <- gtfs_regions$name[i]
-    gtfs_date <- gtfs_regions$gtfs_date[i]
-    run_date <- gtfs_regions$run_date[i]
-    run_hour <- gtfs_regions$run_hour[i]
-    message(sprintf("Running for %s (GTFS %s | OSM Match %s at %s)", region_name, gtfs_date, run_date, run_hour))
+    region <- gtfs_regions[i, ]
+    message(sprintf("Running for %s...", region$name))
 
     # Load GTFS
-    gtfs_file <- sprintf("%s/%s/gtfs_%s/gtfs_%s_%s.zip", output_root, tolower(region_name), gsub("-", "", gtfs_date), region_name, gtfs_date)
-    gtfs <- tidytransit::read_gtfs(gtfs_file)
+    gtfs <- tidytransit::read_gtfs(region$gtfs_url)
+    tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s.zip", output_dir, tolower(region$name)))
     summary(gtfs)
+
+    if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate)) {
+        message("Manipulating gtfs...")
+        gtfs <- get(region$gtfs_manipulate)(gtfs)
+        gtfs_file_manipulated <- sprintf("%s/gtfs_%s_manipulated.zip", output_dir, tolower(region$name))
+        tidytransit::write_gtfs(gtfs, gtfs_file_manipulated)
+    }
+
     shapes_gtfs <- tidytransit::shapes_as_sf(gtfs$shapes)
     message(sprintf("> GTFS has %s shapes", nrow(shapes_gtfs)))
 
     # Load OSM shapes
-    osm_shapes <- sf::st_read(sprintf("%s/%s/gtfs_%s/run_%s_%s/shapes_match_%s_gtfs%s_run%s.gpkg", output_root, tolower(region_name), gsub("-", "", gtfs_date), run_date, run_hour, region_name, gtfs_date, run_date))
-    # names(osm_shapes)
-    # View(osm_shapes)
+    osm_shapes <- sf::st_read(region$osm_match)
     message(sprintf("> OSM has %s shapes", nrow(osm_shapes)))
     osm_shapes <- osm_shapes |> filter(distance_diff < 1000 & points_diff < 500)
     message(sprintf("> Of those, %d meet distance criteria", nrow(osm_shapes)))
@@ -94,7 +105,8 @@ for (i in 1:nrow(gtfs_regions)) {
     summary(gtfs_filtered)
 
     # Append _osm to gtfs_file
-    gtfs_file_osm <- sub(".zip", "_osm.zip", gtfs_file)
+    gtfs_file_osm <- sprintf("%s/gtfs_%s_osm.zip", output_dir, tolower(region$name))
     tidytransit::write_gtfs(gtfs_filtered, gtfs_file_osm)
     message(sprintf("> Saved to %s", gtfs_file_osm))
+    unified_gtfs <- append(unified_gtfs, gtfs_file_osm)
 }
