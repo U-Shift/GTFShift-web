@@ -2,8 +2,10 @@ library(GTFShift)
 library(dplyr)
 library(stringr)
 library(mapview)
-
 library(osmdata)
+
+# Run with: $ Rscript 01_osm_match/osm_match.R
+
 # get_overpass_url()
 # set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter")
 # set_overpass_url("https://overpass.private.coffee/api/interpreter") # 4 servers with 20 cores, 256GB RAM, SSD each
@@ -21,20 +23,34 @@ regions <- data.frame(
 )
 data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
 
-regions <- rbind( # Madrid
+regions <- bind_rows( # Metro Madrid
   regions,
   data.frame(
-    name = "madrid",
-    gtfs_url = "https://servicios.emtmadrid.es:8443/gtfs/transitemt.zip",
+    name = "metroMadrid",
+    gtfs_url = "https://crtm.maps.arcgis.com/sharing/rest/content/items/5c7f2951962540d69ffe8f640d94c246/data",
     gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_manipulate = "manipulate_gtfs_metroMadrid",
     query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "Empresa Municipal de Transportes de Madrid", key_exact = TRUE)
+      list(key = "route", value = c("subway"), key_exact = TRUE),
+      list(key = "network", value = "Metro de Madrid", key_exact = TRUE)
     ))),
-    geofabrik_region = "europe/spain/madrid",
-    osm_stop_order_relaxed = TRUE
+    osm_route_type = "subway",
+    geofabrik_region = "europe/spain/madrid"
   )
 )
+
+manipulate_gtfs_fertagus <- function(gtfs) {
+  # Replace Lisboa by Roma-Areeiro on routes
+  gtfs$routes$route_long_name <- gsub("Lisboa -", "Roma-Areeiro", gtfs$routes$route_long_name)
+  return(gtfs)
+}
+manipulate_gtfs_metroMadrid <- function(gtfs) {
+  # Append "L" suffix to route_short_name
+  gtfs$routes$route_short_name <- paste0("L", gtfs$routes$route_short_name)
+  # Except to Ramal Opera (only "R")
+  gtfs$routes <- gtfs$routes |> mutate(route_short_name = ifelse(route_short_name=="LR", "R", route_short_name))
+  return(gtfs)
+}
 
 # main()
 for (i in 1:nrow(regions)) {
@@ -58,9 +74,15 @@ for (i in 1:nrow(regions)) {
   summary(gtfs)
   # assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
 
-  if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate)) {
-    message("Manipulating gtfs...")
-    gtfs <- get(region$gtfs_manipulate)(gtfs)
+  if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate) || !is.na(region$gtfs_day_filter) && !is.null(region$gtfs_day_filter)) {
+    if (!is.na(region$gtfs_day_filter) && !is.null(region$gtfs_day_filter)) {
+      message(sprintf("Filter gtfs for %s...", region$gtfs_day))
+      gtfs = tidytransit::filter_feed_by_date(gtfs, extract_date = region$gtfs_day)
+    } 
+    if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate)) {
+      message("Manipulating gtfs...")
+      gtfs <- get(region$gtfs_manipulate)(gtfs)
+    }
     gtfs_file_manipulated <- sprintf("%s/gtfs_%s_%s_manipulated.zip", output_region, region$name, region$gtfs_day)
     if (!file.exists(gtfs_file_manipulated)) {
       tidytransit::write_gtfs(gtfs, gtfs_file_manipulated)
@@ -102,7 +124,8 @@ for (i in 1:nrow(regions)) {
     log_file = sprintf("%s/shapes_match_%s_gtfs%s_run%s.r.log", output, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
     osm_file = osm_file,
     num_cores = max(1, floor(parallel::detectCores() / 2)),
-    osm_stop_order_relaxed = if (!is.null(region$osm_stop_order_relaxed)) region$osm_stop_order_relaxed else FALSE
+    osm_stop_order_relaxed = if (!is.null(region$osm_stop_order_relaxed)) region$osm_stop_order_relaxed else FALSE,
+    osm_route_type = if (!is.null(region$osm_route_type)) region$osm_route_type else "bus"
   )
   # assign(sprintf("shapes_match_routes_%s_gtfs%s", region$name, region$gtfs_day), shapes_match_routes)
 
