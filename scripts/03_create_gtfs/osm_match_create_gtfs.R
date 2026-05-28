@@ -13,19 +13,77 @@ gtfs_regions <- data.frame(
     osm_match = character()
 )
 
-manipulate_gtfs_aml <- function(gtfs) {
+manipulate_carris_met <- function(gtfs) {
     # Rename all shapes that start with [.*], remove that part
     gtfs$shapes$shape_id <- gsub("^\\[[^]]*\\]\\s*", "", gtfs$shapes$shape_id)
     gtfs$trips$shape_id <- gsub("^\\[[^]]*\\]\\s*", "", gtfs$trips$shape_id)
     return(gtfs)
 }
+manipulate_carris_met_area_1 <- function(gtfs) {
+    gtfs <- GTFShift::filter_by_agency(gtfs, id = "41")
+    gtfs <- manipulate_carris_met(gtfs)
+    return(gtfs)
+}
+
+manipulate_carris_met_area_2 <- function(gtfs) {
+    gtfs <- GTFShift::filter_by_agency(gtfs, id = 42)
+    gtfs <- manipulate_carris_met(gtfs)
+  return(gtfs)
+}
+
+manipulate_carris_met_area_3 <- function(gtfs) {
+    gtfs <- GTFShift::filter_by_agency(gtfs, id = 43)
+    gtfs <- manipulate_carris_met(gtfs)
+  return(gtfs)
+}
+
+manipulate_carris_met_area_4 <- function(gtfs) {
+    gtfs <- GTFShift::filter_by_agency(gtfs, id = 44)
+    gtfs <- manipulate_carris_met(gtfs)
+  return(gtfs)
+}
 
 gtfs_regions <- bind_rows(
     gtfs_regions,
     data.frame(
-        name = "AML",
+        name = "aml_1",
         gtfs_url = data$URL[data$ID == "AML"],
-        gtfs_manipulate = "manipulate_gtfs_aml",
+        gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+        gtfs_day_filter = TRUE,
+        gtfs_manipulate = "manipulate_carris_met_area_1",
+        osm_match = "osm_match/aml/gtfs_20260506/run_20260506_102712/shapes_match_AML_gtfs20260506_run20260506.gpkg"
+    )
+)
+gtfs_regions <- bind_rows(
+    gtfs_regions,
+    data.frame(
+        name = "aml_2",
+        gtfs_url = data$URL[data$ID == "AML"],
+        gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+        gtfs_day_filter = TRUE,
+        gtfs_manipulate = "manipulate_carris_met_area_2",
+        osm_match = "osm_match/aml/gtfs_20260506/run_20260506_102712/shapes_match_AML_gtfs20260506_run20260506.gpkg"
+    )
+)
+gtfs_regions <- bind_rows(
+    gtfs_regions,
+    data.frame(
+        name = "aml_3",
+        gtfs_url = data$URL[data$ID == "AML"],
+        gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+        gtfs_day_filter = TRUE,
+        gtfs_manipulate = "manipulate_carris_met_area_3",
+        osm_match = "osm_match/aml/gtfs_20260506/run_20260506_102712/shapes_match_AML_gtfs20260506_run20260506.gpkg"
+    )
+)
+gtfs_regions <- bind_rows(
+    gtfs_regions,
+    data.frame(
+        name = "aml_4",
+        gtfs_url = data$URL[data$ID == "AML"],
+        gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+        gtfs_day_filter = TRUE,
+        gtfs_manipulate = "manipulate_carris_met_area_4",
         osm_match = "osm_match/aml/gtfs_20260506/run_20260506_102712/shapes_match_AML_gtfs20260506_run20260506.gpkg"
     )
 )
@@ -34,6 +92,8 @@ gtfs_regions <- bind_rows(
     data.frame(
         name = "barreiro",
         gtfs_url = data$URL[data$ID == "barreiro"],
+        gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+        gtfs_day_filter = TRUE,
         osm_match = "osm_match/barreiro/gtfs_20260518/run_20260518_123051/shapes_match_barreiro_gtfs20260518_run20260518.gpkg"
     )
 )
@@ -42,6 +102,8 @@ gtfs_regions <- bind_rows(
     data.frame(
         name = "cascais",
         gtfs_url = data$URL[data$ID == "cascais"],
+        gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+        gtfs_day_filter = TRUE,
         osm_match = "osm_match/cascais/gtfs_20260507/run_20260507_113820/shapes_match_cascais_gtfs20260507_run20260507.gpkg"
     )
 )
@@ -50,6 +112,8 @@ gtfs_regions <- bind_rows(
     data.frame(
         name = "lisboa",
         gtfs_url = data$URL[data$ID == "lisboa"],
+        gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+        gtfs_day_filter = TRUE,
         osm_match = "osm_match/lisboa/gtfs_20260505/run_20260505_090741/shapes_match_lisboa_gtfs2026-05-05_run20260505.gpkg"
     )
 )
@@ -69,9 +133,15 @@ for (i in 1:nrow(gtfs_regions)) {
     tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s.zip", output_dir, tolower(region$name)))
     summary(gtfs)
 
-    if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate)) {
-        message("Manipulating gtfs...")
-        gtfs <- get(region$gtfs_manipulate)(gtfs)
+    if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate) || !is.na(region$gtfs_day_filter) && !is.null(region$gtfs_day_filter)) {
+        if (!is.na(region$gtfs_day_filter) && !is.null(region$gtfs_day_filter)) {
+            message(sprintf("Filter gtfs for %s...", region$gtfs_day))
+            gtfs = tidytransit::filter_feed_by_date(gtfs, extract_date = region$gtfs_day)
+        } 
+        if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate)) {
+            message("Manipulating gtfs...")
+            gtfs <- get(region$gtfs_manipulate)(gtfs)
+        }
         gtfs_file_manipulated <- sprintf("%s/gtfs_%s_manipulated.zip", output_dir, tolower(region$name))
         tidytransit::write_gtfs(gtfs, gtfs_file_manipulated)
     }
@@ -80,7 +150,7 @@ for (i in 1:nrow(gtfs_regions)) {
     message(sprintf("> GTFS has %s shapes", nrow(shapes_gtfs)))
 
     # Load OSM shapes
-    osm_shapes <- sf::st_read(region$osm_match)
+    osm_shapes <- sf::st_read(region$osm_match) |> distinct(shape_id, .keep_all=TRUE) # Prevent duplicated matches
     message(sprintf("> OSM has %s shapes", nrow(osm_shapes)))
     osm_shapes <- osm_shapes |> filter(distance_diff < 1000 & points_diff < 500)
     message(sprintf("> Of those, %d meet distance criteria", nrow(osm_shapes)))

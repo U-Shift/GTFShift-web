@@ -1,14 +1,19 @@
 # Run with: $ Rscript 03_create_gtfs/osm_match_create_gtfs_unify.R
-# remotes::install_github("gmatosferreira/gtfstools", ref="patch-1")
+# remotes::install_github("gmatosferreira/gtfstools", ref="patch-2")
 library(dplyr)
 
 gtfs_urls <- c(
-    "osm_gtfs/aml_barreiro_cascais_lisboa/run_20260521_165353/gtfs_aml_osm.zip",
-    "osm_gtfs/aml_barreiro_cascais_lisboa/run_20260521_165353/gtfs_barreiro_osm.zip",
-    "osm_gtfs/aml_barreiro_cascais_lisboa/run_20260521_165353/gtfs_cascais_osm.zip",
-    "osm_gtfs/aml_barreiro_cascais_lisboa/run_20260521_165353/gtfs_lisboa_osm.zip"
+    "osm_gtfs/aml_1_aml_2_aml_3_aml_4_barreiro_cascais_lisboa/run_20260527_144749/gtfs_aml_1_osm.zip",
+    "osm_gtfs/aml_1_aml_2_aml_3_aml_4_barreiro_cascais_lisboa/run_20260527_144749/gtfs_aml_2_osm.zip",
+    "osm_gtfs/aml_1_aml_2_aml_3_aml_4_barreiro_cascais_lisboa/run_20260527_144749/gtfs_aml_3_osm.zip",
+    "osm_gtfs/aml_1_aml_2_aml_3_aml_4_barreiro_cascais_lisboa/run_20260527_144749/gtfs_aml_4_osm.zip",
+    "osm_gtfs/aml_1_aml_2_aml_3_aml_4_barreiro_cascais_lisboa/run_20260527_144749/gtfs_barreiro_osm.zip",
+    "osm_gtfs/aml_1_aml_2_aml_3_aml_4_barreiro_cascais_lisboa/run_20260527_144749/gtfs_cascais_osm.zip",
+    "osm_gtfs/aml_1_aml_2_aml_3_aml_4_barreiro_cascais_lisboa/run_20260527_144749/gtfs_lisboa_osm.zip"
+    # Other operators
+
 )
-output_dir <- "osm_gtfs/aml_barreiro_cascais_lisboa/run_20260521_165353/"
+output_dir <- "osm_gtfs/aml_1_aml_2_aml_3_aml_4_barreiro_cascais_lisboa/run_20260527_144749/"
 
 gtfs_list <- lapply(gtfs_urls, function(gtfs_url) {
     feed <- GTFShift::load_feed(gtfs_url, create_transfers = FALSE)
