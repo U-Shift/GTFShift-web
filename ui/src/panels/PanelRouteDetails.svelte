@@ -35,20 +35,6 @@
         scheduleEntries.length > 0
             ? Math.max(...scheduleEntries.map((e) => e.count))
             : 1}
-    {@const speedValues = shapeWays
-        .map((w: any) => w.speed_avg)
-        .filter((v: any) => v !== null && v !== undefined)}
-    {@const lanesValues = shapeWays
-        .map((w: any) => w.n_lanes_direction)
-        .filter((v: any) => v !== null && v !== undefined && v > 0)}
-    {@const extTotal = shapeWays.reduce(
-        (acc: number, w: any) => acc + (w.length_m ?? 0),
-        0,
-    )}
-    {@const extBusLane = shapeWays
-        .filter((w: any) => w.is_bus_lane)
-        .reduce((acc: number, w: any) => acc + (w.length_m ?? 0), 0)}
-    {@const extNoBusLane = extTotal - extBusLane}
     <div
         id="route-details-panel"
         class="absolute top-4 left-4 right-4 sm:left-auto sm:right-4 z-[1010] flex flex-col w-[calc(100vw-2rem)] sm:w-[380px] h-fit max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-5 overflow-y-auto gap-4"
@@ -148,14 +134,7 @@
                 </h5>
                 <div class="grid grid-cols-3 gap-2">
                     <!-- Speed indicators -->
-                    {#if speedValues.length > 0}
-                        {@const speedMin = Math.min(...speedValues)}
-                        {@const speedMax = Math.max(...speedValues)}
-                        {@const speedAvg =
-                            speedValues.reduce(
-                                (a: number, b: number) => a + b,
-                                0,
-                            ) / speedValues.length}
+                    {#if shape.stats?.speed_min && shape.stats?.speed_max && shape.stats?.speed_avg}
                         <div
                             class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center"
                         >
@@ -165,7 +144,7 @@
                                 Min Speed
                             </p>
                             <p class="text-sm font-bold">
-                                {speedMin.toFixed(1)}<span
+                                {shape.stats.speed_min}<span
                                     class="text-[9px] font-normal"
                                 >
                                     km/h</span
@@ -181,7 +160,7 @@
                                 Avg Speed
                             </p>
                             <p class="text-sm font-bold">
-                                {speedAvg.toFixed(1)}<span
+                                {shape.stats.speed_avg}<span
                                     class="text-[9px] font-normal"
                                 >
                                     km/h</span
@@ -197,7 +176,7 @@
                                 Max Speed
                             </p>
                             <p class="text-sm font-bold">
-                                {speedMax.toFixed(1)}<span
+                                {shape.stats.speed_max}<span
                                     class="text-[9px] font-normal"
                                 >
                                     km/h</span
@@ -207,47 +186,42 @@
                     {/if}
 
                     <!-- Lanes indicators -->
-                    {#if lanesValues.length > 0}
-                        {@const lanesMin = Math.min(...lanesValues)}
-                        {@const lanesMax = Math.max(...lanesValues)}
-                        {@const lanesAvg =
-                            lanesValues.reduce(
-                                (a: number, b: number) => a + b,
-                                0,
-                            ) / lanesValues.length}
-                        <div
-                            class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center"
+                    <div
+                        class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center"
+                    >
+                        <p
+                            class="text-[9px] font-bold uppercase text-muted-foreground mb-1"
                         >
-                            <p
-                                class="text-[9px] font-bold uppercase text-muted-foreground mb-1"
-                            >
-                                Min Lanes/Dir
-                            </p>
-                            <p class="text-sm font-bold">{lanesMin}</p>
-                        </div>
-                        <div
-                            class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center"
+                            Min Lanes/Dir
+                        </p>
+                        <p class="text-sm font-bold">
+                            {shape.stats.n_lanes_min}
+                        </p>
+                    </div>
+                    <div
+                        class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center"
+                    >
+                        <p
+                            class="text-[9px] font-bold uppercase text-muted-foreground mb-1"
                         >
-                            <p
-                                class="text-[9px] font-bold uppercase text-muted-foreground mb-1"
-                            >
-                                Avg Lanes/Dir
-                            </p>
-                            <p class="text-sm font-bold">
-                                {lanesAvg.toFixed(1)}
-                            </p>
-                        </div>
-                        <div
-                            class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center"
+                            Avg Lanes/Dir
+                        </p>
+                        <p class="text-sm font-bold">
+                            {shape.stats.n_lanes_avg}
+                        </p>
+                    </div>
+                    <div
+                        class="p-2.5 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 text-center"
+                    >
+                        <p
+                            class="text-[9px] font-bold uppercase text-muted-foreground mb-1"
                         >
-                            <p
-                                class="text-[9px] font-bold uppercase text-muted-foreground mb-1"
-                            >
-                                Max Lanes/Dir
-                            </p>
-                            <p class="text-sm font-bold">{lanesMax}</p>
-                        </div>
-                    {/if}
+                            Max Lanes/Dir
+                        </p>
+                        <p class="text-sm font-bold">
+                            {shape.stats.n_lanes_max}
+                        </p>
+                    </div>
                 </div>
 
                 <!-- Extension bars -->
@@ -269,10 +243,15 @@
                                         >With bus lane</span
                                     >
                                     <span class="font-semibold"
-                                        >{(extBusLane / 1000).toFixed(2)} km ({extTotal >
-                                        0
+                                        >{(
+                                            shape.stats.extension_bus_lane /
+                                            1000
+                                        ).toFixed(2)} km ({shape.stats
+                                            .extension > 0
                                             ? (
-                                                  (extBusLane / extTotal) *
+                                                  (shape.stats
+                                                      .extension_bus_lane /
+                                                      shape.stats.extension) *
                                                   100
                                               ).toFixed(0)
                                             : 0}%)</span
@@ -283,8 +262,10 @@
                                 >
                                     <div
                                         class="h-full rounded-full bg-teal-500"
-                                        style="width: {extTotal > 0
-                                            ? (extBusLane / extTotal) * 100
+                                        style="width: {shape.stats.extension > 0
+                                            ? (shape.stats.extension_bus_lane /
+                                                  shape.stats.extension) *
+                                              100
                                             : 0}%"
                                     ></div>
                                 </div>
@@ -297,10 +278,18 @@
                                         >Without bus lane</span
                                     >
                                     <span class="font-semibold"
-                                        >{(extNoBusLane / 1000).toFixed(2)} km ({extTotal >
-                                        0
+                                        >{(
+                                            (shape.stats.extension -
+                                                shape.stats
+                                                    .extension_bus_lane) /
+                                            1000
+                                        ).toFixed(2)} km ({shape.stats
+                                            .extension > 0
                                             ? (
-                                                  (extNoBusLane / extTotal) *
+                                                  ((shape.stats.extension -
+                                                      shape.stats
+                                                          .extension_bus_lane) /
+                                                      shape.stats.extension) *
                                                   100
                                               ).toFixed(0)
                                             : 0}%)</span
@@ -311,8 +300,12 @@
                                 >
                                     <div
                                         class="h-full rounded-full bg-orange-400"
-                                        style="width: {extTotal > 0
-                                            ? (extNoBusLane / extTotal) * 100
+                                        style="width: {shape.stats.extension > 0
+                                            ? ((shape.stats.extension -
+                                                  shape.stats
+                                                      .extension_bus_lane) /
+                                                  shape.stats.extension) *
+                                              100
                                             : 0}%"
                                     ></div>
                                 </div>
@@ -325,7 +318,8 @@
                                     >Total</span
                                 >
                                 <span class="font-bold"
-                                    >{(extTotal / 1000).toFixed(2)} km</span
+                                    >{(shape.stats.extension / 1000).toFixed(2)}
+                                    km</span
                                 >
                             </div>
                         </div>

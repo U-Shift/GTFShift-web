@@ -1,20 +1,17 @@
-
-
 # Parameters
-output = "web_data"
+output <- "web_data"
 
-regions = data.frame(
+regions <- data.frame(
   name = character(),
   name_long = character(),
   gtfs = character(),
   query = I(list()),
   rt_interval = character(),
   rt_collection = I(list()) # sf object
-  
 )
-data = read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
+data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
 
-regions = rbind( # Lisboa
+regions <- rbind( # Lisboa
   regions,
   data.frame(
     name = "lisboa_rt",
@@ -28,15 +25,15 @@ regions = rbind( # Lisboa
     ))),
     rt_interval = "02-06/02/2026",
     rt_collection = I(list(sf::st_read("data/lisboa_updates_20260202_20260206.csv") |>
-                             mutate(
-                               lon = str_replace(lon, "c\\(", ""),
-                               lat = str_replace(lat, "\\)", ""),
-                               speed = as.numeric(speed)
-                             ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326)))
+      mutate(
+        lon = stringr::str_replace(lon, "c\\(", ""),
+        lat = stringr::str_replace(lat, "\\)", ""),
+        speed = as.numeric(speed)
+      ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326)))
   )
 )
 
-regions = rbind( # CarrisMetropolitana
+regions <- rbind( # CarrisMetropolitana
   regions,
   data.frame(
     name = "aml_rt",
@@ -50,13 +47,13 @@ regions = rbind( # CarrisMetropolitana
     ))),
     rt_interval = "02-06/02/2026",
     rt_collection = I(list(sf::st_read("data/cmet_20250113_20250119_updates.csv") |>
-                             mutate(
-                               speed = as.numeric(speed)
-                             ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326)))
+      mutate(
+        speed = as.numeric(speed)
+      ) |> st_as_sf(coords = c("lon", "lat"), crs = 4326)))
   )
 )
 
-regions = rbind( # Cascais
+regions <- rbind( # Cascais
   regions,
   data.frame(
     name = "cascais",
@@ -70,7 +67,7 @@ regions = rbind( # Cascais
   )
 )
 
-regions = rbind( # STCP
+regions <- rbind( # STCP
   regions,
   data.frame(
     name = "stcp",
@@ -84,7 +81,7 @@ regions = rbind( # STCP
   )
 )
 
-regions = rbind( # NYC, MTA
+regions <- rbind( # NYC, MTA
   regions,
   data.frame(
     name = "nyc_mta",
@@ -99,28 +96,27 @@ regions = rbind( # NYC, MTA
 
 # Helpers
 
-manipulate_carris_met = function(gtfs) {
-  
+manipulate_carris_met <- function(gtfs) {
   # Remove all text from [ to ] from gtfs$shape_ids, which are present in Carris Metropolitana feed and cause issues in matching with OSM shapes
-  gtfs$shapes$shape_id = str_replace_all(gtfs$shapes$shape_id, "\\[.*\\]", "")
-  gtfs$trips$shape_id = str_replace_all(gtfs$trips$shape_id, "\\[.*\\]", "")
-  
+  gtfs$shapes$shape_id <- stringr::str_replace_all(gtfs$shapes$shape_id, "\\[.*\\]", "")
+  gtfs$trips$shape_id <- stringr::str_replace_all(gtfs$trips$shape_id, "\\[.*\\]", "")
+
   return(gtfs)
 }
 
-manipulate_carris_lx = function(gtfs) {
-  colors = read.csv("data_useful/carris_colors.csv")
-  
-  gtfs$routes = gtfs$routes |>
+manipulate_carris_lx <- function(gtfs) {
+  colors <- read.csv("data_useful/carris_colors.csv")
+
+  gtfs$routes <- gtfs$routes |>
     select(-c(route_color, route_text_color)) |>
     left_join(colors, by = "route_short_name")
-  
+
   # Filter tram routes (route_short_name contains "E")
-  routes_bus = gtfs$routes |>
-    filter(!str_detect(route_short_name, "E"))
-  trips_routes_bus = gtfs$trips |>
+  routes_bus <- gtfs$routes |>
+    filter(!stringr::str_detect(route_short_name, "E"))
+  trips_routes_bus <- gtfs$trips |>
     filter(route_id %in% routes_bus$route_id)
-  gtfs = tidytransit::filter_feed_by_trips(gtfs, trips_routes_bus$trip_id)
-  
+  gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_bus$trip_id)
+
   return(gtfs)
 }

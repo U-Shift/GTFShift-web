@@ -35,9 +35,9 @@
         if (speed_avg !== undefined) {
             color = getColorFromGradient(
                 speed_avg,
-                geoData.metadata.data_census.speed_avg?.p5 || 0,
-                geoData.metadata.data_census.speed_avg?.p95 || 1,
-                COLOR_GRADIENT_RED.slice().reverse()
+                geoData.metadata.data_census.speed_avg_length?.p5 || 0,
+                geoData.metadata.data_census.speed_avg_length?.p95 || 1,
+                COLOR_GRADIENT_RED.slice().reverse(),
             );
         }
         return {
@@ -56,7 +56,11 @@
             (feature: Feature | undefined) => {
                 const wayId = feature?.properties?.way_osm_id;
                 const props = wayId ? geoData.wayData[wayId] : undefined;
-                if (selectedShapeId && selectedShapeId !== "all" && !props?.shapes?.includes(selectedShapeId)) {
+                if (
+                    selectedShapeId &&
+                    selectedShapeId !== "all" &&
+                    !props?.shapes?.includes(selectedShapeId)
+                ) {
                     return false;
                 }
                 return (
