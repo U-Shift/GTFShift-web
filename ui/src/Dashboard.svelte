@@ -15,6 +15,7 @@
     import DataCensusTable from "./components/DataCensusTable.svelte";
     import ModalData from "./modals/ModalData.svelte";
     import ModalDetails from "./modals/ModalDetails.svelte";
+    import ModalDownload from "./modals/ModalDownload.svelte";
     import PanelRouteDetails from "./panels/PanelRouteDetails.svelte";
     import PanelWayDetails from "./panels/PanelWayDetails.svelte";
 
@@ -91,10 +92,12 @@
     let action_modal_about_open: boolean = $state(false);
     let action_modal_data_open: boolean = $state(false);
     let action_modal_details_open: boolean = $state(false);
+    let action_modal_download_open: boolean = $state(false);
     let any_modal_open: boolean = $derived(
         action_modal_about_open ||
             action_modal_data_open ||
-            action_modal_details_open,
+            action_modal_details_open ||
+            action_modal_download_open,
     );
 
     let selectedWayId: string | undefined = $state(undefined);
@@ -104,7 +107,8 @@
         if (
             action_modal_about_open ||
             action_modal_data_open ||
-            action_modal_details_open
+            action_modal_details_open ||
+            action_modal_download_open
         ) {
             untrack(() => {
                 selectedWayId = undefined;
@@ -212,6 +216,7 @@
         action_modal_about_open = false;
         action_modal_data_open = false;
         action_modal_details_open = false;
+        action_modal_download_open = false;
 
         region = DB_REGIONS.find((r: DataRegion) => r.id === regionId);
         if (!region || !map) return;
@@ -297,6 +302,7 @@
                                     e.preventDefault();
                                     action_modal_data_open = false;
                                     action_modal_details_open = false;
+                                    action_modal_download_open = false;
                                     action_modal_about_open =
                                         !action_modal_about_open;
                                 }}
@@ -613,6 +619,7 @@
                                         e.preventDefault();
                                         action_modal_about_open = false;
                                         action_modal_details_open = false;
+                                        action_modal_download_open = false;
                                         action_modal_data_open =
                                             !action_modal_data_open;
                                     }}
@@ -638,6 +645,7 @@
                                         e.preventDefault();
                                         action_modal_about_open = false;
                                         action_modal_data_open = false;
+                                        action_modal_download_open = false;
                                         action_modal_details_open =
                                             !action_modal_details_open;
                                     }}
@@ -656,16 +664,21 @@
                     <Tooltip.Root>
                         <Tooltip.Trigger>
                             {#snippet child({ props })}
-                                <a
+                                <button
                                     {...props}
-                                    href={selected_layer?.files.zip}
-                                    target="_blank"
-                                    rel="noreferrer"
                                     class="hover:text-foreground cursor-pointer"
+                                    onclick={(e) => {
+                                        e.preventDefault();
+                                        action_modal_about_open = false;
+                                        action_modal_data_open = false;
+                                        action_modal_details_open = false;
+                                        action_modal_download_open =
+                                            !action_modal_download_open;
+                                    }}
                                     aria-label="Download raw data"
                                 >
                                     <i class="fas fa-download"></i>
-                                </a>
+                                </button>
                             {/snippet}
                         </Tooltip.Trigger>
                         <Tooltip.Content class="z-[1100]"
@@ -1154,6 +1167,7 @@
                     action_modal_about_open = false;
                     action_modal_data_open = false;
                     action_modal_details_open = false;
+                    action_modal_download_open = false;
                 }}
                 class="flex-1"
             >
@@ -1459,3 +1473,5 @@
 {/if}
 
 <ModalDetails bind:open={action_modal_details_open} {geoData} />
+
+<ModalDownload bind:open={action_modal_download_open} zipUrl={selected_layer?.files.zip} />
