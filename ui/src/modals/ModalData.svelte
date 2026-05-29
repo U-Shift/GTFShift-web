@@ -108,8 +108,11 @@
                                     >
                                     <ThSort
                                         {table}
-                                        field={(r) => r.properties.name}
-                                        >Name</ThSort
+                                        field={(r) =>
+                                            r.properties.name &&
+                                            r.properties.name instanceof String
+                                                ? r.properties.name
+                                                : ""}>Name</ThSort
                                     >
                                     <ThSort
                                         {table}
@@ -209,7 +212,11 @@
                                             </Tooltip.Provider>
                                         </td>
                                         <td class="px-4 py-2"
-                                            >{row.properties.name ?? "-"}</td
+                                            >{row.properties.name &&
+                                            row.properties.name instanceof
+                                                String
+                                                ? row.properties.name
+                                                : "-"}</td
                                         >
                                         <td class="px-4 py-2"
                                             >{row.properties.frequency}</td

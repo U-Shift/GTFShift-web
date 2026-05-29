@@ -8,45 +8,76 @@ library(mapview)
 library(jsonlite)
 library(osmdata)
 library(Hmisc) # For  Weighted Statistical Estimates
-get_overpass_url()
-set_overpass_url("https://overpass-api.de/api/interpreter/")
-set_overpass_url("https://maps.mail.ru/osm/tools/overpass/api/interpreter") # Crashes less and responds quicker than default one
-set_overpass_url("https://overpass.private.coffee/api/interpreter") # 4 servers with 20 cores, 256GB RAM, SSD each
-set_overpass_url("https://overpass.kumi.systems/api/interpreter")
-get_overpass_url()
 # set_overpass_url("https://overpass-api.de/api/interpreter")
 
 # Refer to prioritize_parameters.R to define parameters before running this script!
 
 # main()
+output <- "web_data"
+data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
+
+regions <- data.frame(
+  name = character(),
+  name_long = character(),
+  gtfs = character(),
+  query = I(list())
+)
+regions <- rbind( # Toulouse, FR
+  regions,
+  data.frame(
+    name = "toulouse",
+    name_long = "Toulouse, FR",
+    gtfs_url = "https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Tisséo", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/france/midi-pyrenees"
+  )
+)
+
 stop_buffer_size <- 15 # meters
 
 if (!dir.exists(output)) {
   dir.create(output, recursive = TRUE)
 }
 
+message("------------------------------------------------------------------------------------------------------------------------")
+message("\n\nRunning for regions:\n > ", paste(regions$name_long, collapse = "\n > "))
+message("------------------------------------------------------------------------------------------------------------------------\n\n")
+
 for (i in 1:nrow(regions)) {
   # 1. Load data for region
   region <- regions[i, ]
   message(sprintf("\n\nRunning for %s (%s)...", region$name, region$gtfs_day))
 
-  output_region <- sprintf("%s/%s/%s", output, region$name, region$gtfs_day)
+  output_region <- sprintf("%s/%s/gtfs_%s/run_%s", output, tolower(region$name), gsub("-", "", region$gtfs_day), format(Sys.time(), "%Y%m%d_%H%M%S"))
   if (!dir.exists(output_region)) {
     dir.create(output_region, recursive = TRUE)
   }
 
-  gtfs <- GTFShift::load_feed(region$gtfs_url)
+  gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers)) unlist(region$gtfs_url_headers[[1]]) else NULL)
   # assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
-  # tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, region$gtfs_day))
+  tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, region$gtfs_day))
 
   gtfs_shapes <- tidytransit::shapes_as_sf(gtfs$shapes)
   bbox <- sf::st_bbox(gtfs_shapes)
 
-  if (!is.null(region$gtfs_manipulate)) {
+  if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate)) {
     message("Manipulating GTFS with function: ", region$gtfs_manipulate)
+    message("Manipulating gtfs...")
     gtfs <- get(region$gtfs_manipulate)(gtfs)
+    gtfs_file_manipulated <- sprintf("%s/gtfs_%s_%s_manipulated.zip", output_region, region$name, region$gtfs_day)
+    if (!file.exists(gtfs_file_manipulated)) {
+      tidytransit::write_gtfs(gtfs, gtfs_file_manipulated)
+    }
     message("GTFS manipulation completed.")
   }
+
+  gtfs <- tidytransit::filter_feed_by_date(gtfs, extract_date = region$gtfs_day)
+  gtfs_file <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, region$gtfs_day)
+  tidytransit::write_gtfs(gtfs, gtfs_file)
 
   # Build OSM query
   q <- opq(bbox = bbox, timeout = 300) # Timeout to 5 minutes
@@ -60,8 +91,18 @@ for (i in 1:nrow(regions)) {
   }
   # assign(sprintf("q_%s_gtfs%s", region$name, region$gtfs_day), q)
 
+  # Get OSM extract to avoid API call
+  # osmextract::oe_download_directory()
+  if (is.null(region$geofabrik_region)) {
+    stop("Please define the geofabrik_region for this region in osm_match_parameters.R")
+  }
+  osm_file <- osmextract::oe_download(
+    sprintf("https://download.geofabrik.de/%s-latest.osm.pbf", region$geofabrik_region),
+    file_basename = sprintf("%s_%s.osm.pbf", str_replace_all(region$geofabrik_region, "/", "_"), format(Sys.Date(), "%Y%m%d"))
+  )
+
   # 2. Prioritize based on planned operation and infrastructure characteristics
-  prioritization <- GTFShift::prioritize_lanes(gtfs, q, date = region$gtfs_day, keep_osm_attributes = TRUE)
+  prioritization <- GTFShift::prioritize_lanes(gtfs, q, date = region$gtfs_day, keep_osm_attributes = TRUE, osm_file = osm_file)
   # assign(sprintf("prioritization_%s_gtfs%s", region$name, region$gtfs_day), prioritization)
 
   prioritization <- prioritization |>
@@ -79,8 +120,22 @@ for (i in 1:nrow(regions)) {
     row.names = FALSE
   )
 
+  prioritization_area_polygon <- prioritization |>
+    st_union() |>
+    st_convex_hull()
+
+  st_write(
+    prioritization_area_polygon,
+    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
+  )
+  st_write(
+    prioritization_area_polygon,
+    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.geojson", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
+  )
+
   # 3. Extend with real-time data if available
   if (!is.null(region$rt_collection) && !is.na(region$rt_collection)) {
+    message("Extending with real-time data...")
     rt_collection <- region$rt_collection[[1]]
     # Filter updates, to remove those close to bus stops
     gtfs_stops <- tidytransit::stops_as_sf(gtfs$stops, crs = 4326)
@@ -164,12 +219,11 @@ for (i in 1:nrow(regions)) {
   )
 
   # > 4.3. Store route data
-  gtfs_date <- tidytransit::filter_feed_by_date(gtfs, extract_date = region$gtfs_day)
-  routes <- GTFShift::get_route_frequency_hourly(gtfs_date, date = region$gtfs_day) |>
+  routes <- GTFShift::get_route_frequency_hourly(gtfs, date = region$gtfs_day) |>
     st_drop_geometry() |>
     select(-route_short_name) |>
     left_join(gtfs$routes |> select(route_id, route_short_name, route_long_name), by = "route_id") |>
-    left_join(gtfs_date$routes |> select(route_id, route_color, route_text_color), by = "route_id")
+    left_join(gtfs$routes |> select(route_id, route_color, route_text_color), by = "route_id")
   # If route_color does not start with "#", add suffix
   routes <- routes |> mutate(
     route_color = ifelse(!str_starts(route_color, "#"), paste0("#", route_color), route_color),
@@ -182,8 +236,11 @@ for (i in 1:nrow(regions)) {
       select(route_id, shape_id, route_short_name, route_long_name, direction_id, route_color, route_text_color) %>%
       as.list()
 
-    # Create the hourly frequency mapping
-    hourly_frequencies <- setNames(as.list(df$frequency), df$hour)
+    # Create the hourly frequency mapping (aggregating frequencies of all routes sharing this shape by hour)
+    df_hourly <- df %>%
+      dplyr::group_by(hour) %>%
+      dplyr::summarise(frequency = sum(frequency, na.rm = TRUE), .groups = "drop")
+    hourly_frequencies <- setNames(as.list(df_hourly$frequency), df_hourly$hour)
 
     # Get stats for shape
     prioritization_shape <- prioritization |>
@@ -212,6 +269,7 @@ for (i in 1:nrow(regions)) {
   })
   nested_shapes <- nested_shapes[!sapply(nested_shapes, is.null)]
   nested_shapes_df <- bind_rows(lapply(nested_shapes, function(x) {
+    # message(sprintf("Processing shape %s", x$shape_id))
     # Prepend prefixes to sub-list names before flattening
     names(x$stats) <- paste0("stats.", names(x$stats))
     names(x$schedule) <- paste0("schedule.", names(x$schedule))
@@ -228,7 +286,7 @@ for (i in 1:nrow(regions)) {
   )
   write.csv(nested_shapes_df, sprintf("%s/shape_data_%s_gtfs%s_run%s.csv", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())))
 
-  nested_routes <- lapply(split(gtfs_date$routes |> select(route_id, route_short_name, route_long_name, route_color, route_text_color), gtfs_date$routes$route_id), function(df) {
+  nested_routes <- lapply(split(gtfs$routes |> select(route_id, route_short_name, route_long_name, route_color, route_text_color), gtfs$routes$route_id), function(df) {
     route_metadata <- df[1, ] %>%
       as.list()
 
@@ -248,7 +306,7 @@ for (i in 1:nrow(regions)) {
     distinct(way_osm_id, .keep_all = TRUE)
 
   shapes_found <- unique(unlist(prioritization$shapes))
-  shapes_missing <- unique(gtfs_date$shapes$shape_id) %>% setdiff(shapes_found)
+  shapes_missing <- unique(gtfs$shapes$shape_id) %>% setdiff(shapes_found)
   shapes_found_frequency <- sum((routes |> filter(shape_id %in% shapes_found))$frequency)
   shapes_missing_frequency <- sum((routes |> filter(shape_id %in% shapes_missing))$frequency)
 
@@ -269,6 +327,66 @@ for (i in 1:nrow(regions)) {
       as.list()
   })
 
+  # For i in range 0, 23
+  prioritization_hour <- list()
+  for (i in 0:23) {
+    gtfs_hour <- NULL
+    tryCatch(
+      {
+        gtfs_hour <- tidytransit::filter_feed_by_date(gtfs, extract_date = region$gtfs_day, min_departure_time = sprintf("%02d:00:00", i), max_arrival_time = sprintf("%02d:00:00", (i + 1)))
+      },
+      error = function(e) {
+        message(sprintf("No GTFS data for hour %02d, skipping it...", i))
+      }
+    )
+    if (is.null(gtfs_hour)) {
+      next
+    }
+    shapes_found_list <- unique(unlist(prioritization$shapes))
+    # Filter to make sure they are at gtfs_hour$shapes$shape_id
+    shapes_found_list <- shapes_found_list[shapes_found_list %in% gtfs_hour$shapes$shape_id]
+    shapes_missing_list <- setdiff(unique(gtfs_hour$shapes$shape_id), shapes_found_list)
+    shapes_found_frequency_hour <- sum((routes |> filter(shape_id %in% shapes_found_list & hour == i))$frequency)
+    shapes_missing_frequency_hour <- sum((routes |> filter(shape_id %in% shapes_missing_list & hour == i))$frequency)
+
+    # Now for routes
+    routes_found_list <- unique(unlist(prioritization$routes))
+    # Filter to make sure they are at gtfs_hour$routes$route_id
+    routes_found_list <- routes_found_list[routes_found_list %in% gtfs_hour$routes$route_id]
+
+    routes_missing_hour <- routes |>
+      filter(route_id %in% gtfs_hour$routes$route_id) |>
+      group_by(route_id) |>
+      summarise(
+        shapes = list(unique(shape_id)),
+        n_shapes = length(unique(shape_id))
+      ) |>
+      mutate(
+        n_shapes_missing = sapply(shapes, function(s_list) sum(s_list %in% shapes_missing_list))
+      ) |>
+      filter(n_shapes_missing > 0) |>
+      select(-shapes)
+    routes_missing_hour_nested <- lapply(split(routes_missing_hour, routes_missing_hour$route_id), function(df) {
+      df %>%
+        select(n_shapes, n_shapes_missing) %>%
+        as.list()
+    })
+
+    prioritization_hour[[as.character(i)]] <- list(
+      shapes_missing = shapes_missing_list,
+      routes_missing = routes_missing_hour_nested,
+      shapes_total = length(unique(gtfs_hour$shapes$shape_id)),
+      shapes_found_n = length(shapes_found_list),
+      shapes_missing_n = length(shapes_missing_list),
+      shapes_total_frequency = sum((routes |> filter(shape_id %in% gtfs_hour$shapes$shape_id & hour == i))$frequency),
+      shapes_found_frequency = shapes_found_frequency_hour,
+      shapes_missing_frequency = shapes_missing_frequency_hour,
+      routes_total = length(unique(gtfs_hour$routes$route_id)),
+      routes_missing_n = length(routes_missing_hour),
+      routes_found_n = length(routes_found_list)
+    )
+  }
+
   dataCensus <- function(numberArray, weights) {
     quantiles <- wtd.quantile(numberArray, weights = weights, probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
     return(list(
@@ -281,7 +399,8 @@ for (i in 1:nrow(regions)) {
       mean = round(wtd.mean(numberArray, weights = weights, na.rm = TRUE), digits = 2),
       median = round(as.numeric(quantiles[3]), digits = 2),
       variance = round(wtd.var(numberArray, weights = weights, na.rm = TRUE), digits = 2),
-      sd = round(sqrt(wtd.var(numberArray, weights = weights, na.rm = TRUE)), digits = 2)
+      sd = round(sqrt(wtd.var(numberArray, weights = weights, na.rm = TRUE)), digits = 2),
+      count = length(numberArray)
     ))
   }
 
@@ -295,8 +414,8 @@ for (i in 1:nrow(regions)) {
   }
   census_frequency_hour <- list()
   for (h in 0:23) {
-    prioritization_hour <- prioritization |> filter(hour == h)
-    census <- dataCensus(prioritization_hour$frequency, prioritization_hour$length_m)
+    prioritization_h <- prioritization |> filter(hour == h)
+    census <- dataCensus(prioritization_h$frequency, prioritization_h$length_m)
     if (!is.na(census$mean)) {
       census_frequency_hour[[as.character(h)]] <- census
     }
@@ -324,9 +443,11 @@ for (i in 1:nrow(regions)) {
       shapes_total_frequency = sum(routes$frequency),
       shapes_found_frequency = shapes_found_frequency,
       shapes_missing_frequency = shapes_missing_frequency,
-      rountes_missing_n = nrow(routes_missing),
+      routes_total = nrow(gtfs$routes),
+      routes_missing_n = nrow(routes_missing),
       routes_found_n = nrow(routes) - nrow(routes_missing)
     ),
+    prioritization_hour = prioritization_hour,
     data_census = list(
       frequency = dataCensus(prioritization$frequency, prioritization$length_m),
       frequency_hour = census_frequency_hour,
@@ -379,79 +500,3 @@ for (i in 1:nrow(regions)) {
     digits = NA
   )
 }
-
-# Debug
-library(sf)
-prioritization_debug <- prioritization |> mutate(
-  routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
-  shapes = sapply(shapes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE)
-)
-# prioritization <- st_read("releases/web/lisboa/2026-02-04/prioritization_lisboa_rt_gtfs2026-02-04_run20260203_extended.geojson")
-loures <- sf::st_read("https://github.com/U-Shift/MQAT/raw/refs/heads/main/geo/MUNICIPIOSgeo.gpkg", quiet = TRUE) |> filter(Concelho == "Loures")
-
-prioritization_0800 <- prioritization_debug |> filter(hour == 8)
-prioritization_0800 <- st_intersection(prioritization_0800, loures)
-
-p50_frequency <- quantile(prioritization_0800$frequency, 0.5, na.rm = TRUE)
-p50_speed <- quantile(prioritization_0800$speed_avg, 0.5, na.rm = TRUE)
-mapview::mapview(
-  prioritization_0800 |> filter(is_bus_lane & (frequency < p50_frequency | (is.na(n_lanes) | n_lanes_direction <= 1) | speed_avg <= p50_speed)),
-  layer.name = sprintf("Bus lane with -%d bus/h OR -2 lane/dir OR %.2f km/h or - avg. speed", p50_frequency, p50_speed),
-  color = "#DAD887",
-  homebutton = FALSE,
-  lwd = 3
-) + mapview::mapview(
-  prioritization_0800 |> filter(is_bus_lane & frequency >= p50_frequency & !is.na(n_lanes) & n_lanes_direction > 1 & speed_avg > p50_speed),
-  layer.name = sprintf("Bus lane with +%d bus/h AND +1 lane/dir AND +%.2f km/h avg.speed", p50_frequency - 1, p50_speed),
-  color = "#3BC1A8",
-  homebutton = FALSE,
-  lwd = 3
-) + mapview::mapview(
-  prioritization_0800 |> filter(!is_bus_lane & frequency >= p50_frequency & !is.na(n_lanes) & n_lanes_direction > 1 & speed_avg <= p50_speed),
-  layer.name = sprintf("NO bus lane with +%d bus/h AND +1 lane/dir AND %.2f km/h or - avg.speed", p50_frequency - 1, p50_speed),
-  color = "#F63049",
-  homebutton = FALSE,
-  lwd = 3
-)
-
-
-mapview::mapview(
-  prioritization_0800,
-  color = rev(viridis::viridis(10, option = "F")),
-  zcol = "speed_avg",
-  layer.name = "Average speed per lane"
-)
-
-mapview::mapview(
-  prioritization_0800,
-  color = rev(viridis::viridis(10, option = "F")),
-  zcol = "n_lanes_direction",
-  layer.name = "Lanes/direction"
-) + mapview::mapview(
-  prioritization_0800,
-  color = rev(viridis::viridis(10, option = "F")),
-  zcol = "n_lanes_parking",
-  layer.name = "Parking lanes",
-  hide = TRUE
-) + mapview::mapview(
-  prioritization_0800,
-  color = rev(viridis::viridis(10, option = "F")),
-  zcol = "n_lanes_circulation",
-  layer.name = "Circulation lanes",
-  hide = TRUE
-)
-
-
-mapview::mapview(
-  prioritization_0800 |> filter(is_bus_lane == TRUE),
-  layer.name = "Bus lanes",
-  color = "#3bc1a8"
-)
-
-mapview::mapview(loures) +
-  mapview::mapview(
-    prioritization_0800 |> filter(n_lanes_direction > 1),
-    color = rev(viridis::viridis(10, option = "F")),
-    zcol = "n_lanes_direction",
-    layer.name = "Lanes/direction"
-  )
