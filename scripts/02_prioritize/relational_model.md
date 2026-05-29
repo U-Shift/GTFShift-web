@@ -35,7 +35,7 @@ erDiagram
     }
 
     Way_Data_JSON {
-        string way_osm_id PK "Key of root dictionary object"
+        string way_osm_id PK "OSM Way Identifier (key of root dictionary object)"
         string name "Street name"
         float length_m "Length of way in meters"
         boolean is_bus_lane "True if segment has a bus lane"
@@ -51,8 +51,8 @@ erDiagram
     }
 
     Shape_Data_JSON {
-        string shape_id PK "Key of root dictionary object"
-        string route_id FK "Reference to Route_Data_JSON"
+        string shape_id PK "GTFS shape_id (key of root dictionary object)"
+        string route_id FK "GTFS route_id"
         string route_short_name "Public transit route short name (e.g. '12')"
         string route_long_name "Public transit route long name"
         int direction_id "GTFS direction_id (0 or 1)"
@@ -63,7 +63,7 @@ erDiagram
     }
 
     Route_Data_JSON {
-        string route_id PK "Key of root dictionary object"
+        string route_id PK "GTFS route_id (key of root dictionary object)"
         string route_short_name "Public transit route short name"
         string route_long_name "Public transit route long name"
         string route_color "Hex color code for styling"
@@ -73,11 +73,11 @@ erDiagram
     Metadata_JSON {
         string region "Name of the region analyzed"
         object gtfs "Source metadata (date, url)"
-        array osm_query "OSM query filters applied"
+        array osm_query "OSM query to fetch transit data"
         object prioritization "Global missing shapes/routes metrics"
         object prioritization_hour "Hourly lists of missing shapes and routes"
         object data_census "Aggregated census metrics (frequency, speed, lanes)"
-        object rt "Real-time transit API metadata (if applicable)"
+        object rt "Real-time transit metadata (if applicable)"
         object execution "Execution timestamp and Git commit hash"
         object environment "R environment, OS version, and package versions"
     }
@@ -89,8 +89,6 @@ erDiagram
     Way_Data_JSON }o--o{ Route_Data_JSON : "references via routes array"
     Way_Data_JSON }o--o{ Shape_Data_JSON : "references via shapes array"
     Shape_Data_JSON }o--|| Route_Data_JSON : "belongs to route_id"
-    Metadata_JSON }o--o{ Shape_Data_JSON : "identifies missing shape_ids"
-    Metadata_JSON }o--o{ Route_Data_JSON : "identifies missing route_ids"
 ```
 
 ---
