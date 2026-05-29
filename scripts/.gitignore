@@ -12,3 +12,4 @@ venv/*
 osm_scrap/*
 
 osm_gtfs/*
+gtfs_external/*

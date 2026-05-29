@@ -9,8 +9,8 @@
 gtfs_url = "osm_gtfs/aml_barreiro_cascais_lisboa/run_20260521_165353/gtfs_lisboa.zip"
 gtfs_osm_url = "osm_gtfs/aml_barreiro_cascais_lisboa/run_20260521_165353/gtfs_lisboa_osm.zip"
 
-gtfs_url = "osm_gtfs/aml_1_aml_2_aml_3_aml_4_barreiro_cascais_lisboa/run_20260527_144749/gtfs_lisboa_manipulated.zip"
-gtfs_osm_url = "osm_gtfs/aml_1_aml_2_aml_3_aml_4_barreiro_cascais_lisboa/run_20260527_144749/gtfs_lisboa_osm.zip"
+gtfs_url = "osm_gtfs/aml_1_aml_2_aml_3_aml_4_barreiro_cascais_lisboa/run_20260527_144749/gtfs_aml_3_manipulated.zip"
+gtfs_osm_url = "osm_gtfs/aml_1_aml_2_aml_3_aml_4_barreiro_cascais_lisboa/run_20260527_144749/gtfs_aml_3_osm.zip"
 
 gtfs <- tidytransit::read_gtfs(gtfs_url)
 summary(gtfs)
@@ -22,8 +22,8 @@ gtfs_osm_sf <- tidytransit::shapes_as_sf(gtfs_osm$shapes)
 # mapview::mapview(gtfs_osm_sf, layer.name = sprintf("GTFS OSM Shapes (%d)", length(unique(gtfs_osm$shapes$shape_id))), color = "#00b4c5", legend = FALSE, hide = TRUE)
 
 
-mapview::mapview(gtfs_osm_sf, layer.name = sprintf("GTFS OSM Shapes (%d)", length(unique(gtfs_osm$shapes$shape_id))), color = "#00b4c5", legend = FALSE, hide = TRUE) +
-    mapview::mapview(shapes_gtfs, layer.name = sprintf("GTFS Shapes (%d)", length(unique(gtfs$shapes$shape_id))), color = "#fcc9b5", legend = FALSE)
+mapview::mapview(gtfs_osm_sf, layer.name = sprintf("GTFS OSM Shapes (%d)", length(unique(gtfs_osm$shapes$shape_id))), color = "#00b4c5", legend = FALSE, hide = TRUE, homebutton = FALSE) +
+    mapview::mapview(shapes_gtfs, layer.name = sprintf("GTFS Shapes (%d)", length(unique(gtfs$shapes$shape_id))), color = "#fcc9b5", legend = FALSE, homebutton = FALSE)
 
 mapview::mapview(shapes_gtfs, layer.name = "GTFS Shapes", color = "#fcc9b5", legend = FALSE) +
     mapview::mapview(osm_shapes, layer.name = "OSM Shapes", color = "#ff006e", legend = FALSE, hide = TRUE) +
