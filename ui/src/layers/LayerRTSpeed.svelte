@@ -30,9 +30,9 @@
 
     function getSpeedStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
-        const speed_avg = props?.speed_avg || undefined;
+        const speed_avg = props?.speed_avg;
         let color = COLOR_GRAY;
-        if (speed_avg !== undefined) {
+        if (speed_avg !== undefined && speed_avg !== null && !isNaN(Number(speed_avg))) {
             color = getColorFromGradient(
                 speed_avg,
                 geoData.metadata.data_census.speed_avg_length?.p5 || 0,
@@ -64,7 +64,9 @@
                     return false;
                 }
                 return (
-                    props?.speed_avg !== undefined && props?.speed_avg !== null
+                    props?.speed_avg !== undefined && 
+                    props?.speed_avg !== null && 
+                    !isNaN(Number(props?.speed_avg))
                 );
             },
         );

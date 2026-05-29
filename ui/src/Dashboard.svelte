@@ -3,7 +3,7 @@
     import * as L from "leaflet";
     import type { Feature } from "geojson";
     import type { GeoPrioritization } from "./types/GeoPrioritization";
-    import type { DataRegion } from "./types/DataRegion";
+    import type { DataRegion, RegionLayer } from "./types/DataRegion";
 
     import ModalAbout from "./modals/ModalAbout.svelte";
     import LayerBusLanePrioritization from "./layers/LayerBusLanePrioritization.svelte";
@@ -11,9 +11,11 @@
     import LayerTransitFrequency from "./layers/LayerTransitFrequency.svelte";
     import LayerNumberOfLanes from "./layers/LayerNumberOfLanes.svelte";
     import LayerRTSpeed from "./layers/LayerRTSpeed.svelte";
+    import LayerBoundaries from "./layers/LayerBoundaries.svelte";
     import DataCensusTable from "./components/DataCensusTable.svelte";
     import ModalData from "./modals/ModalData.svelte";
     import ModalDetails from "./modals/ModalDetails.svelte";
+    import ModalDownload from "./modals/ModalDownload.svelte";
     import PanelRouteDetails from "./panels/PanelRouteDetails.svelte";
     import PanelWayDetails from "./panels/PanelWayDetails.svelte";
 
@@ -56,6 +58,21 @@
     }
 
     let region: DataRegion | undefined = $state(undefined);
+    let selected_layer: RegionLayer | undefined = $state(undefined);
+    let selected_layer_id: string = $state("");
+    let boundaryGeoJSON: any = $state(null);
+    let show_boundaries: boolean = $state(true);
+    let regionSearchQuery: string = $state("");
+
+    const filteredRegions = $derived.by(() => {
+        const query = regionSearchQuery.trim().toLowerCase();
+        if (!query) return DB_REGIONS;
+        return DB_REGIONS.filter(
+            (r: DataRegion) =>
+                r.name.toLowerCase().includes(query) ||
+                r.region.toLowerCase().includes(query),
+        );
+    });
 
     let active_layer: DisplayOptions | undefined = $state(undefined);
     let open_accordion: string | undefined = $state(undefined);
@@ -75,10 +92,12 @@
     let action_modal_about_open: boolean = $state(false);
     let action_modal_data_open: boolean = $state(false);
     let action_modal_details_open: boolean = $state(false);
+    let action_modal_download_open: boolean = $state(false);
     let any_modal_open: boolean = $derived(
         action_modal_about_open ||
             action_modal_data_open ||
-            action_modal_details_open,
+            action_modal_details_open ||
+            action_modal_download_open,
     );
 
     let selectedWayId: string | undefined = $state(undefined);
@@ -88,7 +107,8 @@
         if (
             action_modal_about_open ||
             action_modal_data_open ||
-            action_modal_details_open
+            action_modal_details_open ||
+            action_modal_download_open
         ) {
             untrack(() => {
                 selectedWayId = undefined;
@@ -111,43 +131,48 @@
     // Action handlers
     const handleLayerCreate = (layer: L.Layer) => {};
 
-    const handleRegionChange = async (regionId: string) => {
-        if (!regionId) return;
+    const handleLayerChange = async (layerId: string) => {
+        if (!region || !layerId) return;
 
-        action_modal_about_open = false;
-        action_modal_data_open = false;
-        action_modal_details_open = false;
+        const targetLayer = region.layers.find((l) => l.id === layerId);
+        if (!targetLayer) return;
 
-        region = DB_REGIONS.find((r: DataRegion) => r.id === regionId);
-        if (!region || !map) return;
+        selected_layer = targetLayer;
+        selected_layer_id = targetLayer.id;
 
         active_layer = undefined;
         open_accordion = undefined;
         selected_shape_id = "all";
         geoData = null;
-        loading = "data for " + region.name;
+        loading = "data for " + region.name + " (" + selected_layer.name + ")";
 
         try {
             // Fetch and load new data model components
-            const [
-                waysRes,
-                wayDataRes,
-                metadataRes,
-                routeDataRes,
-                shapeDataRes,
-            ] = await Promise.all([
-                fetch(region.files.ways),
-                fetch(region.files.way_data),
-                fetch(region.files.metadata),
-                fetch(region.files.route_data),
-                fetch(region.files.shape_data),
-            ]);
+            const fetchPromises: Promise<Response>[] = [
+                fetch(selected_layer.files.ways),
+                fetch(selected_layer.files.way_data),
+                fetch(selected_layer.files.metadata),
+                fetch(selected_layer.files.route_data),
+                fetch(selected_layer.files.shape_data),
+            ];
 
-            const ways = await waysRes.json();
-            const wayData = await wayDataRes.json();
-            const metadata = await metadataRes.json();
-            const routeData = await routeDataRes.json();
-            const shapeData = await shapeDataRes.json();
+            if (selected_layer.files.boundaries) {
+                fetchPromises.push(fetch(selected_layer.files.boundaries));
+            }
+
+            const results = await Promise.all(fetchPromises);
+
+            const ways = await results[0].json();
+            const wayData = await results[1].json();
+            const metadata = await results[2].json();
+            const routeData = await results[3].json();
+            const shapeData = await results[4].json();
+
+            if (selected_layer.files.boundaries && results[5]) {
+                boundaryGeoJSON = await results[5].json();
+            } else {
+                boundaryGeoJSON = null;
+            }
 
             geoData = {
                 features: ways.features,
@@ -177,11 +202,30 @@
             active_layer = DisplayOptions.PRIORITIZATION;
             open_accordion = DisplayOptions.PRIORITIZATION.toString();
 
-            console.log("Loaded GeoJSON for region:", region.id);
+            console.log("Loaded GeoJSON for layer:", selected_layer.id);
         } catch (error) {
             console.error("Error loading GeoJSON:", error);
         } finally {
             loading = undefined;
+        }
+    };
+
+    const handleRegionChange = async (regionId: string) => {
+        if (!regionId) return;
+
+        action_modal_about_open = false;
+        action_modal_data_open = false;
+        action_modal_details_open = false;
+        action_modal_download_open = false;
+
+        region = DB_REGIONS.find((r: DataRegion) => r.id === regionId);
+        if (!region || !map) return;
+
+        selected_layer = undefined;
+        selected_layer_id = "";
+
+        if (region.layers && region.layers.length === 1) {
+            await handleLayerChange(region.layers[0].id);
         }
     };
 
@@ -241,9 +285,7 @@
 <div
     id="controls-panel"
     class="absolute top-4 left-4 z-[1010] flex flex-col items-start w-[calc(100vw-2rem)] sm:w-[350px] max-h-[70vh] sm:max-h-[calc(100vh-2rem)] rounded-xl bg-background/95 backdrop-blur shadow-lg border p-4 overflow-y-auto h-fit"
-    style={geoData
-        ? "background-image: url('./static/logo/background_blur_transparent.png'); background-size: auto 7vw; background-position: top right; background-repeat: no-repeat;"
-        : ""}
+    style={"background-image: url('./static/logo/background_blur_transparent.png'); background-size: auto 7vw; background-position: top right; background-repeat: no-repeat;"}
 >
     <!-- Title -->
     <div class="w-full text-left mb-4">
@@ -260,6 +302,7 @@
                                     e.preventDefault();
                                     action_modal_data_open = false;
                                     action_modal_details_open = false;
+                                    action_modal_download_open = false;
                                     action_modal_about_open =
                                         !action_modal_about_open;
                                 }}
@@ -292,8 +335,32 @@
             <p class="text-xs text-muted-foreground mb-2">
                 Select the region you want to analyse
             </p>
+
+            <!-- Search bar -->
+            <div class="relative w-full mb-3 mt-2">
+                <i
+                    class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs pointer-events-none"
+                ></i>
+                <Input
+                    type="text"
+                    placeholder="Search region by name or location..."
+                    class="pl-9 pr-8 py-1 h-9 text-xs bg-background/50 focus-visible:ring-1 focus-visible:ring-primary/50"
+                    bind:value={regionSearchQuery}
+                />
+                {#if regionSearchQuery}
+                    <button
+                        type="button"
+                        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full hover:bg-muted/50 transition-colors cursor-pointer"
+                        onclick={() => (regionSearchQuery = "")}
+                        aria-label="Clear search"
+                    >
+                        <i class="fas fa-times text-[10px]"></i>
+                    </button>
+                {/if}
+            </div>
+
             <div class="flex flex-col gap-2 mt-3">
-                {#each DB_REGIONS as r}
+                {#each filteredRegions as r}
                     <button
                         class="group relative w-full text-left rounded-xl border border-border bg-background transition-all duration-200 p-3 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                         onclick={() => handleRegionChange(r.id)}
@@ -346,7 +413,7 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p
-                                    class="text-sm font-semibold text-foreground leading-tight truncate"
+                                    class="text-sm font-semibold text-foreground leading-tight"
                                 >
                                     {r.name}
                                 </p>
@@ -384,16 +451,145 @@
                         ></div>
                     </button>
                 {/each}
+
+                {#if filteredRegions.length === 0}
+                    <div
+                        class="text-center py-6 border border-dashed rounded-xl bg-muted/20"
+                    >
+                        <i
+                            class="fas fa-map-marked-alt text-muted-foreground text-xl mb-2 block opacity-50"
+                        ></i>
+                        <p class="text-xs font-semibold text-foreground">
+                            No regions found
+                        </p>
+                        <p class="text-[10px] text-muted-foreground mt-0.5">
+                            Try searching for a different name or location
+                        </p>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            class="h-7 text-[10px] px-2.5 mt-3 gap-1 cursor-pointer"
+                            onclick={() => (regionSearchQuery = "")}
+                        >
+                            <i class="fas fa-undo text-[9px]"></i> Reset Search
+                        </Button>
+                    </div>
+                {/if}
             </div>
+        </div>
+    {/if}
+
+    <!-- Form 1.5: Select Layer -->
+    {#if region !== undefined && selected_layer === undefined && region.layers && region.layers.length > 1}
+        <div class="w-full text-left mb-4">
+            <div class="flex items-center gap-2 mb-3">
+                {#if region.logo}
+                    <img
+                        src={region.logo}
+                        alt={region.name}
+                        class="h-6 w-6 object-contain"
+                    />
+                {/if}
+                <h5 class="text-lg font-semibold text-primary mb-1">
+                    {region.name}
+                </h5>
+            </div>
+            <p class="text-xs text-muted-foreground mb-4">
+                Select a dataset/layer to begin analysis:
+            </p>
+
+            <div class="flex flex-col gap-2 mt-3">
+                {#each region.layers as layer}
+                    <button
+                        class="group relative w-full text-left rounded-xl border border-border bg-background transition-all duration-200 p-3 overflow-hidden shadow-sm hover:shadow-md cursor-pointer"
+                        onclick={() => handleLayerChange(layer.id)}
+                        disabled={loading !== undefined}
+                        onmouseenter={(e) => {
+                            const el = e.currentTarget as HTMLElement;
+                            el.style.borderColor = region?.color ?? "";
+                            el.style.backgroundColor =
+                                (region?.color ?? "") + "0d";
+                            el.querySelector<HTMLElement>(
+                                ".layer-accent",
+                            )!.style.transform = "scaleX(1)";
+                        }}
+                        onmouseleave={(e) => {
+                            const el = e.currentTarget as HTMLElement;
+                            el.style.borderColor = "";
+                            el.style.backgroundColor = "";
+                            el.querySelector<HTMLElement>(
+                                ".layer-accent",
+                            )!.style.transform = "scaleX(0)";
+                        }}
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <p
+                                    class="text-sm font-semibold text-foreground leading-tight"
+                                >
+                                    {layer.name}
+                                </p>
+                                <p class="text-xs text-muted-foreground mt-1">
+                                    <i class="fas fa-calendar-alt mr-1"></i>
+                                    {layer.date}
+                                </p>
+                                {#if layer.rt_data}
+                                    <p
+                                        class="text-xs text-muted-foreground mt-0.5"
+                                    >
+                                        <i class="fas fa-traffic-light mr-1"
+                                        ></i> With traffic conditions
+                                    </p>
+                                {:else}
+                                    <p
+                                        class="text-xs text-muted-foreground mt-0.5"
+                                    >
+                                        <i class="fas fa-road mr-1"></i> Static analysis
+                                    </p>
+                                {/if}
+                            </div>
+                            <i
+                                class="fas fa-chevron-right text-xs text-muted-foreground mt-1 group-hover:text-primary transition-colors"
+                            ></i>
+                        </div>
+                        <div
+                            class="layer-accent absolute bottom-0 left-0 right-0 h-[2px] transition-transform duration-200 origin-left rounded-b-xl"
+                            style="background-color: {region.color}; transform: scaleX(0);"
+                        ></div>
+                    </button>
+                {/each}
+            </div>
+
+            <!-- Back button to regions -->
+            <Button
+                variant="outline"
+                size="sm"
+                onclick={() => {
+                    region = undefined;
+                    selected_layer = undefined;
+                    selected_layer_id = "";
+                }}
+                disabled={loading !== undefined}
+                class="w-full mt-4"
+            >
+                <i class="fa-solid fa-arrow-left mr-2"></i> Back to Regions
+            </Button>
         </div>
     {/if}
 
     <!-- Form 2: Region display options -->
     {#if region !== undefined && geoData && !action_hide_form}
         <div class="w-full text-left flex-1" id="form">
-            <h5 class="text-lg font-semibold text-primary mb-1">
-                {region.name}
-            </h5>
+            <div class="flex items-center gap-2">
+                <img
+                    src={region.logo}
+                    alt={region.name}
+                    class="h-5 w-5 object-contain"
+                />
+                <h5 class="text-lg font-semibold text-primary mb-1">
+                    {region.name}
+                </h5>
+            </div>
             <div
                 class="flex items-center gap-3 text-sm text-muted-foreground mb-4"
             >
@@ -401,7 +597,16 @@
                     <i class="fas fa-map-marker-alt mr-1"></i>
                     {region.region}<br />
                     <i class="fas fa-calendar-alt mr-1"></i>
-                    {region.date}
+                    {selected_layer?.date ?? region.date}
+                    {#if selected_layer?.notes}
+                        <br />
+                        <span
+                            class="text-[11px] italic mt-1 block leading-tight"
+                        >
+                            <i class="fas fa-circle-info mr-1"></i>
+                            {selected_layer.notes}
+                        </span>
+                    {/if}
                 </p>
                 <Tooltip.Provider delayDuration={0}>
                     <Tooltip.Root>
@@ -414,6 +619,7 @@
                                         e.preventDefault();
                                         action_modal_about_open = false;
                                         action_modal_details_open = false;
+                                        action_modal_download_open = false;
                                         action_modal_data_open =
                                             !action_modal_data_open;
                                     }}
@@ -439,6 +645,7 @@
                                         e.preventDefault();
                                         action_modal_about_open = false;
                                         action_modal_data_open = false;
+                                        action_modal_download_open = false;
                                         action_modal_details_open =
                                             !action_modal_details_open;
                                     }}
@@ -457,16 +664,21 @@
                     <Tooltip.Root>
                         <Tooltip.Trigger>
                             {#snippet child({ props })}
-                                <a
+                                <button
                                     {...props}
-                                    href={region?.files.zip}
-                                    target="_blank"
-                                    rel="noreferrer"
                                     class="hover:text-foreground cursor-pointer"
+                                    onclick={(e) => {
+                                        e.preventDefault();
+                                        action_modal_about_open = false;
+                                        action_modal_data_open = false;
+                                        action_modal_details_open = false;
+                                        action_modal_download_open =
+                                            !action_modal_download_open;
+                                    }}
                                     aria-label="Download raw data"
                                 >
                                     <i class="fas fa-download"></i>
-                                </a>
+                                </button>
                             {/snippet}
                         </Tooltip.Trigger>
                         <Tooltip.Content class="z-[1100]"
@@ -475,6 +687,43 @@
                     </Tooltip.Root>
                 </Tooltip.Provider>
             </div>
+
+            {#if region.layers && region.layers.length > 1}
+                <div class="w-full mb-6">
+                    <h5
+                        class="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider"
+                    >
+                        Active Layer / Dataset
+                    </h5>
+                    <Select.Root
+                        type="single"
+                        bind:value={selected_layer_id}
+                        onValueChange={(val) => {
+                            if (val) handleLayerChange(val);
+                        }}
+                    >
+                        <Select.Trigger
+                            class="w-full justify-between bg-background/50 hover:bg-accent transition-colors border text-left"
+                        >
+                            <span class="truncate">
+                                {region.layers.find(
+                                    (l) => l.id === selected_layer_id,
+                                )?.name ?? "Select active layer"}
+                            </span>
+                        </Select.Trigger>
+                        <Select.Content class="z-[1100]">
+                            {#each region.layers as layer}
+                                <Select.Item
+                                    value={layer.id}
+                                    label={layer.name}
+                                >
+                                    {layer.name}
+                                </Select.Item>
+                            {/each}
+                        </Select.Content>
+                    </Select.Root>
+                </div>
+            {/if}
 
             <div class="w-full mb-6">
                 <h5
@@ -900,12 +1149,17 @@
 
     <!-- Control buttons -->
     <div class="w-full flex gap-2 mt-4 pt-4 border-t">
-        {#if region && region.files && geoData && geoData.metadata}
+        {#if region && selected_layer && geoData && geoData.metadata}
             <Button
                 variant="outline"
                 size="sm"
                 onclick={() => {
-                    region = undefined;
+                    if (region && region.layers && region.layers.length === 1) {
+                        region = undefined;
+                    }
+                    selected_layer = undefined;
+                    selected_layer_id = "";
+                    geoData = null;
                     active_layer = undefined;
                     open_accordion = undefined;
                     selected_shape_id = "all";
@@ -913,6 +1167,7 @@
                     action_modal_about_open = false;
                     action_modal_data_open = false;
                     action_modal_details_open = false;
+                    action_modal_download_open = false;
                 }}
                 class="flex-1"
             >
@@ -1089,11 +1344,44 @@
                 </div>
             </div>
         {/if}
+
+        {#if boundaryGeoJSON}
+            <div class="border-t pt-2 mt-1 flex items-center justify-between">
+                <span
+                    class="text-xs text-muted-foreground flex items-center gap-2"
+                >
+                    <i
+                        class="fa-solid fa-draw-polygon text-[11px]"
+                        style="color: {region?.color}"
+                    ></i>
+                    Operations Area
+                </span>
+                <button
+                    class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 outline-none {show_boundaries
+                        ? 'bg-primary'
+                        : 'bg-muted'}"
+                    style="background-color: {show_boundaries
+                        ? region?.color
+                        : ''};"
+                    onclick={() => (show_boundaries = !show_boundaries)}
+                    aria-label="Toggle analysis boundary"
+                >
+                    <span
+                        class="pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow-lg ring-0 transition duration-200 ease-in-out {show_boundaries
+                            ? 'translate-x-4'
+                            : 'translate-x-0.5'}"
+                    ></span>
+                </button>
+            </div>
+        {/if}
     </div>
 {/if}
 
-<!-- Map layers -->
 {#if region && geoData && active_layer !== undefined && map}
+    {#if boundaryGeoJSON && show_boundaries}
+        <LayerBoundaries {map} {boundaryGeoJSON} color={region.color} />
+    {/if}
+
     {#if active_layer === DisplayOptions.PRIORITIZATION}
         <LayerBusLanePrioritization
             {map}
@@ -1185,3 +1473,5 @@
 {/if}
 
 <ModalDetails bind:open={action_modal_details_open} {geoData} />
+
+<ModalDownload bind:open={action_modal_download_open} zipUrl={selected_layer?.files.zip} />

@@ -216,6 +216,79 @@
                                                     </Tooltip.Content>
                                                 </Tooltip.Root>
                                             </Tooltip.Provider>
+                                            {#if geoData.metadata?.prioritization_hour}
+                                                <Tooltip.Provider
+                                                    delayDuration={0}
+                                                >
+                                                    <Tooltip.Root>
+                                                        <Tooltip.Trigger>
+                                                            {#snippet child({
+                                                                props,
+                                                            })}
+                                                                <button
+                                                                    {...props}
+                                                                    class="text-muted-foreground hover:text-foreground cursor-help"
+                                                                >
+                                                                    <i
+                                                                        class="fas fa-clock"
+                                                                    ></i>
+                                                                </button>
+                                                            {/snippet}
+                                                        </Tooltip.Trigger>
+                                                        <Tooltip.Content
+                                                            class="z-[2100] max-w-[300px] p-3 text-xs"
+                                                        >
+                                                            <div
+                                                                class="space-y-2 max-h-[200px] overflow-y-auto pr-2"
+                                                            >
+                                                                <p
+                                                                    class="font-bold border-b pb-1"
+                                                                >
+                                                                    Hour
+                                                                    distribution:
+                                                                </p>
+                                                                {#each Object.keys(geoData.metadata.prioritization_hour) as hh}
+                                                                    <p>
+                                                                        <b
+                                                                            >{hh}h:</b
+                                                                        >{" "}
+                                                                        {geoData
+                                                                            .metadata
+                                                                            .prioritization_hour[
+                                                                            hh
+                                                                        ]
+                                                                            .shapes_found_n}{" "}
+                                                                        of {" "}
+                                                                        {geoData
+                                                                            .metadata
+                                                                            .prioritization_hour[
+                                                                            hh
+                                                                        ]
+                                                                            .shapes_total}{" "}
+                                                                        ({(
+                                                                            (geoData
+                                                                                .metadata
+                                                                                .prioritization_hour[
+                                                                                hh
+                                                                            ]
+                                                                                .shapes_found_n /
+                                                                                geoData
+                                                                                    .metadata
+                                                                                    .prioritization_hour[
+                                                                                    hh
+                                                                                ]
+                                                                                    .shapes_total) *
+                                                                            100
+                                                                        ).toFixed(
+                                                                            2,
+                                                                        )}%)
+                                                                    </p>
+                                                                {/each}
+                                                            </div></Tooltip.Content
+                                                        >
+                                                    </Tooltip.Root>
+                                                </Tooltip.Provider>
+                                            {/if}
                                         </div>
                                     </td>
                                 </tr>
@@ -225,22 +298,98 @@
                                         >Service frequencies considered²</th
                                     >
                                     <td class="px-4 py-2">
-                                        <kbd
-                                            class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
-                                        >
-                                            {geoData.metadata.prioritization
-                                                .shapes_found_frequency} of {geoData
-                                                .metadata.prioritization
-                                                .shapes_total_frequency}
-                                            ({(
-                                                (geoData.metadata.prioritization
-                                                    .shapes_found_frequency /
-                                                    geoData.metadata
+                                        <div class="flex items-center gap-2">
+                                            <kbd
+                                                class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
+                                            >
+                                                {geoData.metadata.prioritization
+                                                    .shapes_found_frequency} of {geoData
+                                                    .metadata.prioritization
+                                                    .shapes_total_frequency}
+                                                ({(
+                                                    (geoData.metadata
                                                         .prioritization
-                                                        .shapes_total_frequency) *
-                                                100
-                                            ).toFixed(2)}%)
-                                        </kbd>
+                                                        .shapes_found_frequency /
+                                                        geoData.metadata
+                                                            .prioritization
+                                                            .shapes_total_frequency) *
+                                                    100
+                                                ).toFixed(2)}%)
+                                            </kbd>
+                                            {#if geoData.metadata?.prioritization_hour}
+                                                <Tooltip.Provider
+                                                    delayDuration={0}
+                                                >
+                                                    <Tooltip.Root>
+                                                        <Tooltip.Trigger>
+                                                            {#snippet child({
+                                                                props,
+                                                            })}
+                                                                <button
+                                                                    {...props}
+                                                                    class="text-muted-foreground hover:text-foreground cursor-help"
+                                                                >
+                                                                    <i
+                                                                        class="fas fa-clock"
+                                                                    ></i>
+                                                                </button>
+                                                            {/snippet}
+                                                        </Tooltip.Trigger>
+                                                        <Tooltip.Content
+                                                            class="z-[2100] max-w-[300px] p-3 text-xs"
+                                                        >
+                                                            <div
+                                                                class="space-y-2 max-h-[200px] overflow-y-auto pr-2"
+                                                            >
+                                                                <p
+                                                                    class="font-bold border-b pb-1"
+                                                                >
+                                                                    Hour
+                                                                    distribution:
+                                                                </p>
+                                                                {#each Object.keys(geoData.metadata.prioritization_hour) as hh}
+                                                                    <p>
+                                                                        <b
+                                                                            >{hh}h:</b
+                                                                        >{" "}
+                                                                        {geoData
+                                                                            .metadata
+                                                                            .prioritization_hour[
+                                                                            hh
+                                                                        ]
+                                                                            .shapes_found_frequency}{" "}
+                                                                        of {" "}
+                                                                        {geoData
+                                                                            .metadata
+                                                                            .prioritization_hour[
+                                                                            hh
+                                                                        ]
+                                                                            .shapes_total_frequency}{" "}
+                                                                        ({(
+                                                                            (geoData
+                                                                                .metadata
+                                                                                .prioritization_hour[
+                                                                                hh
+                                                                            ]
+                                                                                .shapes_found_frequency /
+                                                                                geoData
+                                                                                    .metadata
+                                                                                    .prioritization_hour[
+                                                                                    hh
+                                                                                ]
+                                                                                    .shapes_total_frequency) *
+                                                                            100
+                                                                        ).toFixed(
+                                                                            2,
+                                                                        )}%)
+                                                                    </p>
+                                                                {/each}
+                                                            </div></Tooltip.Content
+                                                        >
+                                                    </Tooltip.Root>
+                                                </Tooltip.Provider>
+                                            {/if}
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr>
@@ -287,6 +436,40 @@
                                             class="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono"
                                             >{geoData.metadata.environment
                                                 .r}</kbd
+                                        >
+                                        <kbd
+                                            class="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono"
+                                            >{geoData.metadata.environment.os}
+                                            {geoData.metadata.environment
+                                                .os_release}</kbd
+                                        >
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th
+                                        class="px-4 py-2 text-left font-medium text-muted-foreground"
+                                        >Execution details</th
+                                    >
+                                    <td class="px-4 py-2 flex flex-wrap gap-1">
+                                        <kbd
+                                            class="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono"
+                                            >Executed at {geoData.metadata
+                                                .execution.moment}</kbd
+                                        >
+                                        <a
+                                            href={"https://github.com/U-Shift/GTFShift-web/commit/" +
+                                                geoData.metadata.execution
+                                                    .git_commit}
+                                            target="_blank"
+                                            class="text-primary hover:underline leading-none"
+                                        >
+                                            <kbd
+                                                class="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono"
+                                                >U-Shift/GTFShift-web@{geoData.metadata.execution.git_commit.substring(
+                                                    0,
+                                                    7,
+                                                )}</kbd
+                                            ></a
                                         >
                                     </td>
                                 </tr>

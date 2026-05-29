@@ -19,21 +19,57 @@ export const COLOR_GRADIENT_RED: string[] = ["#ffffcc", "#fffecb", "#fffec9", "#
 
 export const DB_REGIONS: DataRegion[] = [
     {
+        id: 'aml_unified',
+        name: 'Lisbon Metro Area',
+        region: 'Lisbon Metro Area, PT',
+        rt_data: true,
+        logo: './static/regions/navegante.png',
+        date: 'May 2026',
+        color: '#fd0',
+        layers: [
+            {
+                id: 'aml_all',
+                name: 'Carris Metropolitana + Carris + TCB + MobiCascais',
+                notes: 'Speed data is not available for MobiCascais.',
+                date: 'May 2026',
+                rt_data: true,
+                files: {
+                    ways: './data/aml_all/ways_aml_all_gtfs2026-05-20_run20260518_20260519.geojson',
+                    boundaries: './data/aml_all/prioritization_area_polygon_aml_all_gtfs2026-05-20_run20260518_20260519.geojson',
+                    way_data: './data/aml_all/way_data_aml_all_gtfs2026-05-20_run20260518_20260519.json',
+                    metadata: './data/aml_all/metadata_aml_all_gtfs2026-05-20_run20260518_20260519.json',
+                    route_data: './data/aml_all/route_data_aml_all_gtfs2026-05-20_run20260518_20260519.json',
+                    shape_data: './data/aml_all/shape_data_aml_all_gtfs2026-05-20_run20260518_20260519.json',
+                    zip: './data/aml_all/aml_all.zip'
+                }
+            }
+        ]
+    },
+    {
         id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260316',
         name: 'Carris',
         region: 'Lisbon, PT',
         rt_data: true,
         logo: './static/regions/carris.png',
-        files: {
-            ways: './data/lisbon/ways_lisboa_rt_gtfs2026-02-04_run20260414.geojson',
-            way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-02-04_run20260414.json',
-            metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-02-04_run20260414.json',
-            route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-02-04_run20260414.json',
-            shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-02-04_run20260414.json',
-            zip: './data/lisbon/lisbon.zip'
-        },
-        date: 'Feb 2026',
-        color: '#003f8f'
+        date: 'May 2026',
+        color: '#003f8f',
+        layers: [
+            {
+                id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260316',
+                name: 'All network',
+                date: 'May 2026',
+                rt_data: true,
+                files: {
+                    ways: './data/lisbon/ways_lisboa_rt_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: './data/lisbon/prioritization_area_polygon_lisboa_rt_gtfs2026-05-20_run20260518.geojson',
+                    way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
+                    metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-05-20_run20260518.json',
+                    route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
+                    shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
+                    zip: './data/lisbon/lisbon.zip'
+                }
+            }
+        ]
     },
     {
         id: 'aml',
@@ -41,16 +77,85 @@ export const DB_REGIONS: DataRegion[] = [
         region: 'Lisbon Metro Area, PT',
         rt_data: true,
         logo: './static/regions/carrismetropolitana.png',
-        files: {
-            ways: './data/aml/ways_aml_rt_gtfs2026-02-04_run20260414.geojson',
-            way_data: './data/aml/way_data_aml_rt_gtfs2026-02-04_run20260414.json',
-            metadata: './data/aml/metadata_aml_rt_gtfs2026-02-04_run20260414.json',
-            route_data: './data/aml/route_data_aml_rt_gtfs2026-02-04_run20260414.json',
-            shape_data: './data/aml/shape_data_aml_rt_gtfs2026-02-04_run20260414.json',
-            zip: './data/aml/aml.zip'
-        },
-        date: 'Feb 2026',
-        color: '#ffdd01'
+        date: 'Feb - May 2026',
+        color: '#ffdd01',
+        layers: [
+            {
+                id: 'aml_1_2_3_4',
+                name: 'All network',
+                date: 'May 2026',
+                rt_data: true,
+                files: {
+                    ways: './data/aml_1_2_3_4/ways_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: './data/aml_1_2_3_4/prioritization_area_polygon_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.geojson',
+                    way_data: './data/aml_1_2_3_4/way_data_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
+                    metadata: './data/aml_1_2_3_4/metadata_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
+                    route_data: './data/aml_1_2_3_4/route_data_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
+                    shape_data: './data/aml_1_2_3_4/shape_data_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
+                    zip: './data/aml_1_2_3_4/aml_1_2_3_4.zip'
+                }
+            },
+            {
+                id: 'aml_a1',
+                name: 'Area 1',
+                date: 'May 2026',
+                rt_data: true,
+                files: {
+                    ways: './data/aml_1/ways_aml_rt_area_1_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: './data/aml_1/prioritization_area_polygon_aml_rt_area_1_gtfs2026-05-20_run20260518.geojson',
+                    way_data: './data/aml_1/way_data_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
+                    metadata: './data/aml_1/metadata_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
+                    route_data: './data/aml_1/route_data_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
+                    shape_data: './data/aml_1/shape_data_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
+                    zip: './data/aml_1/aml_1.zip'
+                }
+            },
+            {
+                id: 'aml_a2',
+                name: 'Area 2',
+                date: 'May 2026',
+                rt_data: true,
+                files: {
+                    ways: './data/aml_2/ways_aml_rt_area_2_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: './data/aml_2/prioritization_area_polygon_aml_rt_area_2_gtfs2026-05-20_run20260518.geojson',
+                    way_data: './data/aml_2/way_data_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
+                    metadata: './data/aml_2/metadata_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
+                    route_data: './data/aml_2/route_data_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
+                    shape_data: './data/aml_2/shape_data_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
+                    zip: './data/aml_2/aml_2.zip'
+                }
+            },
+            {
+                id: 'aml_a3',
+                name: 'Area 3',
+                date: 'May 2026',
+                rt_data: true,
+                files: {
+                    ways: './data/aml_3/ways_aml_rt_area_3_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: './data/aml_3/prioritization_area_polygon_aml_rt_area_3_gtfs2026-05-20_run20260518.geojson',
+                    way_data: './data/aml_3/way_data_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
+                    metadata: './data/aml_3/metadata_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
+                    route_data: './data/aml_3/route_data_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
+                    shape_data: './data/aml_3/shape_data_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
+                    zip: './data/aml_3/aml_3.zip'
+                }
+            },
+            {
+                id: 'aml_a4',
+                name: 'Area 4',
+                date: 'May 2026',
+                rt_data: true,
+                files: {
+                    ways: './data/aml_4/ways_aml_rt_area_4_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: './data/aml_4/prioritization_area_polygon_aml_rt_area_4_gtfs2026-05-20_run20260518.geojson',
+                    way_data: './data/aml_4/way_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
+                    metadata: './data/aml_4/metadata_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
+                    route_data: './data/aml_4/route_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
+                    shape_data: './data/aml_4/shape_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
+                    zip: './data/aml_4/aml_4.zip'
+                }
+            }
+        ]
     },
     {
         id: 'cascais',
@@ -58,15 +163,102 @@ export const DB_REGIONS: DataRegion[] = [
         region: 'Cascais, PT',
         rt_data: false,
         logo: './static/regions/mobicascais.png',
-        files: {
-            ways: './data/cascais/ways_cascais_gtfs2026-04-14_run20260414.geojson',
-            way_data: './data/cascais/way_data_cascais_gtfs2026-04-14_run20260414.json',
-            metadata: './data/cascais/metadata_cascais_gtfs2026-04-14_run20260414.json',
-            route_data: './data/cascais/route_data_cascais_gtfs2026-04-14_run20260414.json',
-            shape_data: './data/cascais/shape_data_cascais_gtfs2026-04-14_run20260414.json',
-            zip: './data/cascais/cascais.zip'
-        },
-        date: 'Apr 2026',
-        color: '#31bcad'
+        date: 'May 2026',
+        color: '#31bcad',
+        layers: [
+            {
+                id: 'cascais',
+                name: 'All network',
+                date: 'May 2026',
+                rt_data: false,
+                files: {
+                    ways: './data/cascais/ways_cascais_gtfs2026-05-20_run20260519.geojson',
+                    boundaries: './data/cascais/prioritization_area_polygon_cascais_gtfs2026-05-20_run20260519.geojson',
+                    way_data: './data/cascais/way_data_cascais_gtfs2026-05-20_run20260519.json',
+                    metadata: './data/cascais/metadata_cascais_gtfs2026-05-20_run20260519.json',
+                    route_data: './data/cascais/route_data_cascais_gtfs2026-05-20_run20260519.json',
+                    shape_data: './data/cascais/shape_data_cascais_gtfs2026-05-20_run20260519.json',
+                    zip: './data/cascais/cascais.zip'
+                }
+            }
+        ]
+    },
+    {
+        id: 'barreiro',
+        name: 'Barreiro',
+        region: 'Barreiro, PT',
+        rt_data: true,
+        logo: './static/regions/tcb.png',
+        date: 'May 2026',
+        color: '#97d700',
+        layers: [
+            {
+                id: 'barreiro',
+                name: 'All network',
+                date: 'May 2026',
+                rt_data: true,
+                files: {
+                    ways: './data/barreiro/ways_barreiro_gtfs2026-05-20_run20260519.geojson',
+                    boundaries: './data/barreiro/prioritization_area_polygon_barreiro_gtfs2026-05-20_run20260519.geojson',
+                    way_data: './data/barreiro/way_data_barreiro_gtfs2026-05-20_run20260519.json',
+                    metadata: './data/barreiro/metadata_barreiro_gtfs2026-05-20_run20260519.json',
+                    route_data: './data/barreiro/route_data_barreiro_gtfs2026-05-20_run20260519.json',
+                    shape_data: './data/barreiro/shape_data_barreiro_gtfs2026-05-20_run20260519.json',
+                    zip: './data/barreiro/barreiro.zip'
+                }
+            }
+        ]
+    },
+    {
+        id: 'porto',
+        name: 'STCP',
+        region: 'Porto, PT',
+        rt_data: true,
+        logo: './static/regions/stcp.png',
+        date: 'May 2026',
+        color: '#0074c7',
+        layers: [
+            {
+                id: 'porto',
+                name: 'All network',
+                date: 'May 2026',
+                rt_data: true,
+                files: {
+                    ways: './data/porto/ways_stcp_gtfs2026-05-20_run20260519.geojson',
+                    boundaries: './data/porto/prioritization_area_polygon_stcp_gtfs2026-05-20_run20260519.geojson',
+                    way_data: './data/porto/way_data_stcp_gtfs2026-05-20_run20260519.json',
+                    metadata: './data/porto/metadata_stcp_gtfs2026-05-20_run20260519.json',
+                    route_data: './data/porto/route_data_stcp_gtfs2026-05-20_run20260519.json',
+                    shape_data: './data/porto/shape_data_stcp_gtfs2026-05-20_run20260519.json',
+                    zip: './data/porto/porto.zip'
+                }
+            }
+        ]
+    },
+    {
+        id: 'madrid',
+        name: 'EMT Madrid',
+        region: 'Madrid, ES',
+        rt_data: false,
+        logo: './static/regions/emt.png',
+        date: 'May 2026',
+        color: '#2c7abf',
+        layers: [
+            {
+                id: 'madrid',
+                name: 'All network',
+                date: 'May 2026',
+                rt_data: false,
+                files: {
+                    ways: './data/madrid/ways_madrid_gtfs2026-05-20_run20260519.geojson',
+                    way_data: './data/madrid/way_data_madrid_gtfs2026-05-20_run20260519.json',
+                    metadata: './data/madrid/metadata_madrid_gtfs2026-05-20_run20260519.json',
+                    route_data: './data/madrid/route_data_madrid_gtfs2026-05-20_run20260519.json',
+                    shape_data: './data/madrid/shape_data_madrid_gtfs2026-05-20_run20260519.json',
+                    boundaries: './data/madrid/prioritization_area_polygon_madrid_gtfs2026-05-20_run20260519.geojson',
+                    zip: './data/madrid/madrid.zip'
+                }
+            }
+        ]
     }
 ]
