@@ -214,8 +214,8 @@
                                         </td>
                                         <td class="px-4 py-2"
                                             >{row.properties.name &&
-                                            row.properties.name instanceof
-                                                String
+                                            typeof row.properties.name ===
+                                                "string"
                                                 ? row.properties.name
                                                 : "-"}</td
                                         >
