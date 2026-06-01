@@ -110,7 +110,8 @@
                                         {table}
                                         field={(r) =>
                                             r.properties.name &&
-                                            r.properties.name instanceof String
+                                            typeof r.properties.name ===
+                                                "string"
                                                 ? r.properties.name
                                                 : ""}>Name</ThSort
                                     >
