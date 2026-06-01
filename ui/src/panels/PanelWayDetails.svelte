@@ -54,7 +54,7 @@
                     </a>
                 </div>
                 <h4 class="text-lg font-semibold">
-                    {way.name && way.name instanceof String
+                    {way.name && typeof way.name === "string"
                         ? way.name
                         : "Unnamed Way"}
                 </h4>
