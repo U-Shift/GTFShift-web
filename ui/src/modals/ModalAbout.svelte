@@ -96,7 +96,7 @@
                 <h4 class="font-bold mb-2">Developers</h4>
                 <div class="space-y-1">
                     <p class="flex items-center gap-2">
-                        Gonçalo Matos
+                        Gonçalo F. Matos
                         <span class="text-xs text-muted-foreground"
                             >(Author, Maintainer)</span
                         >
@@ -104,7 +104,7 @@
                             href="https://orcid.org/0009-0001-3489-1732"
                             target="_blank"
                             class="text-[#A6CE39] hover:opacity-80"
-                            aria-label="ORCID for Gonçalo Matos"
+                            aria-label="ORCID for Gonçalo F. Matos"
                         >
                             <i class="fab fa-orcid"></i>
                         </a>
