@@ -3,6 +3,8 @@ import type { DataRegion } from "./types/DataRegion";
 
 export const BASE_URL: string = 'https://localhost:5173/';
 
+export const ABOUT_METHODOLOGICAL_SLIDES: string = 'https://ushift.tecnico.ulisboa.pt/~ushift.daemon/apps/gtfshift/slides_gmu_20260512';
+
 export const MAP_DARK: string = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png';
 export const MAP_LIGHT: string = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
 export const MAP_INIT_ZOOM: number = 3; // 3
