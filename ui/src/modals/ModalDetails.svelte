@@ -400,7 +400,7 @@
                                     <td class="px-4 py-2 flex flex-wrap gap-1">
                                         {#each geoData.metadata.osm_query as q}
                                             <kbd
-                                                class="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono"
+                                                class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
                                                 >{q.key}={q.value}</kbd
                                             >
                                         {/each}
@@ -417,6 +417,21 @@
                                                 class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
                                                 >{geoData.metadata.rt
                                                     .period}</kbd
+                                            ></td
+                                        >
+                                    </tr>
+                                {/if}
+                                {#if geoData.metadata.rt && geoData.metadata.rt.notes}
+                                    <tr class="bg-muted/30">
+                                        <th
+                                            class="px-4 py-2 text-left font-medium text-muted-foreground"
+                                            >Real-time data notes</th
+                                        >
+                                        <td class="px-4 py-2"
+                                            ><span
+                                                class="text-xs text-primary [&_a]:underline"
+                                                >{@html geoData.metadata.rt
+                                                    .notes}</span
                                             ></td
                                         >
                                     </tr>
@@ -516,6 +531,7 @@
                     >
                         <i class="fas fa-terminal"></i> R Analysis Code
                     </h5>
+
                     <a
                         href="https://u-shift.github.io/GTFShift/articles/prioritize.html"
                         target="_blank"

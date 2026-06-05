@@ -86,6 +86,7 @@ export interface GeoPrioritization {
             url: string;
             period: string;
             stop_buffer_size: number;
+            notes?: string;
         } | undefined;
         execution: {
             moment: string;
