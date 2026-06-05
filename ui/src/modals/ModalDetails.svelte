@@ -540,6 +540,25 @@
                         View Tutorial
                     </a>
                 </div>
+                <p class="text-muted-foreground text-sm mb-3">
+                    Below is a simplified version of the R script used to
+                    generate the analysis presented in this dashboard. Refer to
+                    the <a
+                        href="https://u-shift.github.io/GTFShift/articles/prioritize.html"
+                        target="_blank"
+                        class="text-primary hover:underline">tutorial</a
+                    >
+                    for a full description of the workflow and the assumptions behind
+                    the analysis or to the raw scripts at the
+                    <a
+                        href="https://github.com/U-Shift/GTFShift-web/tree/main/scripts"
+                        target="_blank"
+                        class="text-primary hover:underline"
+                    >
+                        GitHub repository</a
+                    >
+                    for a reproducible analysis pipeline.
+                </p>
 
                 {#if geoData}
                     <div
