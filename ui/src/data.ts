@@ -1,7 +1,9 @@
 import type { DataRegion } from "./types/DataRegion";
 
 
-export const BASE_URL: string = 'https://localhost:5173/';
+export const BASE_URL: string = './data'; // 'https://ushift.tecnico.ulisboa.pt/apps/gtfshift/' // 'https://localhost:5173/';
+
+export const ABOUT_METHODOLOGICAL_SLIDES: string = 'https://ushift.tecnico.ulisboa.pt/~ushift.daemon/apps/gtfshift/slides_gmu_20260512';
 
 export const MAP_DARK: string = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png';
 export const MAP_LIGHT: string = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
@@ -23,7 +25,7 @@ export const DB_REGIONS: DataRegion[] = [
         name: 'Lisbon Metro Area',
         region: 'Lisbon Metro Area, PT',
         rt_data: true,
-        logo: './static/regions/navegante.png',
+        logo: BASE_URL + '/static/regions/navegante.png',
         date: 'May 2026',
         color: '#fd0',
         layers: [
@@ -33,14 +35,15 @@ export const DB_REGIONS: DataRegion[] = [
                 notes: 'Speed data is not available for MobiCascais.',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 92.1,
                 files: {
-                    ways: './data/aml_all/ways_aml_all_gtfs2026-05-20_run20260518_20260519.geojson',
-                    boundaries: './data/aml_all/prioritization_area_polygon_aml_all_gtfs2026-05-20_run20260518_20260519.geojson',
-                    way_data: './data/aml_all/way_data_aml_all_gtfs2026-05-20_run20260518_20260519.json',
-                    metadata: './data/aml_all/metadata_aml_all_gtfs2026-05-20_run20260518_20260519.json',
-                    route_data: './data/aml_all/route_data_aml_all_gtfs2026-05-20_run20260518_20260519.json',
-                    shape_data: './data/aml_all/shape_data_aml_all_gtfs2026-05-20_run20260518_20260519.json',
-                    zip: './data/aml_all/aml_all.zip'
+                    ways: BASE_URL + '/data/aml_all/ways_aml_all_gtfs2026-05-20_run20260518_20260519.geojson',
+                    boundaries: BASE_URL + '/data/aml_all/prioritization_area_polygon_aml_all_gtfs2026-05-20_run20260518_20260519.geojson',
+                    way_data: BASE_URL + '/data/aml_all/way_data_aml_all_gtfs2026-05-20_run20260518_20260519.json',
+                    metadata: BASE_URL + '/data/aml_all/metadata_aml_all_gtfs2026-05-20_run20260518_20260519.json',
+                    route_data: BASE_URL + '/data/aml_all/route_data_aml_all_gtfs2026-05-20_run20260518_20260519.json',
+                    shape_data: BASE_URL + '/data/aml_all/shape_data_aml_all_gtfs2026-05-20_run20260518_20260519.json',
+                    zip: BASE_URL + '/data/aml_all/aml_all.zip'
                 }
             }
         ]
@@ -50,7 +53,7 @@ export const DB_REGIONS: DataRegion[] = [
         name: 'Carris',
         region: 'Lisbon, PT',
         rt_data: true,
-        logo: './static/regions/carris.png',
+        logo: BASE_URL + '/static/regions/carris.png',
         date: 'May 2026',
         color: '#003f8f',
         layers: [
@@ -59,14 +62,15 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'All network',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 99.7,
                 files: {
-                    ways: './data/lisbon/ways_lisboa_rt_gtfs2026-05-20_run20260518.geojson',
-                    boundaries: './data/lisbon/prioritization_area_polygon_lisboa_rt_gtfs2026-05-20_run20260518.geojson',
-                    way_data: './data/lisbon/way_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
-                    metadata: './data/lisbon/metadata_lisboa_rt_gtfs2026-05-20_run20260518.json',
-                    route_data: './data/lisbon/route_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
-                    shape_data: './data/lisbon/shape_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
-                    zip: './data/lisbon/lisbon.zip'
+                    ways: BASE_URL + '/data/lisbon/ways_lisboa_rt_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: BASE_URL + '/data/lisbon/prioritization_area_polygon_lisboa_rt_gtfs2026-05-20_run20260518.geojson',
+                    way_data: BASE_URL + '/data/lisbon/way_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
+                    metadata: BASE_URL + '/data/lisbon/metadata_lisboa_rt_gtfs2026-05-20_run20260518.json',
+                    route_data: BASE_URL + '/data/lisbon/route_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
+                    shape_data: BASE_URL + '/data/lisbon/shape_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
+                    zip: BASE_URL + '/data/lisbon/lisbon.zip'
                 }
             }
         ]
@@ -76,7 +80,7 @@ export const DB_REGIONS: DataRegion[] = [
         name: 'Carris Metropolitana',
         region: 'Lisbon Metro Area, PT',
         rt_data: true,
-        logo: './static/regions/carrismetropolitana.png',
+        logo: BASE_URL + '/static/regions/carrismetropolitana.png',
         date: 'Feb - May 2026',
         color: '#ffdd01',
         layers: [
@@ -85,14 +89,15 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'All network',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 88.1,
                 files: {
-                    ways: './data/aml_1_2_3_4/ways_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.geojson',
-                    boundaries: './data/aml_1_2_3_4/prioritization_area_polygon_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.geojson',
-                    way_data: './data/aml_1_2_3_4/way_data_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
-                    metadata: './data/aml_1_2_3_4/metadata_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
-                    route_data: './data/aml_1_2_3_4/route_data_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
-                    shape_data: './data/aml_1_2_3_4/shape_data_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
-                    zip: './data/aml_1_2_3_4/aml_1_2_3_4.zip'
+                    ways: BASE_URL + '/data/aml_1_2_3_4/ways_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: BASE_URL + '/data/aml_1_2_3_4/prioritization_area_polygon_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.geojson',
+                    way_data: BASE_URL + '/data/aml_1_2_3_4/way_data_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
+                    metadata: BASE_URL + '/data/aml_1_2_3_4/metadata_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
+                    route_data: BASE_URL + '/data/aml_1_2_3_4/route_data_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
+                    shape_data: BASE_URL + '/data/aml_1_2_3_4/shape_data_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.json',
+                    zip: BASE_URL + '/data/aml_1_2_3_4/aml_1_2_3_4.zip'
                 }
             },
             {
@@ -100,14 +105,15 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'Area 1',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 84.9,
                 files: {
-                    ways: './data/aml_1/ways_aml_rt_area_1_gtfs2026-05-20_run20260518.geojson',
-                    boundaries: './data/aml_1/prioritization_area_polygon_aml_rt_area_1_gtfs2026-05-20_run20260518.geojson',
-                    way_data: './data/aml_1/way_data_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
-                    metadata: './data/aml_1/metadata_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
-                    route_data: './data/aml_1/route_data_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
-                    shape_data: './data/aml_1/shape_data_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
-                    zip: './data/aml_1/aml_1.zip'
+                    ways: BASE_URL + '/data/aml_1/ways_aml_rt_area_1_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: BASE_URL + '/data/aml_1/prioritization_area_polygon_aml_rt_area_1_gtfs2026-05-20_run20260518.geojson',
+                    way_data: BASE_URL + '/data/aml_1/way_data_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
+                    metadata: BASE_URL + '/data/aml_1/metadata_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
+                    route_data: BASE_URL + '/data/aml_1/route_data_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
+                    shape_data: BASE_URL + '/data/aml_1/shape_data_aml_rt_area_1_gtfs2026-05-20_run20260518.json',
+                    zip: BASE_URL + '/data/aml_1/aml_1.zip'
                 }
             },
             {
@@ -115,14 +121,15 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'Area 2',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 83.1,
                 files: {
-                    ways: './data/aml_2/ways_aml_rt_area_2_gtfs2026-05-20_run20260518.geojson',
-                    boundaries: './data/aml_2/prioritization_area_polygon_aml_rt_area_2_gtfs2026-05-20_run20260518.geojson',
-                    way_data: './data/aml_2/way_data_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
-                    metadata: './data/aml_2/metadata_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
-                    route_data: './data/aml_2/route_data_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
-                    shape_data: './data/aml_2/shape_data_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
-                    zip: './data/aml_2/aml_2.zip'
+                    ways: BASE_URL + '/data/aml_2/ways_aml_rt_area_2_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: BASE_URL + '/data/aml_2/prioritization_area_polygon_aml_rt_area_2_gtfs2026-05-20_run20260518.geojson',
+                    way_data: BASE_URL + '/data/aml_2/way_data_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
+                    metadata: BASE_URL + '/data/aml_2/metadata_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
+                    route_data: BASE_URL + '/data/aml_2/route_data_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
+                    shape_data: BASE_URL + '/data/aml_2/shape_data_aml_rt_area_2_gtfs2026-05-20_run20260518.json',
+                    zip: BASE_URL + '/data/aml_2/aml_2.zip'
                 }
             },
             {
@@ -130,14 +137,15 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'Area 3',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 98.7,
                 files: {
-                    ways: './data/aml_3/ways_aml_rt_area_3_gtfs2026-05-20_run20260518.geojson',
-                    boundaries: './data/aml_3/prioritization_area_polygon_aml_rt_area_3_gtfs2026-05-20_run20260518.geojson',
-                    way_data: './data/aml_3/way_data_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
-                    metadata: './data/aml_3/metadata_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
-                    route_data: './data/aml_3/route_data_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
-                    shape_data: './data/aml_3/shape_data_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
-                    zip: './data/aml_3/aml_3.zip'
+                    ways: BASE_URL + '/data/aml_3/ways_aml_rt_area_3_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: BASE_URL + '/data/aml_3/prioritization_area_polygon_aml_rt_area_3_gtfs2026-05-20_run20260518.geojson',
+                    way_data: BASE_URL + '/data/aml_3/way_data_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
+                    metadata: BASE_URL + '/data/aml_3/metadata_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
+                    route_data: BASE_URL + '/data/aml_3/route_data_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
+                    shape_data: BASE_URL + '/data/aml_3/shape_data_aml_rt_area_3_gtfs2026-05-20_run20260518.json',
+                    zip: BASE_URL + '/data/aml_3/aml_3.zip'
                 }
             },
             {
@@ -145,14 +153,15 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'Area 4',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 88.5,
                 files: {
-                    ways: './data/aml_4/ways_aml_rt_area_4_gtfs2026-05-20_run20260518.geojson',
-                    boundaries: './data/aml_4/prioritization_area_polygon_aml_rt_area_4_gtfs2026-05-20_run20260518.geojson',
-                    way_data: './data/aml_4/way_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
-                    metadata: './data/aml_4/metadata_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
-                    route_data: './data/aml_4/route_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
-                    shape_data: './data/aml_4/shape_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
-                    zip: './data/aml_4/aml_4.zip'
+                    ways: BASE_URL + '/data/aml_4/ways_aml_rt_area_4_gtfs2026-05-20_run20260518.geojson',
+                    boundaries: BASE_URL + '/data/aml_4/prioritization_area_polygon_aml_rt_area_4_gtfs2026-05-20_run20260518.geojson',
+                    way_data: BASE_URL + '/data/aml_4/way_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
+                    metadata: BASE_URL + '/data/aml_4/metadata_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
+                    route_data: BASE_URL + '/data/aml_4/route_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
+                    shape_data: BASE_URL + '/data/aml_4/shape_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
+                    zip: BASE_URL + '/data/aml_4/aml_4.zip'
                 }
             }
         ]
@@ -162,7 +171,7 @@ export const DB_REGIONS: DataRegion[] = [
         name: 'MobiCascais',
         region: 'Cascais, PT',
         rt_data: false,
-        logo: './static/regions/mobicascais.png',
+        logo: BASE_URL + '/static/regions/mobicascais.png',
         date: 'May 2026',
         color: '#31bcad',
         layers: [
@@ -171,14 +180,15 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'All network',
                 date: 'May 2026',
                 rt_data: false,
+                matched_frequencies_peak: 97.0,
                 files: {
-                    ways: './data/cascais/ways_cascais_gtfs2026-05-20_run20260519.geojson',
-                    boundaries: './data/cascais/prioritization_area_polygon_cascais_gtfs2026-05-20_run20260519.geojson',
-                    way_data: './data/cascais/way_data_cascais_gtfs2026-05-20_run20260519.json',
-                    metadata: './data/cascais/metadata_cascais_gtfs2026-05-20_run20260519.json',
-                    route_data: './data/cascais/route_data_cascais_gtfs2026-05-20_run20260519.json',
-                    shape_data: './data/cascais/shape_data_cascais_gtfs2026-05-20_run20260519.json',
-                    zip: './data/cascais/cascais.zip'
+                    ways: BASE_URL + '/data/cascais/ways_cascais_gtfs2026-05-20_run20260519.geojson',
+                    boundaries: BASE_URL + '/data/cascais/prioritization_area_polygon_cascais_gtfs2026-05-20_run20260519.geojson',
+                    way_data: BASE_URL + '/data/cascais/way_data_cascais_gtfs2026-05-20_run20260519.json',
+                    metadata: BASE_URL + '/data/cascais/metadata_cascais_gtfs2026-05-20_run20260519.json',
+                    route_data: BASE_URL + '/data/cascais/route_data_cascais_gtfs2026-05-20_run20260519.json',
+                    shape_data: BASE_URL + '/data/cascais/shape_data_cascais_gtfs2026-05-20_run20260519.json',
+                    zip: BASE_URL + '/data/cascais/cascais.zip'
                 }
             }
         ]
@@ -188,7 +198,7 @@ export const DB_REGIONS: DataRegion[] = [
         name: 'Barreiro',
         region: 'Barreiro, PT',
         rt_data: true,
-        logo: './static/regions/tcb.png',
+        logo: BASE_URL + '/static/regions/tcb.png',
         date: 'May 2026',
         color: '#97d700',
         layers: [
@@ -197,14 +207,15 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'All network',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 97.2,
                 files: {
-                    ways: './data/barreiro/ways_barreiro_gtfs2026-05-20_run20260519.geojson',
-                    boundaries: './data/barreiro/prioritization_area_polygon_barreiro_gtfs2026-05-20_run20260519.geojson',
-                    way_data: './data/barreiro/way_data_barreiro_gtfs2026-05-20_run20260519.json',
-                    metadata: './data/barreiro/metadata_barreiro_gtfs2026-05-20_run20260519.json',
-                    route_data: './data/barreiro/route_data_barreiro_gtfs2026-05-20_run20260519.json',
-                    shape_data: './data/barreiro/shape_data_barreiro_gtfs2026-05-20_run20260519.json',
-                    zip: './data/barreiro/barreiro.zip'
+                    ways: BASE_URL + '/data/barreiro/ways_barreiro_gtfs2026-05-20_run20260519.geojson',
+                    boundaries: BASE_URL + '/data/barreiro/prioritization_area_polygon_barreiro_gtfs2026-05-20_run20260519.geojson',
+                    way_data: BASE_URL + '/data/barreiro/way_data_barreiro_gtfs2026-05-20_run20260519.json',
+                    metadata: BASE_URL + '/data/barreiro/metadata_barreiro_gtfs2026-05-20_run20260519.json',
+                    route_data: BASE_URL + '/data/barreiro/route_data_barreiro_gtfs2026-05-20_run20260519.json',
+                    shape_data: BASE_URL + '/data/barreiro/shape_data_barreiro_gtfs2026-05-20_run20260519.json',
+                    zip: BASE_URL + '/data/barreiro/barreiro.zip'
                 }
             }
         ]
@@ -214,7 +225,7 @@ export const DB_REGIONS: DataRegion[] = [
         name: 'STCP',
         region: 'Porto, PT',
         rt_data: true,
-        logo: './static/regions/stcp.png',
+        logo: BASE_URL + '/static/regions/stcp.png',
         date: 'May 2026',
         color: '#0074c7',
         layers: [
@@ -223,14 +234,15 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'All network',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 72.0,
                 files: {
-                    ways: './data/porto/ways_stcp_gtfs2026-05-20_run20260519.geojson',
-                    boundaries: './data/porto/prioritization_area_polygon_stcp_gtfs2026-05-20_run20260519.geojson',
-                    way_data: './data/porto/way_data_stcp_gtfs2026-05-20_run20260519.json',
-                    metadata: './data/porto/metadata_stcp_gtfs2026-05-20_run20260519.json',
-                    route_data: './data/porto/route_data_stcp_gtfs2026-05-20_run20260519.json',
-                    shape_data: './data/porto/shape_data_stcp_gtfs2026-05-20_run20260519.json',
-                    zip: './data/porto/porto.zip'
+                    ways: BASE_URL + '/data/porto/ways_stcp_gtfs2026-05-20_run20260519.geojson',
+                    boundaries: BASE_URL + '/data/porto/prioritization_area_polygon_stcp_gtfs2026-05-20_run20260519.geojson',
+                    way_data: BASE_URL + '/data/porto/way_data_stcp_gtfs2026-05-20_run20260519.json',
+                    metadata: BASE_URL + '/data/porto/metadata_stcp_gtfs2026-05-20_run20260519.json',
+                    route_data: BASE_URL + '/data/porto/route_data_stcp_gtfs2026-05-20_run20260519.json',
+                    shape_data: BASE_URL + '/data/porto/shape_data_stcp_gtfs2026-05-20_run20260519.json',
+                    zip: BASE_URL + '/data/porto/porto.zip'
                 }
             }
         ]
@@ -240,7 +252,7 @@ export const DB_REGIONS: DataRegion[] = [
         name: 'EMT Madrid',
         region: 'Madrid, ES',
         rt_data: false,
-        logo: './static/regions/emt.png',
+        logo: BASE_URL + '/static/regions/emt.png',
         date: 'May 2026',
         color: '#2c7abf',
         layers: [
@@ -249,14 +261,15 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'All network',
                 date: 'May 2026',
                 rt_data: false,
+                matched_frequencies_peak: 88.5,
                 files: {
-                    ways: './data/madrid/ways_madrid_gtfs2026-05-20_run20260519.geojson',
-                    way_data: './data/madrid/way_data_madrid_gtfs2026-05-20_run20260519.json',
-                    metadata: './data/madrid/metadata_madrid_gtfs2026-05-20_run20260519.json',
-                    route_data: './data/madrid/route_data_madrid_gtfs2026-05-20_run20260519.json',
-                    shape_data: './data/madrid/shape_data_madrid_gtfs2026-05-20_run20260519.json',
-                    boundaries: './data/madrid/prioritization_area_polygon_madrid_gtfs2026-05-20_run20260519.geojson',
-                    zip: './data/madrid/madrid.zip'
+                    ways: BASE_URL + '/data/madrid/ways_madrid_gtfs2026-05-20_run20260519.geojson',
+                    way_data: BASE_URL + '/data/madrid/way_data_madrid_gtfs2026-05-20_run20260519.json',
+                    metadata: BASE_URL + '/data/madrid/metadata_madrid_gtfs2026-05-20_run20260519.json',
+                    route_data: BASE_URL + '/data/madrid/route_data_madrid_gtfs2026-05-20_run20260519.json',
+                    shape_data: BASE_URL + '/data/madrid/shape_data_madrid_gtfs2026-05-20_run20260519.json',
+                    boundaries: BASE_URL + '/data/madrid/prioritization_area_polygon_madrid_gtfs2026-05-20_run20260519.geojson',
+                    zip: BASE_URL + '/data/madrid/madrid.zip'
                 }
             }
         ]

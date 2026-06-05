@@ -361,6 +361,7 @@
 
             <div class="flex flex-col gap-2 mt-3">
                 {#each filteredRegions as r}
+                    {@const peak = r.layers[0]?.matched_frequencies_peak}
                     <button
                         class="group relative w-full text-left rounded-xl border border-border bg-background transition-all duration-200 p-3 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                         onclick={() => handleRegionChange(r.id)}
@@ -437,6 +438,14 @@
                                         class="text-xs text-muted-foreground mt-0.5"
                                     >
                                         <i class="fas fa-road mr-1"></i> Static analysis
+                                    </p>
+                                {/if}
+                                {#if peak !== undefined}
+                                    <p
+                                        class="text-xs text-muted-foreground mt-0.5"
+                                    >
+                                        <i class="fas fa-chart-simple mr-1"></i>
+                                        {peak}% of services matched (at peak)
                                     </p>
                                 {/if}
                             </div>
@@ -545,6 +554,15 @@
                                         class="text-xs text-muted-foreground mt-0.5"
                                     >
                                         <i class="fas fa-road mr-1"></i> Static analysis
+                                    </p>
+                                {/if}
+                                {#if layer.matched_frequencies_peak}
+                                    <p
+                                        class="text-xs text-muted-foreground mt-0.5"
+                                    >
+                                        <i class="fas fa-chart-simple mr-1"></i>
+                                        {layer.matched_frequencies_peak}% of
+                                        services matched (at peak)
                                     </p>
                                 {/if}
                             </div>
@@ -1474,4 +1492,7 @@
 
 <ModalDetails bind:open={action_modal_details_open} {geoData} />
 
-<ModalDownload bind:open={action_modal_download_open} zipUrl={selected_layer?.files.zip} />
+<ModalDownload
+    bind:open={action_modal_download_open}
+    zipUrl={selected_layer?.files.zip}
+/>

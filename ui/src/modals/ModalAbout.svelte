@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Button } from "$lib/components/ui/button/index.js";
+    import { ABOUT_METHODOLOGICAL_SLIDES } from "../data";
 
     let { open = $bindable(false) } = $props();
 </script>
@@ -64,8 +65,13 @@
                 potential and capabilities to a non-technical audience, while
                 disseminating the outputs of these real world scenarios.
             </p>
+            <p>
+                For details on the methodology used to obtain the results
+                presented in this dashboard, please refer to the methodological
+                slides and the R package documentation in the buttons below.
+            </p>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2">
                 <Button
                     variant="outline"
                     href="https://github.com/U-Shift/GTFShift-web/issues/new?template=new-region.yml"
@@ -82,6 +88,15 @@
                 >
                     <i class="fa fa-book mr-2"></i> R package docs
                 </Button>
+
+                <Button
+                    variant="outline"
+                    href={ABOUT_METHODOLOGICAL_SLIDES}
+                    target="_blank"
+                    class="w-full justify-start"
+                >
+                    <i class="fa fa-file-lines mr-2"></i> Methodological slides
+                </Button>
                 <Button
                     variant="outline"
                     href="https://github.com/U-Shift/GTFShift-web/"
@@ -96,7 +111,7 @@
                 <h4 class="font-bold mb-2">Developers</h4>
                 <div class="space-y-1">
                     <p class="flex items-center gap-2">
-                        Gonçalo Matos
+                        Gonçalo F. Matos
                         <span class="text-xs text-muted-foreground"
                             >(Author, Maintainer)</span
                         >
@@ -104,7 +119,7 @@
                             href="https://orcid.org/0009-0001-3489-1732"
                             target="_blank"
                             class="text-[#A6CE39] hover:opacity-80"
-                            aria-label="ORCID for Gonçalo Matos"
+                            aria-label="ORCID for Gonçalo F. Matos"
                         >
                             <i class="fab fa-orcid"></i>
                         </a>
