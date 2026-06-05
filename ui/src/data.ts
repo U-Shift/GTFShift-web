@@ -1,7 +1,7 @@
 import type { DataRegion } from "./types/DataRegion";
 
 
-export const BASE_URL: string = './data'; // 'https://ushift.tecnico.ulisboa.pt/apps/gtfshift/' // 'https://localhost:5173/';
+export const BASE_URL: string = '.'; // 'https://ushift.tecnico.ulisboa.pt/apps/gtfshift/' // 'https://localhost:5173/';
 
 export const ABOUT_METHODOLOGICAL_SLIDES: string = 'https://ushift.tecnico.ulisboa.pt/~ushift.daemon/apps/gtfshift/slides_gmu_20260512';
 
