@@ -4,6 +4,7 @@ export type RegionLayer = {
     date: string;
     rt_data: boolean;
     notes?: string;
+    matched_frequencies_peak?: number;
     files: {
         ways: string;
         way_data: string;

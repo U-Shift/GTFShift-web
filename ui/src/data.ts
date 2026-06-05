@@ -35,6 +35,7 @@ export const DB_REGIONS: DataRegion[] = [
                 notes: 'Speed data is not available for MobiCascais.',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 92.1,
                 files: {
                     ways: './data/aml_all/ways_aml_all_gtfs2026-05-20_run20260518_20260519.geojson',
                     boundaries: './data/aml_all/prioritization_area_polygon_aml_all_gtfs2026-05-20_run20260518_20260519.geojson',
@@ -61,6 +62,7 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'All network',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 99.7,
                 files: {
                     ways: './data/lisbon/ways_lisboa_rt_gtfs2026-05-20_run20260518.geojson',
                     boundaries: './data/lisbon/prioritization_area_polygon_lisboa_rt_gtfs2026-05-20_run20260518.geojson',
@@ -87,6 +89,7 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'All network',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 88.1,
                 files: {
                     ways: './data/aml_1_2_3_4/ways_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.geojson',
                     boundaries: './data/aml_1_2_3_4/prioritization_area_polygon_aml_areas_1_2_3_4_gtfs2026-05-20_run20260518.geojson',
@@ -117,6 +120,7 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'Area 2',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 83.1,
                 files: {
                     ways: './data/aml_2/ways_aml_rt_area_2_gtfs2026-05-20_run20260518.geojson',
                     boundaries: './data/aml_2/prioritization_area_polygon_aml_rt_area_2_gtfs2026-05-20_run20260518.geojson',
@@ -147,6 +151,7 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'Area 4',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 88.5,
                 files: {
                     ways: './data/aml_4/ways_aml_rt_area_4_gtfs2026-05-20_run20260518.geojson',
                     boundaries: './data/aml_4/prioritization_area_polygon_aml_rt_area_4_gtfs2026-05-20_run20260518.geojson',
@@ -173,6 +178,7 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'All network',
                 date: 'May 2026',
                 rt_data: false,
+                matched_frequencies_peak: 97.0,
                 files: {
                     ways: './data/cascais/ways_cascais_gtfs2026-05-20_run20260519.geojson',
                     boundaries: './data/cascais/prioritization_area_polygon_cascais_gtfs2026-05-20_run20260519.geojson',
@@ -199,6 +205,7 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'All network',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 97.2,
                 files: {
                     ways: './data/barreiro/ways_barreiro_gtfs2026-05-20_run20260519.geojson',
                     boundaries: './data/barreiro/prioritization_area_polygon_barreiro_gtfs2026-05-20_run20260519.geojson',
@@ -225,6 +232,7 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'All network',
                 date: 'May 2026',
                 rt_data: true,
+                matched_frequencies_peak: 72.0,
                 files: {
                     ways: './data/porto/ways_stcp_gtfs2026-05-20_run20260519.geojson',
                     boundaries: './data/porto/prioritization_area_polygon_stcp_gtfs2026-05-20_run20260519.geojson',
@@ -251,6 +259,7 @@ export const DB_REGIONS: DataRegion[] = [
                 name: 'All network',
                 date: 'May 2026',
                 rt_data: false,
+                matched_frequencies_peak: 88.5,
                 files: {
                     ways: './data/madrid/ways_madrid_gtfs2026-05-20_run20260519.geojson',
                     way_data: './data/madrid/way_data_madrid_gtfs2026-05-20_run20260519.json',
