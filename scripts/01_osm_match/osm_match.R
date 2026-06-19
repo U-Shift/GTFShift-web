@@ -23,32 +23,35 @@ regions <- data.frame(
 )
 data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
 
-regions <- bind_rows( # Metro Madrid
+regions <- bind_rows( # Lisboa, Trams
   regions,
   data.frame(
-    name = "metroMadrid",
-    gtfs_url = "https://crtm.maps.arcgis.com/sharing/rest/content/items/5c7f2951962540d69ffe8f640d94c246/data",
-    gtfs_day = gsub("-", "", Sys.Date()),
-    gtfs_manipulate = "manipulate_gtfs_metroMadrid",
+    name = "lisboa",
+    gtfs_url = data$URL[data$ID == "lisboa"],
+    gtfs_day = Sys.Date(),
     query = I(list(list(
-      list(key = "route", value = c("subway"), key_exact = TRUE),
-      list(key = "network", value = "Metro de Madrid", key_exact = TRUE)
+      list(key = "route", value = c("tram"), key_exact = TRUE),
+      list(key = "network", value = "Carris", key_exact = TRUE)
     ))),
-    osm_route_type = "subway",
-    geofabrik_region = "europe/spain/madrid"
+    geofabrik_region = "europe/portugal",
+    osm_stop_order_relaxed = TRUE,
+    osm_route_type = "tram",
+    gtfs_manipulate = "manipulate_carris_trams"
   )
 )
 
-manipulate_gtfs_fertagus <- function(gtfs) {
-  # Replace Lisboa by Roma-Areeiro on routes
-  gtfs$routes$route_long_name <- gsub("Lisboa -", "Roma-Areeiro", gtfs$routes$route_long_name)
-  return(gtfs)
-}
-manipulate_gtfs_metroMadrid <- function(gtfs) {
-  # Append "L" suffix to route_short_name
-  gtfs$routes$route_short_name <- paste0("L", gtfs$routes$route_short_name)
-  # Except to Ramal Opera (only "R")
-  gtfs$routes <- gtfs$routes |> mutate(route_short_name = ifelse(route_short_name=="LR", "R", route_short_name))
+manipulate_carris_trams <- function(gtfs) {
+  # Filter tram routes (route_short_name contains "E")
+  routes_bus <- gtfs$routes |>
+    filter(
+      stringr::str_detect(route_short_name, "E") &
+      # Does not start with 5
+      !stringr::str_detect(route_short_name, "^5")
+    )
+  trips_routes_bus <- gtfs$trips |>
+    filter(route_id %in% routes_bus$route_id)
+  gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_bus$trip_id)
+
   return(gtfs)
 }
 
