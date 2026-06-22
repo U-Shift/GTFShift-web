@@ -121,7 +121,7 @@
                     class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
                 >
                     {#if true}
-                        {@const lanesDir = way.n_lanes_direction ?? 0}
+                        {@const lanesDir = way.n_lanes_circulation_direction ?? 0}
                         {@const lanesCensus =
                             geoData.metadata.data_census.lanes}
                         {@const lanesColor = lanesCensus
@@ -196,13 +196,10 @@
                         Total Lanes
                     </p>
                     <p class="text-xs font-medium text-muted-foreground">
-                        <span class="text-foreground"
-                            >{way.n_lanes ?? "N/A"}</span
-                        >
-                        <span class="text-[9px]"
-                            >({way.n_lanes_circulation ?? 0} circulation + {way.n_lanes_parking ??
-                                0} parking)</span
-                        >
+                        <span class="text-foreground">
+                            {way.n_lanes_circulation ?? 0} <span class="text-[9px] text-muted-foreground">circulation</span> + {way.n_lanes_parking ??
+                                0} <span class="text-[9px] text-muted-foreground">parking</span>
+                        </span>
                     </p>
                 </div>
 

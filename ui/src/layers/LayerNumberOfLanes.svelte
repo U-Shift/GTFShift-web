@@ -30,7 +30,7 @@
 
     function getLaneStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
-        const n_lanes_direction = props?.n_lanes_direction || 0;
+        const n_lanes_direction = props?.n_lanes_circulation_direction || 0;
         const color = getColorFromGradient(
             n_lanes_direction,
             geoData.metadata.data_census.lanes_length?.p5 || 0,
@@ -63,7 +63,7 @@
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(
-            // Order by n_lanes_direction asc, to plot higher nr of lanes on top
+            // Order by n_lanes_circulation_direction asc, to plot higher nr of lanes on top
             filteredFeatures.sort((a, b) => {
                 const propsA = a.properties?.way_osm_id
                     ? geoData.wayData[a.properties.way_osm_id]
@@ -72,8 +72,8 @@
                     ? geoData.wayData[b.properties.way_osm_id]
                     : null;
                 return (
-                    (propsA?.n_lanes_direction || 0) -
-                    (propsB?.n_lanes_direction || 0)
+                    (propsA?.n_lanes_circulation_direction || 0) -
+                    (propsB?.n_lanes_circulation_direction || 0)
                 );
             }),
             {

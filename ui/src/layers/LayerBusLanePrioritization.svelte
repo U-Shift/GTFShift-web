@@ -62,9 +62,9 @@
 
             const lanesOk =
                 !criteriaNLanesDirectionEnabled ||
-                (props.n_lanes !== undefined &&
-                    props.n_lanes_direction !== undefined &&
-                    props.n_lanes_direction >= criteriaNLanesDirection);
+                (props.n_lanes_circulation !== undefined &&
+                    props.n_lanes_circulation_direction !== undefined &&
+                    props.n_lanes_circulation_direction >= criteriaNLanesDirection);
 
             const speedOk =
                 !criteriaAvgSpeedEnabled ||
@@ -85,9 +85,9 @@
                     props.hour_frequency[criteriaHour] >= criteriaBusFrequency);
             const lanesOk =
                 !criteriaNLanesDirectionEnabled ||
-                (props.n_lanes !== undefined &&
-                    props.n_lanes_direction !== undefined &&
-                    props.n_lanes_direction >= criteriaNLanesDirection);
+                (props.n_lanes_circulation !== undefined &&
+                    props.n_lanes_circulation_direction !== undefined &&
+                    props.n_lanes_circulation_direction >= criteriaNLanesDirection);
             const speedOk =
                 !criteriaAvgSpeedEnabled ||
                 criteriaAvgSpeed === undefined ||

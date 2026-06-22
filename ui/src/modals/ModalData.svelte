@@ -128,9 +128,16 @@
                                     >
                                     <ThSort
                                         {table}
-                                        field={(r) => r.properties.n_lanes}
+                                        field={(r) => r.properties.n_lanes_circulation}
+                                        >Nr<br/>lanes <small
+                                            >(circulation)</small
+                                        ></ThSort
+                                    >
+                                    <ThSort
+                                        {table}
+                                        field={(r) => r.properties.n_lanes_parking}
                                         >Nr lanes <small
-                                            >(circulation + parking)</small
+                                            >(parking)</small
                                         ></ThSort
                                     >
                                     <ThSort
@@ -141,7 +148,7 @@
                                     <ThSort
                                         {table}
                                         field={(r) =>
-                                            r.properties.n_lanes_direction}
+                                            r.properties.n_lanes_circulation_direction}
                                         >Nr lanes/dir</ThSort
                                     >
                                     {#if rt_data}
@@ -228,22 +235,23 @@
                                                 : "No"}</td
                                         >
                                         <td
-                                            class="px-4 py-2 text-muted-foreground"
+                                            class="px-4 py-2"
                                         >
-                                            {row.properties.n_lanes}
-                                            <span class="text-[10px]"
-                                                >({row.properties
+                                                {row.properties
                                                     .n_lanes_circulation}
-                                                + {row.properties
-                                                    .n_lanes_parking})</span
-                                            >
+                                        </td>
+                                        <td
+                                            class="px-4 py-2"
+                                        >
+                                                {row.properties
+                                                    .n_lanes_parking}
                                         </td>
                                         <td class="px-4 py-2"
                                             >{row.properties.n_directions}</td
                                         >
                                         <td class="px-4 py-2"
                                             >{row.properties
-                                                .n_lanes_direction}</td
+                                                .n_lanes_circulation_direction}</td
                                         >
                                         {#if rt_data}
                                             <td class="px-4 py-2"

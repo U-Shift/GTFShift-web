@@ -199,10 +199,8 @@ prioritization <- prioritization |>
     is_bus_lane = any(is_bus_lane),
     n_lanes_parking = first(n_lanes_parking),
     n_lanes_circulation = first(n_lanes_circulation),
-    n_lanes = first(n_lanes),
     n_directions = first(n_directions),
     n_lanes_circulation_direction = first(n_lanes_circulation_direction),
-    n_lanes_direction = first(n_lanes_direction),
     routes = paste(unique(unlist(lapply(routes, function(x) x))), collapse = "; "),
     shapes = paste(unique(unlist(lapply(shapes, function(x) x))), collapse = "; "),
     name = first(name),
@@ -290,8 +288,8 @@ if (length(metadata_list) > 0) {
     frequency_hour = census_frequency_hour,
     speed_avg_length = NA,
     speed_avg_frequency = NA,
-    lanes_length = dataCensus(prioritization_infrastructure$n_lanes_direction, prioritization_infrastructure$length_m),
-    lanes_frequency = dataCensus(prioritization_infrastructure$n_lanes_direction, prioritization_infrastructure$frequency),
+    lanes_length = dataCensus(prioritization_infrastructure$n_lanes_circulation_direction, prioritization_infrastructure$length_m),
+    lanes_frequency = dataCensus(prioritization_infrastructure$n_lanes_circulation_direction, prioritization_infrastructure$frequency),
     prioritization_stats_length = lapply(
       GTFShift::get_prioritization_stats(prioritization_infrastructure, weight = "length"),
       function(x) {

@@ -106,7 +106,7 @@ for (i in 1:nrow(regions)) {
   # assign(sprintf("prioritization_%s_gtfs%s", region$name, region$gtfs_day), prioritization)
 
   prioritization <- prioritization |>
-    select(way_osm_id, hour, frequency, is_bus_lane, n_lanes_parking, n_lanes_circulation, n_lanes, n_directions, n_lanes_circulation_direction, n_lanes_direction, routes, shapes, name, geometry)
+    select(way_osm_id, hour, frequency, is_bus_lane, n_lanes_parking, n_lanes_circulation, n_directions, n_lanes_circulation_direction, routes, shapes, name, geometry)
 
   write.csv(
     prioritization |>
@@ -453,8 +453,8 @@ for (i in 1:nrow(regions)) {
       frequency_hour = census_frequency_hour,
       speed_avg_length = NA,
       speed_avg_frequency = NA,
-      lanes_length = dataCensus(prioritization_infrastructure$n_lanes_direction, prioritization_infrastructure$length_m),
-      lanes_frequency = dataCensus(prioritization_infrastructure$n_lanes_direction, prioritization_infrastructure$frequency),
+      lanes_length = dataCensus(prioritization_infrastructure$n_lanes_circulation_direction, prioritization_infrastructure$length_m),
+      lanes_frequency = dataCensus(prioritization_infrastructure$n_lanes_circulation_direction, prioritization_infrastructure$frequency),
       prioritization_stats_length = lapply(
         GTFShift::get_prioritization_stats(prioritization_infrastructure, weight = "length"),
         function(x) {
