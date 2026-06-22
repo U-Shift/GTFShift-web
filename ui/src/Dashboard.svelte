@@ -1286,34 +1286,21 @@
                     class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
                     style="background-color: {COLOR_YELLOW}"
                 ></span>
-                <span
-                    ><b class="text-foreground">Bus lane</b> with - {criteria_bus_frequency}
-                    bus/h OR - {criteria_n_lanes_direction} lane/dir {#if display_rt}OR
-                        {criteria_avg_speed} or - km/h avg. speed{/if}</span
-                >
+                <span><b class="text-foreground">Bus lane</b> with{#if criteria_bus_frequency_enabled}{" "}- {criteria_bus_frequency} bus/h{/if}{#if criteria_n_lanes_direction_enabled}{#if criteria_bus_frequency_enabled}{" "}OR{/if}{" "}- {criteria_n_lanes_direction} lane/dir{/if}{#if criteria_n_lanes_parking_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled}{" "}OR{/if}{" "}- {criteria_n_lanes_parking} parking lane{/if}{#if display_rt && criteria_avg_speed_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled || criteria_n_lanes_parking_enabled}{" "}OR{/if}{" "}{criteria_avg_speed} or - km/h avg. speed{/if}</span>
             </p>
             <p class="flex items-start text-muted-foreground leading-tight">
                 <span
                     class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
                     style="background-color: {COLOR_TEAL}"
                 ></span>
-                <span
-                    ><b class="text-foreground">Bus lane</b> with + {criteria_bus_frequency -
-                        1} bus/h AND + {criteria_n_lanes_direction - 1} lane/dir
-                    {#if display_rt}AND + {criteria_avg_speed} km/h avg. speed{/if}</span
-                >
+                <span><b class="text-foreground">Bus lane</b> with{#if criteria_bus_frequency_enabled}{" "}+ {criteria_bus_frequency - 1} bus/h{/if}{#if criteria_n_lanes_direction_enabled}{#if criteria_bus_frequency_enabled}{" "}AND{/if}{" "}+ {criteria_n_lanes_direction - 1} lane/dir{/if}{#if criteria_n_lanes_parking_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled}{" "}AND{/if}{" "}+ {criteria_n_lanes_parking - 1} parking lane{/if}{#if display_rt && criteria_avg_speed_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled || criteria_n_lanes_parking_enabled}{" "}AND{/if}{" "}+ {criteria_avg_speed} km/h avg. speed{/if}</span>
             </p>
             <p class="flex items-start text-muted-foreground leading-tight">
                 <span
                     class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
                     style="background-color: {COLOR_RED}"
                 ></span>
-                <span
-                    ><b class="text-foreground">NO bus lane</b> with + {criteria_bus_frequency -
-                        1} bus/h AND + {criteria_n_lanes_direction - 1} lane/dir
-                    {#if display_rt}AND
-                        {criteria_avg_speed} or - km/h avg. speed{/if}</span
-                >
+                <span><b class="text-foreground">NO bus lane</b> with{#if criteria_bus_frequency_enabled}{" "}+ {criteria_bus_frequency - 1} bus/h{/if}{#if criteria_n_lanes_direction_enabled}{#if criteria_bus_frequency_enabled}{" "}AND{/if}{" "}+ {criteria_n_lanes_direction - 1} lane/dir{/if}{#if criteria_n_lanes_parking_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled}{" "}AND{/if}{" "}+ {criteria_n_lanes_parking - 1} parking lane{/if}{#if display_rt && criteria_avg_speed_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled || criteria_n_lanes_parking_enabled}{" "}AND{/if}{" "}{criteria_avg_speed} or - km/h avg. speed{/if}</span>
             </p>
         {:else if active_layer === DisplayOptions.BUS_LANES}
             <p class="flex items-start text-muted-foreground leading-tight">
