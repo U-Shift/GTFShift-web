@@ -13,6 +13,8 @@
         criteriaBusFrequencyEnabled = true,
         criteriaNLanesDirection = 2,
         criteriaNLanesDirectionEnabled = true,
+        criteriaNLanesParking = 1,
+        criteriaNLanesParkingEnabled = false,
         criteriaAvgSpeed = undefined,
         criteriaAvgSpeedEnabled = true,
         selectedWayId = undefined,
@@ -27,6 +29,8 @@
         criteriaBusFrequencyEnabled: boolean;
         criteriaNLanesDirection: number;
         criteriaNLanesDirectionEnabled: boolean;
+        criteriaNLanesParking: number;
+        criteriaNLanesParkingEnabled: boolean;
         criteriaAvgSpeed: number | undefined;
         criteriaAvgSpeedEnabled: boolean;
         selectedWayId: string | undefined;
@@ -66,13 +70,18 @@
                     props.n_lanes_circulation_direction !== undefined &&
                     props.n_lanes_circulation_direction >= criteriaNLanesDirection);
 
+            const parkingOk =
+                !criteriaNLanesParkingEnabled ||
+                (props.n_lanes_parking !== undefined &&
+                    props.n_lanes_parking >= criteriaNLanesParking);
+
             const speedOk =
                 !criteriaAvgSpeedEnabled ||
                 criteriaAvgSpeed === undefined ||
                 (props.speed_avg !== undefined &&
                     props.speed_avg <= criteriaAvgSpeed);
 
-            return frequencyOk && lanesOk && speedOk;
+            return frequencyOk && lanesOk && parkingOk && speedOk;
         });
     });
 
@@ -88,6 +97,10 @@
                 (props.n_lanes_circulation !== undefined &&
                     props.n_lanes_circulation_direction !== undefined &&
                     props.n_lanes_circulation_direction >= criteriaNLanesDirection);
+            const parkingOk =
+                !criteriaNLanesParkingEnabled ||
+                (props.n_lanes_parking !== undefined &&
+                    props.n_lanes_parking >= criteriaNLanesParking);
             const speedOk =
                 !criteriaAvgSpeedEnabled ||
                 criteriaAvgSpeed === undefined ||
@@ -95,7 +108,7 @@
                     props.speed_avg > criteriaAvgSpeed);
             return {
                 color:
-                    frequencyOk && lanesOk && speedOk
+                    frequencyOk && lanesOk && parkingOk && speedOk
                         ? COLOR_TEAL
                         : COLOR_YELLOW,
                 weight: 3.5,
