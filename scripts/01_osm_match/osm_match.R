@@ -27,8 +27,9 @@ regions <- bind_rows( # Lisboa, Trams
   regions,
   data.frame(
     name = "lisboa",
-    gtfs_url = data$URL[data$ID == "lisboa"],
-    gtfs_day = Sys.Date(),
+    gtfs_url = "~/Downloads/gtfs_2026-06-18(1).zip",
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("tram"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
@@ -37,6 +38,23 @@ regions <- bind_rows( # Lisboa, Trams
     osm_stop_order_relaxed = TRUE,
     osm_route_type = "tram",
     gtfs_manipulate = "manipulate_carris_trams"
+  )
+)
+regions <- bind_rows( # Lisboa, Funiculars
+  regions,
+  data.frame(
+    name = "lisboa",
+    gtfs_url = "~/Downloads/gtfs_2026-06-18(1).zip",
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_day_filter = TRUE,
+    query = I(list(list(
+      list(key = "route", value = c("funicular"), key_exact = TRUE),
+      list(key = "network", value = "Carris", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/portugal",
+    osm_stop_order_relaxed = TRUE,
+    osm_route_type = "funicular",
+    gtfs_manipulate = "manipulate_carris_funiculars"
   )
 )
 
@@ -51,6 +69,111 @@ manipulate_carris_trams <- function(gtfs) {
   trips_routes_bus <- gtfs$trips |>
     filter(route_id %in% routes_bus$route_id)
   gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_bus$trip_id)
+
+  return(gtfs)
+}
+manipulate_carris_funiculars <- function(gtfs) {
+  # Filter funicular routes (route_short_name starts with "5")
+  routes_filter <- gtfs$routes |>
+    filter(
+      # Starts with 5
+      stringr::str_detect(route_short_name, "^5")
+    )
+  trips_routes_filter <- gtfs$trips |>
+    filter(route_id %in% routes_filter$route_id)
+  gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_filter$trip_id)
+
+  return(gtfs)
+}
+
+regions <- bind_rows( # CP Portugal
+  regions,
+  data.frame(
+    name = "cp_pt",
+    gtfs_url = "https://publico.cp.pt/gtfs/gtfs.zip",
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_day_filter = TRUE,
+    query = I(list(list(
+      list(key = "route", value = c("train"), key_exact = TRUE),
+      list(key = "operator", value = "Comboios de Portugal", key_exact = TRUE)
+    ))),
+    gtfs_match = "route_short_name",
+    osm_match = "name",
+    gtfs_manipulate = "manipulate_gtfs_cp",
+    gtfs_osm_match_exact = FALSE,
+    geofabrik_region = "europe/portugal"
+  )
+)
+regions <- bind_rows( # CP Lisboa
+  regions,
+  data.frame(
+    name = "cp_lisboa",
+    gtfs_url = "https://publico.cp.pt/gtfs/gtfs.zip",
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_day_filter = TRUE,
+    query = I(list(list(
+      list(key = "route", value = c("train"), key_exact = TRUE),
+      list(key = "operator", value = "Comboios de Portugal", key_exact = TRUE)
+    ))),
+    gtfs_match = "route_short_name",
+    osm_match = "name",
+    gtfs_manipulate = "manipulate_gtfs_cp_lisbon",
+    gtfs_osm_match_exact = FALSE,
+    geofabrik_region = "europe/portugal"
+  )
+)
+manipulate_gtfs_cp <- function(gtfs) {
+  # Method to manipulate GTFS routes names, to enable match with OSM names
+  # See https://github.com/U-Shift/GTFShift/issues/35 for more details
+
+  # String replace service acronym in gtfs$routes$route_short_name by extended name
+  # Example: "AP" by "Alfa Pendular",  "IC" by "Intercidades"
+  gtfs$routes$route_short_name <- gsub("AP", "Alfa Pendular", gtfs$routes$route_short_name)
+  gtfs$routes$route_short_name <- gsub("IC", "Intercidades", gtfs$routes$route_short_name)
+  gtfs$routes$route_short_name <- gsub("IR", "InterR", gtfs$routes$route_short_name)
+  gtfs$routes$route_short_name <- gsub("R", "Regional", gtfs$routes$route_short_name)
+  gtfs$routes$route_short_name <- gsub("U", "Urbano", gtfs$routes$route_short_name)
+
+  # Extend gtfs$routes$route_short_name with origin/destination station names
+  gtfs$routes <- gtfs$routes |>
+    mutate(
+      from = str_split_fixed(route_id, "-", 3)[, 2],
+      to = str_split_fixed(route_id, "-", 3)[, 3]
+    ) |>
+    left_join(gtfs$stops |> select(stop_id, stop_name) |> rename(from_name = stop_name), by = c("from" = "stop_id")) |>
+    left_join(gtfs$stops |> select(stop_id, stop_name) |> rename(to_name = stop_name), by = c("to" = "stop_id")) |>
+    mutate(route_short_name = sprintf("%s %s %s", route_short_name, from_name, to_name))
+
+  return(gtfs)
+}
+manipulate_gtfs_cp_lisbon <- function(gtfs) {
+  gtfs <- manipulate_gtfs_cp(gtfs)
+  stations_lisbon_u = c(
+    "94_61101", # Sintra
+    "94_62042", # Meleças
+    "94_59006", # Rossio
+    "94_31039", # Lisboa Oriente
+    "94_33001", # Azambuja
+    "94_30007", # Lisboa SA
+    "94_31310", # Castanheira Ribatejo
+    "94_67025", # Alcântara-terra
+    "94_69260", # Cascais
+    "94_69179", # Oeiras
+    "94_69005", # Cais do Sodré
+    "94_95000", # Barreiro
+    "94_91058" # Praias do Sado A
+  )
+  stations_lisbon_r = c(
+    "94_40154" # Tomar
+  )
+  routes_lisbon = gtfs$routes %>%
+    filter(
+      grepl(paste(stations_lisbon_u, collapse = "|"), route_id) & (route_short_name == "U" | grepl("^Linha", route_short_name))
+      | grepl(paste(stations_lisbon_r, collapse = "|"), route_id) & (route_short_name %in% c("R", "IR"))
+    )
+  trips_lisbon = gtfs$trips %>%
+    filter(route_id %in% routes_lisbon$route_id)
+  gtfs = tidytransit::filter_feed_by_trips(gtfs, trip_ids = trips_lisbon$trip_id) 
 
   return(gtfs)
 }
@@ -108,6 +231,8 @@ for (i in 1:nrow(regions)) {
   # assign(sprintf("q_%s_gtfs%s", region$name, region$gtfs_day), q)
 
   # Get OSM extract to avoid API call
+  # Increase timeout 
+  options(timeout=1000)
   # osmextract::oe_download_directory()
   if (is.null(region$geofabrik_region)) {
     stop("Please define the geofabrik_region for this region in osm_match_parameters.R")

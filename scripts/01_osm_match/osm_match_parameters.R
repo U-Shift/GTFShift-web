@@ -96,7 +96,7 @@ regions <- bind_rows( # Lisboa, Bus
   data.frame(
     name = "lisboa",
     gtfs_url = data$URL[data$ID == "lisboa"],
-    gtfs_day = Sys.Date(),
+    gtfs_day = gsub("-", "", Sys.Date())
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
@@ -112,7 +112,7 @@ regions <- bind_rows( # Lisboa, Trams
   data.frame(
     name = "lisboa",
     gtfs_url = data$URL[data$ID == "lisboa"],
-    gtfs_day = Sys.Date(),
+    gtfs_day = gsub("-", "", Sys.Date())
     query = I(list(list(
       list(key = "route", value = c("tram"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
@@ -121,6 +121,22 @@ regions <- bind_rows( # Lisboa, Trams
     osm_stop_order_relaxed = TRUE,
     osm_route_type = "tram",
     gtfs_manipulate = "manipulate_carris_trams"
+  )
+)
+regions <- bind_rows( # Lisboa, Funiculars
+  regions,
+  data.frame(
+    name = "lisboa",
+    gtfs_url = data$URL[data$ID == "lisboa"],
+    gtfs_day = gsub("-", "", Sys.Date())
+    query = I(list(list(
+      list(key = "route", value = c("funicular"), key_exact = TRUE),
+      list(key = "network", value = "Carris", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/portugal",
+    osm_stop_order_relaxed = TRUE,
+    osm_route_type = "funicular",
+    gtfs_manipulate = "manipulate_carris_funiculars"
   )
 )
 
@@ -148,7 +164,7 @@ regions <- bind_rows( # STCP
       "X-App-Id" = Sys.getenv("GTFS_STCP_KEY"),
       "X-Api-Key" = Sys.getenv("GTFS_STCP_SECRET")
     ))),
-    gtfs_day = Sys.Date(),
+    gtfs_day = gsub("-", "", Sys.Date())
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "STCP", key_exact = TRUE)
@@ -188,7 +204,7 @@ regions <- bind_rows( # CP Portugal
     geofabrik_region = "europe/portugal"
   )
 )
-regions <- bind_rows( # CP Portugal
+regions <- bind_rows( # CP Lisboa
   regions,
   data.frame(
     name = "cp_lisboa",
@@ -212,7 +228,7 @@ regions <- bind_rows( # NYC, Bronx
   data.frame(
     name = "nyc_bronx",
     gtfs_url = "data/gtfs_bx.zip", # https://rrgtfsfeeds.s3.amazonaws.com/gtfs_bx.zip",
-    gtfs_day = Sys.Date(),
+    gtfs_day = gsub("-", "", Sys.Date())
     gtfs_manipulate = "manipulate_gtfs_bronx",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
@@ -291,7 +307,7 @@ regions <- bind_rows(
   data.frame(
     name = "fuenlabrada",
     gtfs_url = "https://api.control.optibus.co/opendata/v1/gtfs?uid=c-5cfcd2d1",
-    gtfs_day = Sys.Date(),
+    gtfs_day = gsub("-", "", Sys.Date())
     gtfs_manipulate = "manipulate_gtfs_fuenlabrada",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
@@ -323,7 +339,7 @@ regions <- bind_rows(
   data.frame(
     name = "guelph",
     gtfs_url = "https://gismaps.guelph.ca/Pages/GTFS/google_transit.zip",
-    gtfs_day = Sys.Date(),
+    gtfs_day = gsub("-", "", Sys.Date())
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Guelph Transit", key_exact = TRUE)
@@ -499,28 +515,40 @@ manipulate_gtfs_metroMadrid <- function(gtfs) {
 
 manipulate_carris_bus <- function(gtfs) {
   # Filter tram routes (route_short_name contains "E")
-  routes_bus <- gtfs$routes |>
+  routes_filter <- gtfs$routes |>
     filter(!stringr::str_detect(route_short_name, "E"))
-  trips_routes_bus <- gtfs$trips |>
-    filter(route_id %in% routes_bus$route_id)
-  gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_bus$trip_id)
+  trips_routes_filter <- gtfs$trips |>
+    filter(route_id %in% routes_filter$route_id)
+  gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_filter$trip_id)
 
   return(gtfs)
 }
 
 manipulate_carris_trams <- function(gtfs) {
   # Filter tram routes (route_short_name contains "E")
-  routes_bus <- gtfs$routes |>
+  routes_filter <- gtfs$routes |>
     filter(
       stringr::str_detect(route_short_name, "E") &
       # Does not start with 5
       !stringr::str_detect(route_short_name, "^5")
     )
-  trips_routes_bus <- gtfs$trips |>
-    filter(route_id %in% routes_bus$route_id)
-  gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_bus$trip_id)
+  trips_routes_filter <- gtfs$trips |>
+    filter(route_id %in% routes_filter$route_id)
+  gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_filter$trip_id)
 
   return(gtfs)
 }
 
-manipulate_carris_funiculars # TODO
+manipulate_carris_funiculars <- function(gtfs) {
+  # Filter funicular routes (route_short_name starts with "5")
+  routes_filter <- gtfs$routes |>
+    filter(
+      # Starts with 5
+      stringr::str_detect(route_short_name, "^5")
+    )
+  trips_routes_filter <- gtfs$trips |>
+    filter(route_id %in% routes_filter$route_id)
+  gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_filter$trip_id)
+
+  return(gtfs)
+}
