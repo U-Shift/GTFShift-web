@@ -95,8 +95,8 @@ regions <- bind_rows(
   data.frame(
     name = "lisboa_funiculars",
     # gtfs_url = data$URL[data$ID == "lisboa"],
-    gtfs_url = "~/Transferências/gtfs_2026-06-18(1).zip",
-    gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_url = "https://files.mobilitydatabase.org/mdb-2929/mdb-2929-202512111941/mdb-2929-202512111941.zip", # Dec 2025, when they weere still active
+    gtfs_day = "2025-12-03",
     gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("funicular"), key_exact = TRUE),
@@ -601,8 +601,10 @@ manipulate_carris_funiculars <- function(gtfs) {
   # Filter funicular routes (route_short_name starts with "5")
   routes_filter <- gtfs$routes |>
     filter(
-      # Starts with 5
-      stringr::str_detect(route_short_name, "^5")
+      # Starts with 5 and contains "E"
+      stringr::str_detect(route_short_name, "^5") & stringr::str_detect(route_short_name, "E") &
+      # route_long_name contains "Ascensor"
+      stringr::str_detect(route_long_name, "Ascensor")
     )
   trips_routes_filter <- gtfs$trips |>
     filter(route_id %in% routes_filter$route_id)
