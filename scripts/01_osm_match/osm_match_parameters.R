@@ -11,35 +11,22 @@ regions <- data.frame(
 data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
 
 # Lisbon Metro Area -------------------------------------------------------
-## Carris Metropolitana -----------------------------------
-regions <- bind_rows( 
-  regions,
-  data.frame(
-    name = "AML",
-    # For historical versions, refer to https://mobilitydatabase.org/feeds/gtfs/mdb-2027
-    gtfs_url = data$URL[data$ID == "AML"],
-    gtfs_day = as.character(Sys.Date()),
-    gtfs_manipulate = "manipulate_gtfs_aml",
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
-    ))),
-    geofabrik_region = "europe/portugal",
-    osm_stop_order_relaxed = TRUE
-  )
-)
 ## TCB, Barreiro -----------------------------------
 regions <- bind_rows(
   regions,
   data.frame(
     name = "barreiro",
-    gtfs_url = data$URL[data$ID == "barreiro"],
-    gtfs_day = as.character(Sys.Date()),
+    # gtfs_url = data$URL[data$ID == "barreiro"],
+    gtfs_url = "https://github.com/U-Shift/GTFShift/releases/download/v0.9/gtfs_barreiro_20260518.zip",
+    # gtfs_day = as.character(Sys.Date()),
+    gtfs_day = "2026-05-27",
+    gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "network", value = c("TCB", "Transportes Coletivos do Barreiro"), key_exact = TRUE)
+      list(key = "network", value = c("TCB", "Transportes Coletivos do Barreiro", "Transportes Colectivos do Barreiro"), key_exact = TRUE)
     ))),
-    geofabrik_region = "europe/portugal"
+    geofabrik_region = "europe/portugal",
+		metric_crs = 3763
   )
 )
 ## MobiCascais, Cascais -----------------------------------
@@ -47,13 +34,18 @@ regions <- bind_rows(
   regions,
   data.frame(
     name = "cascais",
-    gtfs_url = data$URL[data$ID == "cascais"],
-    gtfs_day = as.character(Sys.Date()),
+    # gtfs_url = data$URL[data$ID == "cascais"],
+    gtfs_url = "https://github.com/U-Shift/GTFShift/releases/download/v0.9/gtfs_cascais_20260507.zip",
+    # gtfs_day = as.character(Sys.Date()),
+    gtfs_day = "2026-05-27",
+    gtfs_day_filter = TRUE,
     gtfs_manipulate = "manipulate_gtfs_cascais",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "MobiCascais", key_exact = TRUE)
-    )))
+    ))),
+    geofabrik_region = "europe/portugal",
+		metric_crs = 3763
   )
 )
 ## Carris, Lisboa -----------------------------------
@@ -62,13 +54,17 @@ regions <- bind_rows(
   regions,
   data.frame(
     name = "lisboa",
-    gtfs_url = data$URL[data$ID == "lisboa"],
-    gtfs_day = as.character(Sys.Date()),
+    # gtfs_url = data$URL[data$ID == "lisboa"],
+    gtfs_url = "https://github.com/U-Shift/GTFShift/releases/download/v0.9/gtfs_lisboa_20260519.zip",
+    # gtfs_day = as.character(Sys.Date()),
+    gtfs_day = "2026-05-27",
+    gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
     ))),
     geofabrik_region = "europe/portugal",
+		metric_crs = 3763,
     osm_stop_order_relaxed = TRUE,
     gtfs_manipulate = "manipulate_carris_bus"
   )
@@ -87,6 +83,7 @@ regions <- bind_rows(
       list(key = "network", value = "Carris", key_exact = TRUE)
     ))),
     geofabrik_region = "europe/portugal",
+		metric_crs = 3763,
     osm_stop_order_relaxed = TRUE,
     osm_route_type = "tram",
     gtfs_manipulate = "manipulate_carris_trams"
@@ -106,9 +103,31 @@ regions <- bind_rows(
       list(key = "network", value = "Carris", key_exact = TRUE)
     ))),
     geofabrik_region = "europe/portugal",
+		metric_crs = 3763,
     osm_stop_order_relaxed = TRUE,
     osm_route_type = "funicular",
     gtfs_manipulate = "manipulate_carris_funiculars"
+  )
+)
+## Carris Metropolitana -----------------------------------
+regions <- bind_rows( 
+  regions,
+  data.frame(
+    name = "AML",
+    # For historical versions, refer to https://mobilitydatabase.org/feeds/gtfs/mdb-2027
+    # gtfs_url = data$URL[data$ID == "AML"],
+    gtfs_url = "https://github.com/U-Shift/GTFShift/releases/download/v0.9/gtfs_AML_2026-05-27.zip",
+    # gtfs_day = as.character(Sys.Date()),
+    gtfs_day = "2026-05-27",
+    gtfs_day_filter = TRUE,
+    gtfs_manipulate = "manipulate_gtfs_aml",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/portugal",
+		metric_crs = 3763,
+    osm_stop_order_relaxed = TRUE
   )
 )
 ## CP Trains, Lisbon -----------------------------------
@@ -129,7 +148,8 @@ regions <- bind_rows(
     osm_route_type = "train",
     gtfs_manipulate = "manipulate_gtfs_cp_lisbon",
     gtfs_osm_match_exact = FALSE,
-    geofabrik_region = "europe/portugal"
+    geofabrik_region = "europe/portugal",
+		metric_crs = 3763
   )
 )
 
@@ -147,7 +167,8 @@ regions <- bind_rows( # Metro Lisboa
       list(key = "network", value = "Metropolitano de Lisboa", key_exact = TRUE)
     ))),
     osm_route_type = "subway",
-    geofabrik_region = "europe/portugal"
+    geofabrik_region = "europe/portugal",
+		metric_crs = 3763
   )
 )
 ## Fertagus -----------------------------------
@@ -166,7 +187,8 @@ regions <- bind_rows( # Fertagus
       list(key = "network", value = "Fertagus", key_exact = TRUE)
     ))),
     osm_route_type = "train",
-    geofabrik_region = "europe/portugal"
+    geofabrik_region = "europe/portugal",
+		metric_crs = 3763
   )
 )
 
@@ -182,7 +204,8 @@ regions <- bind_rows(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "Transportes Urbanos de Braga", key_exact = TRUE)
     ))),
-    geofabrik_region = "europe/portugal"
+    geofabrik_region = "europe/portugal",
+		metric_crs = 3763
   )
 )
 ## Funchal -----------------------------------
@@ -196,7 +219,8 @@ regions <- bind_rows(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "HF", key_exact = TRUE)
     ))),
-    geofabrik_region = "europe/portugal"
+    geofabrik_region = "europe/portugal",
+		metric_crs = 3763
   )
 )
 ## Lagos -----------------------------------
@@ -210,7 +234,8 @@ regions <- bind_rows( # Lagos
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "ONDA", key_exact = TRUE)
     ))),
-    geofabrik_region = "europe/portugal"
+    geofabrik_region = "europe/portugal",
+		metric_crs = 3763
   )
 )
 ## STCP, Porto -----------------------------------
@@ -228,7 +253,8 @@ regions <- bind_rows( # STCP
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "STCP", key_exact = TRUE)
     ))),
-    geofabrik_region = "europe/portugal"
+    geofabrik_region = "europe/portugal",
+		metric_crs = 3763
   )
 )
 ## CP Trains, Portugal -----------------------------------
@@ -249,7 +275,8 @@ regions <- bind_rows(
     osm_route_type = "train",
     gtfs_manipulate = "manipulate_gtfs_cp",
     gtfs_osm_match_exact = FALSE,
-    geofabrik_region = "europe/portugal"
+    geofabrik_region = "europe/portugal",
+		metric_crs = 3763
   )
 )
 

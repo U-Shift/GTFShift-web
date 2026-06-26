@@ -16,13 +16,14 @@ library(osmdata)
 source("01_osm_match/osm_match_parameters.R")
 
 regions <- regions |>
-  filter(name %in% c("lisboa_trams", "lisboa_funiculars", "cp_lisboa", "cp_pt"))
-  # filter(name %in% c("cp_lisboa"))
+  filter(name %in% c("barreiro", "cascais", "lisboa", "AML"))
+  # filter(name %in% c("lisboa_trams", "lisboa_funiculars", "cp_lisboa", "cp_pt"))
 
 # main()
 for (i in 1:nrow(regions)) {
   region <- regions[i, ]
   gtfs_day_str <- gsub("-", "", region$gtfs_day)
+  run_day = gsub("-", "", Sys.Date())
   output_region <- sprintf("%s/%s/gtfs_%s", output_root, tolower(region$name), gtfs_day_str)
   output <- sprintf("%s/run_%s", output_region, format(Sys.time(), "%Y%m%d_%H%M%S"))
   if (!dir.exists(output)) {
@@ -91,18 +92,19 @@ for (i in 1:nrow(regions)) {
     gtfs_match = if (!is.null(region$gtfs_match) & !any(is.na(region$gtfs_match))) region$gtfs_match else "route_short_name",
     osm_match = if (!is.null(region$osm_match) & !any(is.na(region$osm_match))) region$osm_match else "ref",
     gtfs_osm_match_exact = if (!is.null(region$gtfs_osm_match_exact) & !any(is.na(region$gtfs_osm_match_exact))) region$gtfs_osm_match_exact else TRUE,
-    log_file = sprintf("%s/shapes_match_%s_gtfs%s_run%s.r.log", output, region$name, gtfs_day_str, gtfs_day_str),
+    log_file = sprintf("%s/shapes_match_%s_gtfs%s_run%s.r.log", output, region$name, gtfs_day_str, run_day),
     osm_file = osm_file,
     num_cores = max(1, floor(parallel::detectCores() / 2)),
     osm_stop_order_relaxed = if (!is.null(region$osm_stop_order_relaxed) & !any(is.na(region$osm_stop_order_relaxed))) region$osm_stop_order_relaxed else FALSE,
-    osm_route_type = if (!is.null(region$osm_route_type) & !any(is.na(region$osm_route_type))) region$osm_route_type else "bus"
+    osm_route_type = if (!is.null(region$osm_route_type) & !any(is.na(region$osm_route_type))) region$osm_route_type else "bus",
+    metric_crs = if (!is.null(region$metric_crs) & !any(is.na(region$metric_crs))) region$metric_crs else 3857
   )
   # assign(sprintf("shapes_match_routes_%s_gtfs%s", region$name, region$gtfs_day), shapes_match_routes)
 
   write.csv(shapes_match_routes |> sf::st_drop_geometry() |> mutate(
     distance_diff = round(distance_diff),
     points_diff = round(points_diff)
-  ), sprintf("%s/shapes_match_%s_gtfs%s_run%s.csv", output, region$name, gtfs_day_str, gtfs_day_str), row.names = FALSE)
-  sf::st_write(shapes_match_routes, sprintf("%s/shapes_match_%s_gtfs%s_run%s.gpkg", output, region$name, gtfs_day_str, gtfs_day_str), append = FALSE)
+  ), sprintf("%s/shapes_match_%s_gtfs%s_run%s.csv", output, region$name, gtfs_day_str, run_day), row.names = FALSE)
+  sf::st_write(shapes_match_routes, sprintf("%s/shapes_match_%s_gtfs%s_run%s.gpkg", output, region$name, gtfs_day_str, run_day), append = FALSE)
   message("Done! :)")
 }
