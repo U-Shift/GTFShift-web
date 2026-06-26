@@ -1,4 +1,4 @@
-# Parameters
+# Initialization -------------------------------------------------------
 output_root <- "osm_match"
 
 # Define regions to analyse
@@ -10,13 +10,15 @@ regions <- data.frame(
 )
 data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
 
-regions <- bind_rows( # AML
+# Lisbon Metro Area -------------------------------------------------------
+## Carris Metropolitana -----------------------------------
+regions <- bind_rows( 
   regions,
   data.frame(
     name = "AML",
     # For historical versions, refer to https://mobilitydatabase.org/feeds/gtfs/mdb-2027
     gtfs_url = data$URL[data$ID == "AML"],
-    gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_day = as.character(Sys.Date()),
     gtfs_manipulate = "manipulate_gtfs_aml",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
@@ -26,12 +28,13 @@ regions <- bind_rows( # AML
     osm_stop_order_relaxed = TRUE
   )
 )
-regions <- bind_rows( # Barreiro
+## TCB, Barreiro -----------------------------------
+regions <- bind_rows(
   regions,
   data.frame(
     name = "barreiro",
     gtfs_url = data$URL[data$ID == "barreiro"],
-    gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_day = as.character(Sys.Date()),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = c("TCB", "Transportes Coletivos do Barreiro"), key_exact = TRUE)
@@ -39,25 +42,13 @@ regions <- bind_rows( # Barreiro
     geofabrik_region = "europe/portugal"
   )
 )
-regions <- bind_rows( # Braga
-  regions,
-  data.frame(
-    name = "braga",
-    gtfs_url = data$URL[data$ID == "braga"],
-    gtfs_day = gsub("-", "", Sys.Date()),
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "Transportes Urbanos de Braga", key_exact = TRUE)
-    ))),
-    geofabrik_region = "europe/portugal"
-  )
-)
-regions <- bind_rows( # Cascais
+## MobiCascais, Cascais -----------------------------------
+regions <- bind_rows( 
   regions,
   data.frame(
     name = "cascais",
     gtfs_url = data$URL[data$ID == "cascais"],
-    gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_day = as.character(Sys.Date()),
     gtfs_manipulate = "manipulate_gtfs_cascais",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
@@ -65,38 +56,14 @@ regions <- bind_rows( # Cascais
     )))
   )
 )
-regions <- bind_rows( # Funchal
-  regions,
-  data.frame(
-    name = "funchal",
-    gtfs_url = data$URL[data$ID == "funchal"],
-    gtfs_day = gsub("-", "", Sys.Date()),
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "HF", key_exact = TRUE)
-    ))),
-    geofabrik_region = "europe/portugal"
-  )
-)
-regions <- bind_rows( # Lagos
-  regions,
-  data.frame(
-    name = "lagos",
-    gtfs_url = data$URL[data$ID == "lagos"],
-    gtfs_day = gsub("-", "", Sys.Date()),
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "ONDA", key_exact = TRUE)
-    ))),
-    geofabrik_region = "europe/portugal"
-  )
-)
-regions <- bind_rows( # Lisboa, Bus
+## Carris, Lisboa -----------------------------------
+### Bus -----------------------------------
+regions <- bind_rows( 
   regions,
   data.frame(
     name = "lisboa",
     gtfs_url = data$URL[data$ID == "lisboa"],
-    gtfs_day = gsub("-", "", Sys.Date())
+    gtfs_day = as.character(Sys.Date()),
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
@@ -106,13 +73,15 @@ regions <- bind_rows( # Lisboa, Bus
     gtfs_manipulate = "manipulate_carris_bus"
   )
 )
-
-regions <- bind_rows( # Lisboa, Trams
+### Trams -----------------------------------
+regions <- bind_rows(
   regions,
   data.frame(
-    name = "lisboa",
-    gtfs_url = data$URL[data$ID == "lisboa"],
-    gtfs_day = gsub("-", "", Sys.Date())
+    name = "lisboa_trams",
+    # gtfs_url = data$URL[data$ID == "lisboa"],
+    gtfs_url = "~/Downloads/gtfs_2026-06-18(1).zip",
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("tram"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
@@ -123,12 +92,15 @@ regions <- bind_rows( # Lisboa, Trams
     gtfs_manipulate = "manipulate_carris_trams"
   )
 )
-regions <- bind_rows( # Lisboa, Funiculars
+### Funiculars -----------------------------------
+regions <- bind_rows( 
   regions,
   data.frame(
-    name = "lisboa",
-    gtfs_url = data$URL[data$ID == "lisboa"],
-    gtfs_day = gsub("-", "", Sys.Date())
+    name = "lisboa_funiculars",
+    # gtfs_url = data$URL[data$ID == "lisboa"],
+    gtfs_url = "~/Downloads/gtfs_2026-06-18(1).zip",
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("funicular"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
@@ -139,77 +111,14 @@ regions <- bind_rows( # Lisboa, Funiculars
     gtfs_manipulate = "manipulate_carris_funiculars"
   )
 )
-
-
-regions <- bind_rows( # Madrid
-  regions,
-  data.frame(
-    name = "madrid",
-    gtfs_url = "https://servicios.emtmadrid.es:8443/gtfs/transitemt.zip",
-    gtfs_day = gsub("-", "", Sys.Date()),
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "Empresa Municipal de Transportes de Madrid", key_exact = TRUE)
-    ))),
-    geofabrik_region = "europe/spain/madrid",
-    osm_stop_order_relaxed = TRUE
-  )
-)
-regions <- bind_rows( # STCP
-  regions,
-  data.frame(
-    name = "stcp",
-    gtfs_url = "https://api.stcp.pt:8443/v1/ficheiros/estatico/ficheirozip",
-    gtfs_url_headers = I(list(list(
-      "X-App-Id" = Sys.getenv("GTFS_STCP_KEY"),
-      "X-Api-Key" = Sys.getenv("GTFS_STCP_SECRET")
-    ))),
-    gtfs_day = gsub("-", "", Sys.Date())
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "STCP", key_exact = TRUE)
-    ))),
-    geofabrik_region = "europe/portugal"
-  )
-)
-regions <- bind_rows( # Toulouse
-  regions,
-  data.frame(
-    name = "toulouse",
-    gtfs_url = "https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
-    gtfs_day = gsub("-", "", Sys.Date()),
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "network", value = "Tisséo", key_exact = TRUE)
-    ))),
-    geofabrik_region = "europe/france/midi-pyrenees",
-    osm_stop_order_relaxed = TRUE
-  )
-)
-
-regions <- bind_rows( # CP Portugal
-  regions,
-  data.frame(
-    name = "cp_pt",
-    gtfs_url = "https://publico.cp.pt/gtfs/gtfs.zip",
-    gtfs_day = gsub("-", "", Sys.Date()),
-    query = I(list(list(
-      list(key = "route", value = c("train"), key_exact = TRUE),
-      list(key = "operator", value = "Comboios de Portugal", key_exact = TRUE)
-    ))),
-    gtfs_match = "route_short_name",
-    osm_match = "name",
-    gtfs_manipulate = "manipulate_gtfs_cp",
-    gtfs_osm_match_exact = FALSE,
-    geofabrik_region = "europe/portugal"
-  )
-)
-regions <- bind_rows( # CP Lisboa
+## CP Trains, Lisbon -----------------------------------
+regions <- bind_rows( 
   regions,
   data.frame(
     name = "cp_lisboa",
     gtfs_url = "https://publico.cp.pt/gtfs/gtfs.zip",
-    gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("train"), key_exact = TRUE),
       list(key = "operator", value = "Comboios de Portugal", key_exact = TRUE)
@@ -222,139 +131,13 @@ regions <- bind_rows( # CP Lisboa
   )
 )
 
-
-regions <- bind_rows( # NYC, Bronx
-  regions,
-  data.frame(
-    name = "nyc_bronx",
-    gtfs_url = "data/gtfs_bx.zip", # https://rrgtfsfeeds.s3.amazonaws.com/gtfs_bx.zip",
-    gtfs_day = gsub("-", "", Sys.Date())
-    gtfs_manipulate = "manipulate_gtfs_bronx",
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
-    ))),
-    geofabrik_region = "north-america/us/new-york",
-    osm_stop_order_relaxed = TRUE
-  )
-)
-
-regions <- bind_rows( # NYC, Brooklyn
-  regions,
-  data.frame(
-    name = "nyc_brooklyn",
-    gtfs_url = "data/gtfs_b.zip", # https://rrgtfsfeeds.s3.amazonaws.com/gtfs_b.zip",
-    gtfs_day = gsub("-", "", Sys.Date()),
-    gtfs_manipulate = "manipulate_gtfs_brooklyn",
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
-    )))
-  )
-)
-regions <- bind_rows( # NYC, Manhattan
-  regions,
-  data.frame(
-    name = "nyc_manhattan",
-    gtfs_url = "https://rrgtfsfeeds.s3.amazonaws.com/gtfs_m.zip",
-    gtfs_day = gsub("-", "", Sys.Date()),
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
-    )))
-  )
-)
-regions <- bind_rows( # NYC, Queens
-  regions,
-  data.frame(
-    name = "nyc_queens",
-    gtfs_url = "https://rrgtfsfeeds.s3.amazonaws.com/gtfs_q.zip",
-    gtfs_day = gsub("-", "", Sys.Date()),
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
-    )))
-  )
-)
-regions <- bind_rows( # NYC, Staten Island
-  regions,
-  data.frame(
-    name = "nyc_statenisland",
-    gtfs_url = "https://rrgtfsfeeds.s3.amazonaws.com/gtfs_si.zip",
-    gtfs_day = gsub("-", "", Sys.Date()),
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
-    )))
-  )
-)
-regions <- bind_rows( # NYC, MTA
-  regions,
-  data.frame(
-    name = "nyc_mta",
-    gtfs_url = "https://rrgtfsfeeds.s3.amazonaws.com/gtfs_busco.zip",
-    gtfs_day = gsub("-", "", Sys.Date()),
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
-    )))
-  )
-)
-
-# Fuenlabrada, ES
-regions <- bind_rows(
-  regions,
-  data.frame(
-    name = "fuenlabrada",
-    gtfs_url = "https://api.control.optibus.co/opendata/v1/gtfs?uid=c-5cfcd2d1",
-    gtfs_day = gsub("-", "", Sys.Date())
-    gtfs_manipulate = "manipulate_gtfs_fuenlabrada",
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "operator", value = "EMT Fuenlabrada", key_exact = TRUE)
-    ))),
-    geofabrik_region = "europe/spain/madrid"
-  )
-)
-
-# Rome, IT
-regions <- bind_rows(
-  regions,
-  data.frame(
-    name = "rome",
-    # For historical versions, refer to https://mobilitydatabase.org/feeds/gtfs_rt/mdb-1776
-    gtfs_url = "https://romamobilita.it/sites/default/files/rome_static_gtfs.zip",
-    gtfs_day = gsub("-", "", Sys.Date()),
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "network", value = "ATAC", key_exact = TRUE)
-    ))),
-    geofabrik_region = "europe/italy/centro"
-  )
-)
-
-# Ghelph, CA
-regions <- bind_rows(
-  regions,
-  data.frame(
-    name = "guelph",
-    gtfs_url = "https://gismaps.guelph.ca/Pages/GTFS/google_transit.zip",
-    gtfs_day = gsub("-", "", Sys.Date())
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "network", value = "Guelph Transit", key_exact = TRUE)
-    ))),
-    geofabrik_region = "north-america/canada/ontario"
-  )
-)
-
-# Railways
+## Metro Lisboa -----------------------------------
 regions <- bind_rows( # Metro Lisboa
   regions,
   data.frame(
     name = "metroLisboa",
     gtfs_url = "osm_match/metrolisboa/gtfs_20260526/googleTransit.zip",
-    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
     gtfs_day_filter = TRUE,
     gtfs_match = "route_long_name",
     query = I(list(list(
@@ -365,12 +148,13 @@ regions <- bind_rows( # Metro Lisboa
     geofabrik_region = "europe/portugal"
   )
 )
+## Fertagus -----------------------------------
 regions <- bind_rows( # Fertagus
   regions,
   data.frame(
     name = "fertagus",
     gtfs_url = data$URL[data$ID == "fertagus"],
-    gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_day = as.character(Sys.Date()),
     gtfs_match = "route_long_name",
     osm_match = "name",
     gtfs_manipulate = "manipulate_gtfs_fertagus",
@@ -383,12 +167,255 @@ regions <- bind_rows( # Fertagus
     geofabrik_region = "europe/portugal"
   )
 )
+
+# Portugal, Others -----------------------------------
+## Lagos -----------------------------------
+regions <- bind_rows( 
+  regions,
+  data.frame(
+    name = "braga",
+    gtfs_url = data$URL[data$ID == "braga"],
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "Transportes Urbanos de Braga", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/portugal"
+  )
+)
+## Funchal -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "funchal",
+    gtfs_url = data$URL[data$ID == "funchal"],
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "HF", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/portugal"
+  )
+)
+## Lagos -----------------------------------
+regions <- bind_rows( # Lagos
+  regions,
+  data.frame(
+    name = "lagos",
+    gtfs_url = data$URL[data$ID == "lagos"],
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "ONDA", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/portugal"
+  )
+)
+## STCP, Porto -----------------------------------
+regions <- bind_rows( # STCP
+  regions,
+  data.frame(
+    name = "stcp",
+    gtfs_url = "https://api.stcp.pt:8443/v1/ficheiros/estatico/ficheirozip",
+    gtfs_url_headers = I(list(list(
+      "X-App-Id" = Sys.getenv("GTFS_STCP_KEY"),
+      "X-Api-Key" = Sys.getenv("GTFS_STCP_SECRET")
+    ))),
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "STCP", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/portugal"
+  )
+)
+## CP Trains, Portugal -----------------------------------
+regions <- bind_rows( 
+  regions,
+  data.frame(
+    name = "cp_pt",
+    gtfs_url = "https://publico.cp.pt/gtfs/gtfs.zip",
+    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_day_filter = TRUE,
+    query = I(list(list(
+      list(key = "route", value = c("train"), key_exact = TRUE),
+      list(key = "operator", value = "Comboios de Portugal", key_exact = TRUE)
+    ))),
+    gtfs_match = "route_short_name",
+    osm_match = "name",
+    gtfs_manipulate = "manipulate_gtfs_cp",
+    gtfs_osm_match_exact = FALSE,
+    geofabrik_region = "europe/portugal"
+  )
+)
+
+# International -----------------------------------
+## EMT, Madrid, SPAIN -----------------------------------
+regions <- bind_rows( # Madrid
+  regions,
+  data.frame(
+    name = "madrid",
+    gtfs_url = "https://servicios.emtmadrid.es:8443/gtfs/transitemt.zip",
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "Empresa Municipal de Transportes de Madrid", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/spain/madrid",
+    osm_stop_order_relaxed = TRUE
+  )
+)
+
+## Tisseo, Toulouse, FRANCE -----------------------------------
+regions <- bind_rows( 
+  regions,
+  data.frame(
+    name = "toulouse",
+    gtfs_url = "https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Tisséo", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/france/midi-pyrenees",
+    osm_stop_order_relaxed = TRUE
+  )
+)
+
+
+## Bronx, NYC, USA -----------------------------------
+regions <- bind_rows( 
+  regions,
+  data.frame(
+    name = "nyc_bronx",
+    gtfs_url = "data/gtfs_bx.zip", # https://rrgtfsfeeds.s3.amazonaws.com/gtfs_bx.zip",
+    gtfs_day = as.character(Sys.Date()),
+    gtfs_manipulate = "manipulate_gtfs_bronx",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
+    ))),
+    geofabrik_region = "north-america/us/new-york",
+    osm_stop_order_relaxed = TRUE
+  )
+)
+## Brooklyn, NYC, USA -----------------------------------
+regions <- bind_rows( 
+  regions,
+  data.frame(
+    name = "nyc_brooklyn",
+    gtfs_url = "data/gtfs_b.zip", # https://rrgtfsfeeds.s3.amazonaws.com/gtfs_b.zip",
+    gtfs_day = as.character(Sys.Date()),
+    gtfs_manipulate = "manipulate_gtfs_brooklyn",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
+    )))
+  )
+)
+## Manhattan, NYC, USA -----------------------------------
+regions <- bind_rows( 
+  regions,
+  data.frame(
+    name = "nyc_manhattan",
+    gtfs_url = "https://rrgtfsfeeds.s3.amazonaws.com/gtfs_m.zip",
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
+    )))
+  )
+)
+## Queens, NYC, USA -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "nyc_queens",
+    gtfs_url = "https://rrgtfsfeeds.s3.amazonaws.com/gtfs_q.zip",
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
+    )))
+  )
+)
+## Staten Island, NYC, USA -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "nyc_statenisland",
+    gtfs_url = "https://rrgtfsfeeds.s3.amazonaws.com/gtfs_si.zip",
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
+    )))
+  )
+)
+## MTA, NYC, USA -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "nyc_mta",
+    gtfs_url = "https://rrgtfsfeeds.s3.amazonaws.com/gtfs_busco.zip",
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
+    )))
+  )
+)
+## Fuenlabrada, SPAIN -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "fuenlabrada",
+    gtfs_url = "https://api.control.optibus.co/opendata/v1/gtfs?uid=c-5cfcd2d1",
+    gtfs_day = as.character(Sys.Date()),
+    gtfs_manipulate = "manipulate_gtfs_fuenlabrada",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "EMT Fuenlabrada", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/spain/madrid"
+  )
+)
+## Rome, ITALY -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "rome",
+    # For historical versions, refer to https://mobilitydatabase.org/feeds/gtfs_rt/mdb-1776
+    gtfs_url = "https://romamobilita.it/sites/default/files/rome_static_gtfs.zip",
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "ATAC", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/italy/centro"
+  )
+)
+## Guelph, CANADA -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "guelph",
+    gtfs_url = "https://gismaps.guelph.ca/Pages/GTFS/google_transit.zip",
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Guelph Transit", key_exact = TRUE)
+    ))),
+    geofabrik_region = "north-america/canada/ontario"
+  )
+)
+## Metro Madrid, SPAIN -----------------------------------
 regions <- bind_rows( # Metro Madrid
   regions,
   data.frame(
     name = "metroMadrid",
     gtfs_url = "https://crtm.maps.arcgis.com/sharing/rest/content/items/5c7f2951962540d69ffe8f640d94c246/data",
-    gtfs_day = gsub("-", "", Sys.Date()),
+    gtfs_day = as.character(Sys.Date()),
     gtfs_manipulate = "manipulate_gtfs_metroMadrid",
     query = I(list(list(
       list(key = "route", value = c("subway"), key_exact = TRUE),
@@ -399,7 +426,7 @@ regions <- bind_rows( # Metro Madrid
   )
 )
 
-# Helpers
+# Helpers -----------------------------------
 manipulate_gtfs_cp <- function(gtfs) {
   # Method to manipulate GTFS routes names, to enable match with OSM names
   # See https://github.com/U-Shift/GTFShift/issues/35 for more details
