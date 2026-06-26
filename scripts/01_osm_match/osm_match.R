@@ -17,6 +17,7 @@ source("01_osm_match/osm_match_parameters.R")
 
 regions <- regions |>
   filter(name %in% c("lisboa_trams", "lisboa_funiculars", "cp_lisboa", "cp_pt"))
+  # filter(name %in% c("cp_lisboa"))
 
 # main()
 for (i in 1:nrow(regions)) {
@@ -30,7 +31,7 @@ for (i in 1:nrow(regions)) {
   message(sprintf("\n\nRunning for %s (%s)...", region$name, region$gtfs_day))
 
   gtfs_file <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str)
-  if (file.exists(gtfs_file)) {
+  if (file.exists(gtfs_file) & !isTRUE(region$gtfs_download_force)) {
     message("Loading gtfs from file...")
     gtfs <- GTFShift::load_feed(gtfs_file, create_transfers = FALSE)
   } else {
@@ -38,7 +39,7 @@ for (i in 1:nrow(regions)) {
     gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers) & !any(is.na(region$gtfs_url_headers))) unlist(region$gtfs_url_headers[[1]]) else NULL, create_transfers = FALSE)
     tidytransit::write_gtfs(gtfs, gtfs_file)
   }
-  summary(gtfs)
+  # summary(gtfs)
   # assign(sprintf("gtfs_%s_%s", region$name, gtfs_day_str), gtfs)
 
   if (!is.na(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate) || !is.na(region$gtfs_day) && !is.na(region$gtfs_day_filter)) {

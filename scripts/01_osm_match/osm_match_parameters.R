@@ -79,8 +79,8 @@ regions <- bind_rows(
   data.frame(
     name = "lisboa_trams",
     # gtfs_url = data$URL[data$ID == "lisboa"],
-    gtfs_url = "~/Downloads/gtfs_2026-06-18(1).zip",
-    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_url = "~/Transferências/gtfs_2026-06-18(1).zip",
+    gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
     gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("tram"), key_exact = TRUE),
@@ -98,8 +98,8 @@ regions <- bind_rows(
   data.frame(
     name = "lisboa_funiculars",
     # gtfs_url = data$URL[data$ID == "lisboa"],
-    gtfs_url = "~/Downloads/gtfs_2026-06-18(1).zip",
-    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_url = "~/Transferências/gtfs_2026-06-18(1).zip",
+    gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
     gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("funicular"), key_exact = TRUE),
@@ -117,7 +117,8 @@ regions <- bind_rows(
   data.frame(
     name = "cp_lisboa",
     gtfs_url = "https://publico.cp.pt/gtfs/gtfs.zip",
-    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_download_force = TRUE,
+    gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
     gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("train"), key_exact = TRUE),
@@ -125,6 +126,7 @@ regions <- bind_rows(
     ))),
     gtfs_match = "route_short_name",
     osm_match = "name",
+    osm_route_type = "train",
     gtfs_manipulate = "manipulate_gtfs_cp_lisbon",
     gtfs_osm_match_exact = FALSE,
     geofabrik_region = "europe/portugal"
@@ -235,7 +237,8 @@ regions <- bind_rows(
   data.frame(
     name = "cp_pt",
     gtfs_url = "https://publico.cp.pt/gtfs/gtfs.zip",
-    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
+    gtfs_download_force = TRUE,
+    gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
     gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("train"), key_exact = TRUE),
@@ -243,6 +246,7 @@ regions <- bind_rows(
     ))),
     gtfs_match = "route_short_name",
     osm_match = "name",
+    osm_route_type = "train",
     gtfs_manipulate = "manipulate_gtfs_cp",
     gtfs_osm_match_exact = FALSE,
     geofabrik_region = "europe/portugal"
