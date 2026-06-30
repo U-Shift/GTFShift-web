@@ -11,34 +11,13 @@ library(Hmisc) # For  Weighted Statistical Estimates
 # set_overpass_url("https://overpass-api.de/api/interpreter")
 
 # Refer to prioritize_parameters.R to define parameters before running this script!
+source("02_prioritize/prioritize_parameters.R")
+
+regions <- regions |>
+  # filter(name %in% c("lisboa_rt", "aml_rt", "barreiro", "stcp"))
+  filter(name %in% c("toulouse"))
 
 # main()
-output <- "web_data"
-data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
-
-regions <- data.frame(
-  name = character(),
-  name_long = character(),
-  gtfs = character(),
-  query = I(list())
-)
-regions <- rbind( # Toulouse, FR
-  regions,
-  data.frame(
-    name = "toulouse",
-    name_long = "Toulouse, FR",
-    gtfs_url = "https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
-    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "network", value = "Tisséo", key_exact = TRUE)
-    ))),
-    geofabrik_region = "europe/france/midi-pyrenees"
-  )
-)
-
-stop_buffer_size <- 15 # meters
-
 if (!dir.exists(output)) {
   dir.create(output, recursive = TRUE)
 }
@@ -94,7 +73,7 @@ for (i in 1:nrow(regions)) {
   # Get OSM extract to avoid API call
   # osmextract::oe_download_directory()
   if (is.null(region$geofabrik_region)) {
-    stop("Please define the geofabrik_region for this region in osm_match_parameters.R")
+    stop("Please define the geofabrik_region for this region in prioritize_parameters.R")
   }
   osm_file <- osmextract::oe_download(
     sprintf("https://download.geofabrik.de/%s-latest.osm.pbf", region$geofabrik_region),

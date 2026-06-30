@@ -1,5 +1,6 @@
 # Parameters
 output <- "web_data"
+stop_buffer_size <- 15 # meters
 
 regions <- data.frame(
   name = character(),
