@@ -134,9 +134,38 @@ for (i in 1:nrow(regions)) {
   )
 
   # 3. Extend with real-time data if available
-  if (!is.null(region$rt_collection) && !is.na(region$rt_collection)) {
+  has_rt_collection <- !is.null(region$rt_collection) &&
+    length(region$rt_collection) > 0 &&
+    !is.null(region$rt_collection[[1]]) &&
+    length(region$rt_collection[[1]]) > 0 &&
+    !all(is.na(region$rt_collection[[1]]))
+
+  if (has_rt_collection) {
     message("Extending with real-time data...")
-    rt_collection <- region$rt_collection[[1]]
+    rt_files <- as.character(region$rt_collection[[1]])
+
+    rt_collection_manipulate <- if (!is.null(region$rt_collection_manipulate) &&
+      length(region$rt_collection_manipulate) > 0 &&
+      !is.null(region$rt_collection_manipulate[[1]])) {
+      region$rt_collection_manipulate[[1]]
+    } else {
+      NULL
+    }
+
+    if (is.character(rt_collection_manipulate)) {
+      rt_collection_manipulate <- get(rt_collection_manipulate)
+    }
+    if (!is.function(rt_collection_manipulate)) {
+      stop(sprintf("rt_collection_manipulate must be a function for region '%s'", region$name))
+    }
+
+    rt_collection_raw <- dplyr::bind_rows(lapply(rt_files, read.csv))
+    rt_collection <- rt_collection_manipulate(rt_collection_raw)
+
+    if (!inherits(rt_collection, c("sf", "sfc"))) {
+      stop(sprintf("rt_collection_manipulate must return an sf object for region '%s'", region$name))
+    }
+
     # Filter updates, to remove those close to bus stops
     gtfs_stops <- tidytransit::stops_as_sf(gtfs$stops, crs = 4326)
 
@@ -405,7 +434,7 @@ for (i in 1:nrow(regions)) {
   }
 
   rt_list <- NA
-  if (!is.null(region$rt_collection) && !is.na(region$rt_collection)) {
+  if (has_rt_collection) {
     rt_list <- list(
       url = "", # To be edited manually
       period = region$rt_interval,
