@@ -4,6 +4,11 @@
     import { COLOR_GRADIENT_RED, COLOR_GRAY } from "../data";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
     import type { Feature } from "geojson";
+    import {
+        bindWayValueTooltip,
+        handleWayMouseOut,
+        handleWayMouseOver,
+    } from "../lib/layerInteractions";
 
     let {
         map,
@@ -27,6 +32,13 @@
     let wayLayerMap: Map<string, L.Path> = new Map();
 
     import { getColorFromGradient } from "../lib/utils";
+
+    function formatSpeedLabel(wayId: string): string {
+        const speed = geoData.wayData[wayId]?.speed_avg;
+        const speedValue = Number(speed);
+        if (isNaN(speedValue)) return "Speed: n/a";
+        return `${speedValue.toFixed(1)} km/h`;
+    }
 
     function getSpeedStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
@@ -92,23 +104,18 @@
                 onEachFeature: (feature, layer) => {
                     const wayId = feature.properties?.way_osm_id;
                     if (wayId) wayLayerMap.set(wayId, layer as L.Path);
+                    if (wayId) {
+                        bindWayValueTooltip(layer, formatSpeedLabel(wayId));
+                    }
                     layer.on("click", (e) => {
                         L.DomEvent.stopPropagation(e);
                         if (wayId) onWaySelect(wayId);
                     });
                     layer.on("mouseover", () => {
-                        if (wayId && wayId !== selectedWayId) {
-                            (layer as L.Path).setStyle({
-                                color: "#FCF1DD",
-                                weight: 5,
-                            });
-                            (layer as L.Path).bringToFront();
-                        }
+                        handleWayMouseOver(layer, wayId, selectedWayId);
                     });
                     layer.on("mouseout", () => {
-                        if (wayId && wayId !== selectedWayId) {
-                            (layer as L.Path).setStyle(getSpeedStyle(wayId));
-                        }
+                        handleWayMouseOut(layer, wayId, selectedWayId, getSpeedStyle);
                     });
                 },
             },

@@ -1241,7 +1241,7 @@
                 }}
                 class="flex-1"
             >
-                <i class="fa-solid fa-arrow-left mr-2"></i> Source
+                <i class="fa-solid fa-arrow-left mr-2"></i> Regions
             </Button>
             <Button
                 variant="outline"

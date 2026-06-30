@@ -120,3 +120,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+.map-way-hover-tooltip {
+  background: var(--popover);
+  color: var(--popover-foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.18);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0.25rem 0.5rem;
+}
+
+.map-way-hover-tooltip::before {
+  display: none;
+}

@@ -4,6 +4,11 @@
     import { COLOR_GRADIENT } from "../data";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
     import type { Feature } from "geojson";
+    import {
+        bindWayValueTooltip,
+        handleWayMouseOut,
+        handleWayMouseOver,
+    } from "../lib/layerInteractions";
 
     let {
         map,
@@ -27,6 +32,11 @@
     let wayLayerMap: Map<string, L.Path> = new Map();
 
     import { getColorFromGradient } from "../lib/utils";
+
+    function formatLaneLabel(wayId: string): string {
+        const lanes = geoData.wayData[wayId]?.n_lanes_circulation_direction || 0;
+        return `${lanes} lanes`;
+    }
 
     function getLaneStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
@@ -85,23 +95,18 @@
                 onEachFeature: (feature, layer) => {
                     const wayId = feature.properties?.way_osm_id;
                     if (wayId) wayLayerMap.set(wayId, layer as L.Path);
+                    if (wayId) {
+                        bindWayValueTooltip(layer, formatLaneLabel(wayId));
+                    }
                     layer.on("click", (e) => {
                         L.DomEvent.stopPropagation(e);
                         if (wayId) onWaySelect(wayId);
                     });
                     layer.on("mouseover", () => {
-                        if (wayId && wayId !== selectedWayId) {
-                            (layer as L.Path).setStyle({
-                                color: "#FCF1DD",
-                                weight: 5,
-                            });
-                            (layer as L.Path).bringToFront();
-                        }
+                        handleWayMouseOver(layer, wayId, selectedWayId);
                     });
                     layer.on("mouseout", () => {
-                        if (wayId && wayId !== selectedWayId) {
-                            (layer as L.Path).setStyle(getLaneStyle(wayId));
-                        }
+                        handleWayMouseOut(layer, wayId, selectedWayId, getLaneStyle);
                     });
                 },
             },
