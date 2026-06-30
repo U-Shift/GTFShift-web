@@ -29,16 +29,18 @@ message("-----------------------------------------------------------------------
 for (i in 1:nrow(regions)) {
   # 1. Load data for region
   region <- regions[i, ]
+  gtfs_day_str <- gsub("-", "", region$gtfs_day)
+  run_day <- gsub("-", "", Sys.Date())
   message(sprintf("\n\nRunning for %s (%s)...", region$name, region$gtfs_day))
 
-  output_region <- sprintf("%s/%s/gtfs_%s/run_%s", output, tolower(region$name), gsub("-", "", region$gtfs_day), format(Sys.time(), "%Y%m%d_%H%M%S"))
+  output_region <- sprintf("%s/%s/gtfs_%s/run_%s", output, tolower(region$name), gtfs_day_str, format(Sys.time(), "%Y%m%d_%H%M%S"))
   if (!dir.exists(output_region)) {
     dir.create(output_region, recursive = TRUE)
   }
 
   gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers)) unlist(region$gtfs_url_headers[[1]]) else NULL)
   # assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
-  tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, region$gtfs_day))
+  tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str))
 
   gtfs_shapes <- tidytransit::shapes_as_sf(gtfs$shapes)
   bbox <- sf::st_bbox(gtfs_shapes)
@@ -47,7 +49,7 @@ for (i in 1:nrow(regions)) {
     message("Manipulating GTFS with function: ", region$gtfs_manipulate)
     message("Manipulating gtfs...")
     gtfs <- get(region$gtfs_manipulate)(gtfs)
-    gtfs_file_manipulated <- sprintf("%s/gtfs_%s_%s_manipulated.zip", output_region, region$name, region$gtfs_day)
+    gtfs_file_manipulated <- sprintf("%s/gtfs_%s_%s_manipulated.zip", output_region, region$name, gtfs_day_str)
     if (!file.exists(gtfs_file_manipulated)) {
       tidytransit::write_gtfs(gtfs, gtfs_file_manipulated)
     }
@@ -55,7 +57,7 @@ for (i in 1:nrow(regions)) {
   }
 
   gtfs <- tidytransit::filter_feed_by_date(gtfs, extract_date = region$gtfs_day)
-  gtfs_file <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, region$gtfs_day)
+  gtfs_file <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str)
   tidytransit::write_gtfs(gtfs, gtfs_file)
 
   # Build OSM query
@@ -95,7 +97,7 @@ for (i in 1:nrow(regions)) {
         routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
         shapes = sapply(shapes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE)
       ),
-    sprintf("%s/prioritization_%s_gtfs%s_run%s.csv", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
+    sprintf("%s/prioritization_%s_gtfs%s_run%s.csv", output_region, region$name, gtfs_day_str, run_day),
     row.names = FALSE
   )
 
@@ -105,11 +107,11 @@ for (i in 1:nrow(regions)) {
 
   st_write(
     prioritization_area_polygon,
-    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
+    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.gpkg", output_region, region$name, gtfs_day_str, run_day)
   )
   st_write(
     prioritization_area_polygon,
-    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.geojson", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
+    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.geojson", output_region, region$name, gtfs_day_str, run_day)
   )
 
   # 3. Extend with real-time data if available
@@ -164,14 +166,14 @@ for (i in 1:nrow(regions)) {
   st_write(prioritization |> mutate(
     routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
     shapes = sapply(shapes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE)
-  ), sprintf("%s/prioritization_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append = FALSE)
+  ), sprintf("%s/prioritization_%s_gtfs%s_run%s.gpkg", output_region, region$name, gtfs_day_str, run_day), append = FALSE)
 
   # 4. Build data for dashboard
   # > 4.1. Store ways geometries
   ways <- prioritization |>
     distinct(way_osm_id, geometry)
-  st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append = FALSE)
-  st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.geojson", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append = FALSE)
+  st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.gpkg", output_region, region$name, gtfs_day_str, run_day), append = FALSE)
+  st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.geojson", output_region, region$name, gtfs_day_str, run_day), append = FALSE)
 
   ways_length <- ways |> # Convert to 3857 crs
     st_transform(crs = 3857) |>
@@ -223,7 +225,7 @@ for (i in 1:nrow(regions)) {
   )
   write(
     json_string,
-    sprintf("%s/way_data_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
+    sprintf("%s/way_data_%s_gtfs%s_run%s.json", output_region, region$name, gtfs_day_str, run_day)
   )
 
   # > 4.3. Store route data
@@ -288,11 +290,11 @@ for (i in 1:nrow(regions)) {
 
   write_json(
     nested_shapes,
-    sprintf("%s/shape_data_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
+    sprintf("%s/shape_data_%s_gtfs%s_run%s.json", output_region, region$name, gtfs_day_str, run_day),
     auto_unbox = TRUE,
     digits = NA # To avoid precision loss in coordinates
   )
-  write.csv(nested_shapes_df, sprintf("%s/shape_data_%s_gtfs%s_run%s.csv", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())))
+  write.csv(nested_shapes_df, sprintf("%s/shape_data_%s_gtfs%s_run%s.csv", output_region, region$name, gtfs_day_str, run_day))
 
   nested_routes <- lapply(split(gtfs$routes |> select(route_id, route_short_name, route_long_name, route_color, route_text_color), gtfs$routes$route_id), function(df) {
     route_metadata <- df[1, ] %>%
@@ -302,7 +304,7 @@ for (i in 1:nrow(regions)) {
   })
   write_json(
     nested_routes,
-    sprintf("%s/route_data_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
+    sprintf("%s/route_data_%s_gtfs%s_run%s.json", output_region, region$name, gtfs_day_str, run_day),
     auto_unbox = TRUE,
     digits = NA # To avoid precision loss in coordinates
   )
@@ -492,7 +494,7 @@ for (i in 1:nrow(regions)) {
     ),
     environment = list(
       r = R.version.string,
-      GTFShift = as.character(packageVersion("GTFShift")),
+      GTFShift = GTFShiftVersion,
       os = Sys.info()[["sysname"]],
       os_release = Sys.info()[["release"]]
     )
@@ -503,7 +505,7 @@ for (i in 1:nrow(regions)) {
   }
   write_json(
     metadata,
-    sprintf("%s/metadata_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
+    sprintf("%s/metadata_%s_gtfs%s_run%s.json", output_region, region$name, gtfs_day_str, run_day),
     auto_unbox = TRUE,
     digits = NA
   )
