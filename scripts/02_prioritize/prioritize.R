@@ -10,6 +10,8 @@ library(osmdata)
 library(Hmisc) # For  Weighted Statistical Estimates
 # set_overpass_url("https://overpass-api.de/api/interpreter")
 
+# Run with: $ Rscript 02_prioritize/prioritize.R
+
 # Refer to prioritize_parameters.R to define parameters before running this script!
 source("02_prioritize/prioritize_parameters.R")
 
@@ -27,6 +29,10 @@ message("\n\nRunning for regions:\n > ", paste(regions$name_long, collapse = "\n
 message("------------------------------------------------------------------------------------------------------------------------\n\n")
 
 for (i in 1:nrow(regions)) {
+  if(is.null(region$metric_crs) || is.na(region$metric_crs)) {
+    stop(sprintf("Please define the metric_crs for region '%s' in prioritize_parameters.R", region$name))
+  }
+
   # 1. Load data for region
   region <- regions[i, ]
   gtfs_day_str <- gsub("-", "", region$gtfs_day)
@@ -40,7 +46,10 @@ for (i in 1:nrow(regions)) {
 
   gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers)) unlist(region$gtfs_url_headers[[1]]) else NULL)
   # assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
-  tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str))
+  gtfs_file_location <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str)
+  if (!file.exists(gtfs_file_location)) {
+    tidytransit::write_gtfs(gtfs, gtfs_file_location)
+  }
 
   gtfs_shapes <- tidytransit::shapes_as_sf(gtfs$shapes)
   bbox <- sf::st_bbox(gtfs_shapes)
@@ -150,14 +159,15 @@ for (i in 1:nrow(regions)) {
     # Filter updates, to remove those close to bus stops
     gtfs_stops <- tidytransit::stops_as_sf(gtfs$stops, crs = 4326)
 
-    within_distance <- st_is_within_distance(rt_collection |> st_transform(crs = 3857), gtfs_stops |> st_transform(crs = 3857), dist = stop_buffer_size)
+    within_distance <- st_is_within_distance(rt_collection |> st_transform(crs = region$metric_crs), gtfs_stops |> st_transform(crs = region$metric_crs), dist = stop_buffer_size)
 
     rt_collection_filtered <- rt_collection[lengths(within_distance) == 0, ]
 
     # Extend prioritization with real-time data
     prioritization <- rt_extend_prioritization(
       lane_prioritization = prioritization,
-      rt_collection = rt_collection_filtered
+      rt_collection = rt_collection_filtered,
+      metric_crs = region$metric_crs
     ) |> mutate(
       # Round all columns that start with speed_ to 2 decimals
       across(starts_with("speed_"), ~ round(., 2))
@@ -175,8 +185,8 @@ for (i in 1:nrow(regions)) {
   st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.gpkg", output_region, region$name, gtfs_day_str, run_day), append = FALSE)
   st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.geojson", output_region, region$name, gtfs_day_str, run_day), append = FALSE)
 
-  ways_length <- ways |> # Convert to 3857 crs
-    st_transform(crs = 3857) |>
+  ways_length <- ways |> # Convert to metric_crs
+    st_transform(crs = region$metric_crs) |>
     # Calculate lenght in meters
     mutate(length_m = st_length(geometry)) |>
     # Drop units
@@ -263,7 +273,8 @@ for (i in 1:nrow(regions)) {
     }
     shape_metadata$stats <- GTFShift::get_prioritization_stats(
       prioritization_shape |> distinct(way_osm_id, .keep_all = TRUE),
-      weight = "length"
+      weight = "length",
+      metric_crs = region$metric_crs
     )
     # Round all numeric values to 2 decimals
     shape_metadata$stats <- lapply(shape_metadata$stats, function(x) {

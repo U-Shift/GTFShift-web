@@ -1,6 +1,7 @@
 # Parameters
 output <- "web_data"
 stop_buffer_size <- 15 # meters
+GTFShiftVersion <- "0.10 (dev version)" # as.character(packageVersion("GTFShift"))
 
 regions <- data.frame(
   name = character(),
@@ -13,20 +14,26 @@ regions <- data.frame(
 )
 data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
 
-regions <- rbind( # Lisboa
+
+regions <- bind_rows( # Lisboa
   regions,
   data.frame(
     name = "lisboa_rt",
     name_long = "Lisboa, Portugal",
-    gtfs_url = data[data$ID == "lisboa", ]$URL,
+    gtfs_url = "web_data/lisboa_rt/gtfs_20260520/run_20260520_082954/gtfs_lisboa_rt_2026-05-20.zip", # data[data$ID == "lisboa", ]$URL,
     gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
     gtfs_manipulate = "manipulate_carris_lx",
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Carris", key_exact = TRUE)
     ))),
+    metric_crs = 3763,
     rt_interval = "13-30/04/2026 (Business Days)",
-    rt_collection = I(list("data/cm_20260413_220260430_business/updates.csv")),
+    rt_collection = I(list(as.character(list.files(
+      "data/cm_20260413_220260430_business",
+      pattern = "^updates_with_speed_.*\\.csv$",
+      full.names = TRUE
+    )))),
     rt_collection_manipulate = I(list(function(df) {
       df |>
         mutate(
@@ -39,8 +46,7 @@ regions <- rbind( # Lisboa
     geofabrik_region = "europe/portugal"
   )
 )
-
-regions <- rbind( # CarrisMetropolitana
+regions <- bind_rows( # CarrisMetropolitana
   regions,
   data.frame(
     name = "aml_rt",
@@ -64,7 +70,7 @@ regions <- rbind( # CarrisMetropolitana
     geofabrik_region = "europe/portugal"
   )
 )
-regions <- rbind( # CarrisMetropolitana, Area 1
+regions <- bind_rows( # CarrisMetropolitana, Area 1
   regions,
   data.frame(
     name = "aml_rt_area_1",
@@ -89,7 +95,7 @@ regions <- rbind( # CarrisMetropolitana, Area 1
   )
 )
 
-regions <- rbind( # CarrisMetropolitana, Area 2
+regions <- bind_rows( # CarrisMetropolitana, Area 2
   regions,
   data.frame(
     name = "aml_rt_area_2",
@@ -114,7 +120,7 @@ regions <- rbind( # CarrisMetropolitana, Area 2
   )
 )
 
-regions <- rbind( # CarrisMetropolitana, Area 3
+regions <- bind_rows( # CarrisMetropolitana, Area 3
   regions,
   data.frame(
     name = "aml_rt_area_3",
@@ -139,7 +145,7 @@ regions <- rbind( # CarrisMetropolitana, Area 3
   )
 )
 
-regions <- rbind( # CarrisMetropolitana, Area 4
+regions <- bind_rows( # CarrisMetropolitana, Area 4
   regions,
   data.frame(
     name = "aml_rt_area_4",
@@ -165,7 +171,7 @@ regions <- rbind( # CarrisMetropolitana, Area 4
 )
 
 
-regions <- rbind( # Cascais
+regions <- bind_rows( # Cascais
   regions,
   data.frame(
     name = "cascais",
@@ -181,7 +187,7 @@ regions <- rbind( # Cascais
 )
 
 
-regions <- rbind( # Barreiro
+regions <- bind_rows( # Barreiro
   regions,
   data.frame(
     name = "barreiro",
@@ -205,7 +211,7 @@ regions <- rbind( # Barreiro
   )
 )
 
-regions <- rbind( # STCP
+regions <- bind_rows( # STCP
   regions,
   data.frame(
     name = "stcp",
@@ -233,7 +239,7 @@ regions <- rbind( # STCP
   )
 )
 
-regions <- rbind( # NYC, MTA
+regions <- bind_rows( # NYC, MTA
   regions,
   data.frame(
     name = "nyc_mta",
@@ -247,7 +253,7 @@ regions <- rbind( # NYC, MTA
 )
 
 # Ghelph, CA
-regions <- rbind(
+regions <- bind_rows(
   regions,
   data.frame(
     name = "guelph",
@@ -262,7 +268,7 @@ regions <- rbind(
   )
 )
 
-regions <- rbind( # Madrid
+regions <- bind_rows( # Madrid
   regions,
   data.frame(
     name = "madrid",
@@ -277,7 +283,7 @@ regions <- rbind( # Madrid
   )
 )
 
-regions <- rbind( # Fuenlabrada, ES
+regions <- bind_rows( # Fuenlabrada, ES
   regions,
   data.frame(
     name = "fuenlabrada",
@@ -293,7 +299,7 @@ regions <- rbind( # Fuenlabrada, ES
   )
 )
 
-regions <- rbind( # Toulouse, FR
+regions <- bind_rows( # Toulouse, FR
   regions,
   data.frame(
     name = "toulouse",
