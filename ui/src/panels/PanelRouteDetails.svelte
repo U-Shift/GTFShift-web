@@ -227,7 +227,7 @@
                             Min Lanes/Dir
                         </p>
                         <p class="text-sm font-bold">
-                            {shape.stats.n_lanes_min}
+                            {shape.stats.n_lanes_circulation_min}
                         </p>
                     </div>
                     <div
@@ -239,7 +239,7 @@
                             Avg Lanes/Dir
                         </p>
                         <p class="text-sm font-bold">
-                            {shape.stats.n_lanes_avg}
+                            {shape.stats.n_lanes_circulation_avg}
                         </p>
                     </div>
                     <div
@@ -251,7 +251,7 @@
                             Max Lanes/Dir
                         </p>
                         <p class="text-sm font-bold">
-                            {shape.stats.n_lanes_max}
+                            {shape.stats.n_lanes_circulation_max}
                         </p>
                     </div>
                 </div>

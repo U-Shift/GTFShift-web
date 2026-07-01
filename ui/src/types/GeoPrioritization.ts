@@ -19,9 +19,12 @@ export interface PrioritizationStats {
     speed_avg?: number;
     speed_min?: number;
     speed_max?: number;
-    n_lanes_avg: number;
-    n_lanes_min: number;
-    n_lanes_max: number;
+    n_lanes_circulation_avg: number;
+    n_lanes_circulation_min: number;
+    n_lanes_circulation_max: number;
+    n_lanes_parking_avg: number;
+    n_lanes_parking_min: number;
+    n_lanes_parking_max: number;
 }
 
 interface HourlyFrequency {
