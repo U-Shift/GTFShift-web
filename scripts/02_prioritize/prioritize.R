@@ -17,7 +17,7 @@ source("02_prioritize/prioritize_parameters.R")
 
 regions <- regions |>
   # filter(name %in% c("lisboa_rt", "aml_rt", "barreiro", "stcp"))
-  filter(name %in% c("toulouse"))
+  filter(name %in% c("aml_rt_area_3"))
 
 # main()
 if (!dir.exists(output)) {
@@ -29,6 +29,7 @@ message("\n\nRunning for regions:\n > ", paste(regions$name_long, collapse = "\n
 message("------------------------------------------------------------------------------------------------------------------------\n\n")
 
 for (i in 1:nrow(regions)) {
+  region <- regions[i, ]
   if(is.null(region$metric_crs) || is.na(region$metric_crs)) {
     stop(sprintf("Please define the metric_crs for region '%s' in prioritize_parameters.R", region$name))
   }
@@ -409,16 +410,22 @@ for (i in 1:nrow(regions)) {
   }
 
   dataCensus <- function(numberArray, weights) {
-    quantiles <- wtd.quantile(numberArray, weights = weights, probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
+    quantiles <- wtd.quantile(numberArray, weights = weights, probs = c(0.05, 0.15, 0.25, 0.5, 0.75, 0.85, 0.95))
     return(list(
       min = round(min(numberArray, na.rm = TRUE), digits = 2),
       max = round(max(numberArray, na.rm = TRUE), digits = 2),
       p5 = round(as.numeric(quantiles[1]), digits = 2),
-      p25 = round(as.numeric(quantiles[2]), digits = 2),
-      p75 = round(as.numeric(quantiles[4]), digits = 2),
-      p95 = round(as.numeric(quantiles[5]), digits = 2),
+      p15 = round(as.numeric(quantiles[2]), digits = 2),
+      p25 = round(as.numeric(quantiles[3]), digits = 2),
+      p75 = round(as.numeric(quantiles[5]), digits = 2),
+      p85 = round(as.numeric(quantiles[6]), digits = 2),
+      p95 = round(as.numeric(quantiles[7]), digits = 2),
       mean = round(wtd.mean(numberArray, weights = weights, na.rm = TRUE), digits = 2),
-      median = round(as.numeric(quantiles[3]), digits = 2),
+      median = round(as.numeric(quantiles[4]), digits = 2),
+      # Compute median for values below p85
+      median_below_p95 = round(wtd.quantile(numberArray[numberArray <= quantiles[7]], weights = weights[numberArray <= quantiles[7]], probs = 0.5, na.rm = TRUE), digits = 2),
+      median_below_p85 = round(wtd.quantile(numberArray[numberArray <= quantiles[6]], weights = weights[numberArray <= quantiles[6]], probs = 0.5, na.rm = TRUE), digits = 2),
+      median_below_p75 = round(wtd.quantile(numberArray[numberArray <= quantiles[5]], weights = weights[numberArray <= quantiles[5]], probs = 0.5, na.rm = TRUE), digits = 2),
       variance = round(wtd.var(numberArray, weights = weights, na.rm = TRUE), digits = 2),
       sd = round(sqrt(wtd.var(numberArray, weights = weights, na.rm = TRUE)), digits = 2),
       count = length(numberArray)
