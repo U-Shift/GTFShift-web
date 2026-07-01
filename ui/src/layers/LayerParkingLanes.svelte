@@ -16,6 +16,7 @@
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
+        onVisibleWayIdsChange = (wayIds) => {},
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
@@ -23,6 +24,7 @@
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
+        onVisibleWayIdsChange: (wayIds: string[]) => void;
         onWaySelect: (wayId: string) => void;
     } = $props();
 
@@ -71,6 +73,9 @@
                 return props?.n_lanes_parking !== undefined && props.n_lanes_parking > 0;
             },
         );
+        const visibleWayIds = filteredFeatures
+            .map((feature) => feature?.properties?.way_osm_id)
+            .filter((wayId): wayId is string => !!wayId);
 
         // Create and add new layer to map, sorted asc so higher counts plot on top
         const newLayer = L.geoJSON(
@@ -113,6 +118,7 @@
         untrack(() => {
             currentLayer = newLayer;
             onLayerCreate(newLayer);
+            onVisibleWayIdsChange(visibleWayIds);
         });
 
         // Zoom to layer (only if there are features with valid bounds)
@@ -128,6 +134,7 @@
                 currentLayer = null;
             }
             wayLayerMap = new Map();
+            onVisibleWayIdsChange([]);
         };
     });
 

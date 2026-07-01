@@ -20,6 +20,7 @@
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
+        onVisibleWayIdsChange = (wayIds) => {},
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
@@ -36,6 +37,7 @@
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
+        onVisibleWayIdsChange: (wayIds: string[]) => void;
         onWaySelect: (wayId: string) => void;
     } = $props();
 
@@ -124,6 +126,9 @@
             "LayerBusLanePrioritization effect running. filteredFeatures length:",
             filteredFeatures.length,
         );
+        const visibleWayIds = filteredFeatures
+            .map((feature) => feature?.properties?.way_osm_id)
+            .filter((wayId): wayId is string => !!wayId);
 
         wayLayerMap = new Map();
 
@@ -177,6 +182,7 @@
         untrack(() => {
             currentLayer = newLayer;
             onLayerCreate(newLayer);
+            onVisibleWayIdsChange(visibleWayIds);
         });
 
         // Zoom to layer (only if there are features with valid bounds)
@@ -192,6 +198,7 @@
                 currentLayer = null;
             }
             wayLayerMap = new Map();
+            onVisibleWayIdsChange([]);
         };
     });
 

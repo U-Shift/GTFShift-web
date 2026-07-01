@@ -91,6 +91,7 @@
     let criteria_n_lanes_direction_enabled: boolean = $state(true);
     let criteria_n_lanes_parking_enabled: boolean = $state(false);
     let criteria_avg_speed_enabled: boolean = $state(true);
+    let visible_way_ids: string[] = $state([]);
 
     let action_hide_form: boolean = $state(false);
     let action_modal_about_open: boolean = $state(false);
@@ -134,6 +135,9 @@
 
     // Action handlers
     const handleLayerCreate = (layer: L.Layer) => {};
+    const handleVisibleWayIdsChange = (wayIds: string[]) => {
+        visible_way_ids = wayIds;
+    };
 
     const handleLayerChange = async (layerId: string) => {
         if (!region || !layerId) return;
@@ -147,6 +151,7 @@
         active_layer = undefined;
         open_accordion = undefined;
         selected_shape_id = "all";
+        visible_way_ids = [];
         geoData = null;
         loading = "data for " + region.name + " (" + selected_layer.name + ")";
 
@@ -1504,6 +1509,7 @@
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
         />
     {:else if active_layer === DisplayOptions.BUS_LANES}
         <LayerBusLanes
@@ -1514,6 +1520,7 @@
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
         />
     {:else if active_layer === DisplayOptions.FREQUENCY}
         <LayerTransitFrequency
@@ -1524,6 +1531,7 @@
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
         />
     {:else if active_layer === DisplayOptions.N_LANES}
         <LayerNumberOfLanes
@@ -1534,6 +1542,7 @@
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
         />
     {:else if active_layer === DisplayOptions.PARKING_LANES}
         <LayerParkingLanes
@@ -1543,6 +1552,7 @@
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
         />
     {:else if active_layer === DisplayOptions.RT_SPEED}
         <LayerRTSpeed
@@ -1553,6 +1563,7 @@
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
         />
     {/if}
 {/if}
@@ -1566,6 +1577,7 @@
         {geoData}
         hour={criteria_hour}
         rt_data={display_rt}
+        visible_way_ids={visible_way_ids}
         onRouteSelect={(shapeId) => {
             selected_shape_id = shapeId;
             selectedWayId = undefined;

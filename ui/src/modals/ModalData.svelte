@@ -11,6 +11,7 @@
         geoData,
         hour,
         rt_data,
+        visible_way_ids = [],
         onWaySelect = (wayId) => {},
         onRouteSelect = (shapeId) => {},
     }: {
@@ -18,6 +19,7 @@
         geoData: GeoPrioritization;
         hour: number;
         rt_data: boolean;
+        visible_way_ids?: string[];
         onWaySelect?: (wayId: string) => void;
         onRouteSelect?: (shapeId: string) => void;
     } = $props();
@@ -27,19 +29,17 @@
 
     $effect(() => {
         if (geoData) {
-            data_filtered = Object.entries(geoData.wayData)
-                .filter(([_, wayData]: [string, any]) => {
-                    return (
-                        wayData.hour_frequency &&
-                        wayData.hour_frequency[hour] !== undefined
-                    );
-                })
-                .map(([wayId, wayData]: [string, any]) => {
+            const visibleWayIdSet = new Set(visible_way_ids);
+
+            data_filtered = Array.from(visibleWayIdSet)
+                .filter((wayId) => !!geoData.wayData[wayId])
+                .map((wayId: string) => {
+                    const wayData = geoData.wayData[wayId];
                     return {
                         properties: {
                             way_osm_id: wayId,
                             ...wayData,
-                            frequency: wayData.hour_frequency[hour],
+                            frequency: wayData.hour_frequency?.[hour],
                             route_names: wayData.routes?.join(", ") || "",
                         },
                     } as unknown as Feature;
@@ -80,7 +80,7 @@
                 <i class="fas fa-table text-primary"></i>
                 Attribute table
                 <span class="text-muted-foreground font-normal text-sm"
-                    >at {hour}:00</span
+                    >at {hour}:00 (Showing {data_filtered.length} rows that match current layer, out of {geoData ? Object.keys(geoData.wayData).length : 0})</span
                 >
             </h2>
             <Button
