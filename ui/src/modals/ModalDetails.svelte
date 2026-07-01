@@ -436,6 +436,21 @@
                                         >
                                     </tr>
                                 {/if}
+                                {#if geoData.metadata.demand && geoData.metadata.demand.notes}
+                                    <tr>
+                                        <th
+                                            class="px-4 py-2 text-left font-medium text-muted-foreground"
+                                            >Demand data notes</th
+                                        >
+                                        <td class="px-4 py-2"
+                                            ><span
+                                                class="text-xs text-primary [&_a]:underline"
+                                                >{@html geoData.metadata.demand
+                                                    .notes}</span
+                                            ></td
+                                        >
+                                    </tr>
+                                {/if}
                                 <tr>
                                     <th
                                         class="px-4 py-2 text-left font-medium text-muted-foreground"

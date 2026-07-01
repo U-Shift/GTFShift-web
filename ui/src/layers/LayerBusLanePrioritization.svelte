@@ -17,6 +17,8 @@
         criteriaNLanesParkingEnabled = false,
         criteriaAvgSpeed = undefined,
         criteriaAvgSpeedEnabled = true,
+        criteriaDemand = undefined,
+        criteriaDemandEnabled = false,
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
@@ -34,6 +36,8 @@
         criteriaNLanesParkingEnabled: boolean;
         criteriaAvgSpeed: number | undefined;
         criteriaAvgSpeedEnabled: boolean;
+        criteriaDemand: number | undefined;
+        criteriaDemandEnabled: boolean;
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
@@ -83,7 +87,13 @@
                 (props.speed_avg !== undefined &&
                     props.speed_avg <= criteriaAvgSpeed);
 
-            return frequencyOk && lanesOk && parkingOk && speedOk;
+            const demandOk =
+                !criteriaDemandEnabled ||
+                criteriaDemand === undefined ||
+                (!Number.isNaN(Number(props.demand)) &&
+                    Number(props.demand) >= criteriaDemand);
+
+            return frequencyOk && lanesOk && parkingOk && speedOk && demandOk;
         });
     });
 
@@ -108,9 +118,14 @@
                 criteriaAvgSpeed === undefined ||
                 (props.speed_avg !== undefined &&
                     props.speed_avg > criteriaAvgSpeed);
+            const demandOk =
+                !criteriaDemandEnabled ||
+                criteriaDemand === undefined ||
+                (!Number.isNaN(Number(props.demand)) &&
+                    Number(props.demand) >= criteriaDemand);
             return {
                 color:
-                    frequencyOk && lanesOk && parkingOk && speedOk
+                    frequencyOk && lanesOk && parkingOk && speedOk && demandOk
                         ? COLOR_TEAL
                         : COLOR_YELLOW,
                 weight: 3.5,

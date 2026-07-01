@@ -17,6 +17,8 @@ source("02_prioritize/prioritize_parameters.R")
 
 regions <- regions |>
   # filter(name %in% c("lisboa_rt", "aml_rt", "barreiro", "stcp"))
+  # filter(name %in% c("lisboa_rt"))
+  # filter(name %in% c("barreiro"))
   filter(name %in% c("aml_rt_area_3"))
 
 # main()
@@ -174,6 +176,25 @@ for (i in 1:nrow(regions)) {
       across(starts_with("speed_"), ~ round(., 2))
     )
   }
+
+  # 3.2. Extend with route demand data if available
+  route_demand <- data.frame(route_id = character(), route_short_name = character(), demand = numeric())
+  if (!is.null(region$demand_for_route) && !is.na(region$demand_for_route) && length(region$demand_for_route) > 0 && !is.null(region$demand_for_route[[1]]) && length(region$demand_for_route[[1]]) > 0 && !all(is.na(region$demand_for_route[[1]]))) {
+    message("Extending with route demand data...")
+    route_demand_files <- as.character(region$demand_for_route[[1]])
+    route_demand <- read.csv(route_demand_files) |>
+      mutate(route_short_name = as.character(route_short_name)) |>
+      right_join(gtfs$routes |> select(route_id, route_short_name), by = "route_short_name") |>
+      filter(!is.na(demand))
+
+    # For each prioritization row, sum route_demand$demand for all routes with route_id in prioritization$routes list
+    prioritization <- prioritization |>
+      rowwise() |>
+      mutate(
+        demand = sum(route_demand$demand[route_demand$route_id %in% routes], na.rm = TRUE)
+      ) |>
+      ungroup()
+  }
   st_write(prioritization |> mutate(
     routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
     shapes = sapply(shapes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE)
@@ -308,7 +329,12 @@ for (i in 1:nrow(regions)) {
   )
   write.csv(nested_shapes_df, sprintf("%s/shape_data_%s_gtfs%s_run%s.csv", output_region, region$name, gtfs_day_str, run_day))
 
-  nested_routes <- lapply(split(gtfs$routes |> select(route_id, route_short_name, route_long_name, route_color, route_text_color), gtfs$routes$route_id), function(df) {
+  nested_routes <- lapply(split(
+    gtfs$routes |> 
+      select(route_id, route_short_name, route_long_name, route_color, route_text_color) |>
+      left_join(route_demand |> select(route_id, demand), by = "route_id"), 
+    gtfs$routes$route_id
+  ), function(df) {
     route_metadata <- df[1, ] %>%
       as.list()
 
@@ -437,7 +463,14 @@ for (i in 1:nrow(regions)) {
     rt_list <- list(
       url = "", # To be edited manually
       period = region$rt_interval,
-      stop_buffer_size = stop_buffer_size
+      stop_buffer_size = stop_buffer_size,
+      notes = region$rt_notes
+    )
+  }
+  demand_list <- NA
+  if (!is.null(region$demand_for_route) && !is.na(region$demand_for_route) && length(region$demand_for_route) > 0 && !is.null(region$demand_for_route[[1]]) && length(region$demand_for_route[[1]]) > 0 && !all(is.na(region$demand_for_route[[1]]))) {
+    demand_list <- list(
+      notes = region$demand_notes
     )
   }
   census_frequency_hour <- list()
@@ -481,6 +514,8 @@ for (i in 1:nrow(regions)) {
       frequency_hour = census_frequency_hour,
       speed_avg_length = NA,
       speed_avg_frequency = NA,
+      demand_frequency = NA,
+      demand_length = NA,
       lanes_length = dataCensus(prioritization_infrastructure$n_lanes_circulation_direction, prioritization_infrastructure$length_m),
       lanes_frequency = dataCensus(prioritization_infrastructure$n_lanes_circulation_direction, prioritization_infrastructure$frequency),
       prioritization_stats_length = lapply(
@@ -505,6 +540,7 @@ for (i in 1:nrow(regions)) {
       )
     ),
     rt = rt_list,
+    demand = demand_list,
     execution = list(
       moment = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
       script = "dev/web_version.R",
@@ -520,6 +556,10 @@ for (i in 1:nrow(regions)) {
   if ("speed_avg" %in% colnames(prioritization_infrastructure)) {
     metadata$data_census$speed_avg_length <- dataCensus(prioritization_infrastructure$speed_avg, prioritization_infrastructure$length_m)
     metadata$data_census$speed_avg_frequency <- dataCensus(prioritization_infrastructure$speed_avg, prioritization_infrastructure$frequency)
+  }
+  if ("demand" %in% colnames(prioritization_infrastructure)) {
+    metadata$data_census$demand_frequency <- dataCensus(prioritization_infrastructure$demand, prioritization_infrastructure$frequency)
+    metadata$data_census$demand_length <- dataCensus(prioritization_infrastructure$demand, prioritization_infrastructure$length_m)
   }
   write_json(
     metadata,

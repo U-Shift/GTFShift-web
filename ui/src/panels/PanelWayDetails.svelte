@@ -123,7 +123,7 @@
                     {#if true}
                         {@const lanesDir = way.n_lanes_circulation_direction ?? 0}
                         {@const lanesCensus =
-                            geoData.metadata.data_census.lanes}
+                            geoData.metadata.data_census.lanes_length}
                         {@const lanesColor = lanesCensus
                             ? getColorFromGradient(
                                   lanesDir,
@@ -157,7 +157,7 @@
                         {#if true}
                             {@const speed = way.speed_avg}
                             {@const speedCensus =
-                                geoData.metadata.data_census.speed_avg}
+                                geoData.metadata.data_census.speed_avg_length}
                             {@const speedColor = speedCensus
                                 ? getColorFromGradient(
                                       speed,
@@ -180,6 +180,44 @@
                                 <div
                                     class="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-xl"
                                     style="background-color: {speedColor}"
+                                ></div>
+                            {/if}
+                        {/if}
+                    </div>
+                {/if}
+
+                <!-- Demand Card -->
+                {#if !Number.isNaN(Number(way.demand))}
+                    <div
+                        class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
+                    >
+                        {#if true}
+                            {@const demand = Number(way.demand)}
+                            {@const demandCensus =
+                                geoData.metadata.data_census.demand_length}
+                            {@const demandColor = demandCensus
+                                ? getColorFromGradient(
+                                      demand,
+                                      demandCensus.p5,
+                                      demandCensus.p95,
+                                      COLOR_GRADIENT,
+                                  )
+                                : null}
+                            <p
+                                class="text-[10px] font-bold uppercase text-muted-foreground mb-1"
+                            >
+                                Demand
+                            </p>
+                            <p class="text-lg font-bold leading-tight">
+                                {Math.round(demand).toLocaleString()}
+                            </p>
+                            <p class="text-[10px] text-muted-foreground">
+                                passengers/day
+                            </p>
+                            {#if demandColor}
+                                <div
+                                    class="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-xl"
+                                    style="background-color: {demandColor}"
                                 ></div>
                             {/if}
                         {/if}

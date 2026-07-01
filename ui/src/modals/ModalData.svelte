@@ -11,6 +11,7 @@
         geoData,
         hour,
         rt_data,
+        demand_data,
         visible_way_ids = [],
         onWaySelect = (wayId) => {},
         onRouteSelect = (shapeId) => {},
@@ -19,6 +20,7 @@
         geoData: GeoPrioritization;
         hour: number;
         rt_data: boolean;
+        demand_data: boolean;
         visible_way_ids?: string[];
         onWaySelect?: (wayId: string) => void;
         onRouteSelect?: (shapeId: string) => void;
@@ -80,7 +82,7 @@
                 <i class="fas fa-table text-primary"></i>
                 Attribute table
                 <span class="text-muted-foreground font-normal text-sm"
-                    >at {hour}:00 (Showing {data_filtered.length} rows that match current layer, out of {geoData ? Object.keys(geoData.wayData).length : 0})</span
+                    >at {hour}:00 (Showing {data_filtered.length} rows displayed in current layer, out of {geoData ? Object.keys(geoData.wayData).length : 0})</span
                 >
             </h2>
             <Button
@@ -165,6 +167,15 @@
                                                 r.properties.speed_count}
                                             >Speed count <small
                                                 >(nr measurements)</small
+                                            ></ThSort
+                                        >
+                                    {/if}
+                                    {#if demand_data}
+                                        <ThSort
+                                            {table}
+                                            field={(r) =>
+                                                r.properties.demand}
+                                            >Demand <small>(passengers/day)</small
                                             ></ThSort
                                         >
                                     {/if}
@@ -262,6 +273,11 @@
                                             <td class="px-4 py-2"
                                                 >{row.properties
                                                     .speed_count}</td
+                                            >
+                                        {/if}
+                                        {#if demand_data}
+                                            <td class="px-4 py-2"
+                                                >{row.properties.demand?.toLocaleString() || "-"}</td
                                             >
                                         {/if}
                                         <td class="px-4 py-2"

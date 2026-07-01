@@ -77,6 +77,8 @@ export interface GeoPrioritization {
             frequency_hour: HourlyFrequency;
             speed_avg_length: StatisticsBundle | undefined;
             speed_avg_frequency: StatisticsBundle | undefined;
+            demand_length?: StatisticsBundle | undefined;
+            demand_frequency?: StatisticsBundle | undefined;
             lanes_length: StatisticsBundle | undefined;
             lanes_frequency: StatisticsBundle | undefined;
             prioritization_stats_frequency: PrioritizationStats | undefined;
@@ -86,6 +88,9 @@ export interface GeoPrioritization {
             url: string;
             period: string;
             stop_buffer_size: number;
+            notes?: string;
+        } | undefined;
+        demand: {
             notes?: string;
         } | undefined;
         execution: {
