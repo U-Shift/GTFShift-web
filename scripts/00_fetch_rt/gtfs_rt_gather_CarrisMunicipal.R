@@ -105,12 +105,12 @@ get_trip_stops <- function(trips_stops, trip_id) {
 
 process_trip <- function(RECORDS, TRIPS_STOPS) {
   trips_processed <- RECORDS |>
-    # filter(trip_id %in% TRIPS_STOPS$trip_id) |> # Only valid trip_id
+    filter(trip_id %in% TRIPS_STOPS$trip_id) |> # Only valid trip_id
     sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) |>
     sf::st_transform(crs = METRIC_CRS) |>
     group_split(trip_id) |>
     purrr::map_dfr(function(trip_df) {
-      # trip_trips_stops = TRIPS_STOPS |> filter(trip_id == trip_df$trip_id[1])
+      trip_trips_stops = TRIPS_STOPS |> filter(trip_id == trip_df$trip_id[1])
       return(trip_df |> mutate(
         time_since_prev_sec = timestamp - lag(timestamp),
         euclidean_distance_since_prev_meters = units::drop_units(st_distance(lag(geometry), geometry, by_element = TRUE)),
@@ -118,10 +118,9 @@ process_trip <- function(RECORDS, TRIPS_STOPS) {
         manhattan_distance_since_prev_meters = distHaversine(cbind(lag(longitude), lag(latitude)), cbind(longitude, latitude)),
         manhattan_speed_kmh = (manhattan_distance_since_prev_meters / 1000) / (time_since_prev_sec / 3600),
       ) |> filter(
-        !is.na(euclidean_speed_kmh)
-        #& # Remove first and last stop (as bus tends to stop there for a while)
-          #current_stop_sequence > trip_trips_stops$min[[1]] &
-          #current_stop_sequence < trip_trips_stops$max[[1]]
+        !is.na(euclidean_speed_kmh) & # Remove first and last stop (as bus tends to stop there for a while)
+          current_stop_sequence > trip_trips_stops$min[[1]] &
+          current_stop_sequence < trip_trips_stops$max[[1]]
       ) |> select(-geometry))
     })
 }
