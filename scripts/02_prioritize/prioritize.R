@@ -17,9 +17,9 @@ source("02_prioritize/prioritize_parameters.R")
 
 regions <- regions |>
   # filter(name %in% c("lisboa_rt", "aml_rt", "barreiro", "stcp"))
-  # filter(name %in% c("lisboa_rt"))
+  filter(name %in% c("lisboa_rt"))
   # filter(name %in% c("barreiro"))
-  filter(name %in% c("aml_rt_area_3"))
+  # filter(name %in% c("aml_rt_area_3"))
 
 # main()
 if (!dir.exists(output)) {
@@ -179,7 +179,12 @@ for (i in 1:nrow(regions)) {
 
   # 3.2. Extend with route demand data if available
   route_demand <- data.frame(route_id = character(), route_short_name = character(), demand = numeric())
-  if (!is.null(region$demand_for_route) && !is.na(region$demand_for_route) && length(region$demand_for_route) > 0 && !is.null(region$demand_for_route[[1]]) && length(region$demand_for_route[[1]]) > 0 && !all(is.na(region$demand_for_route[[1]]))) {
+  has_demand <- !is.null(region$demand_for_route) &&
+    length(region$demand_for_route) > 0 &&
+    !is.null(region$demand_for_route[[1]]) &&
+    length(region$demand_for_route[[1]]) > 0 &&
+    !all(is.na(region$demand_for_route[[1]]))
+  if (has_demand) {
     message("Extending with route demand data...")
     route_demand_files <- as.character(region$demand_for_route[[1]])
     route_demand <- read.csv(route_demand_files) |>
@@ -188,12 +193,19 @@ for (i in 1:nrow(regions)) {
       filter(!is.na(demand))
 
     # For each prioritization row, sum route_demand$demand for all routes with route_id in prioritization$routes list
+    priotitization_demand <- prioritization |>
+      st_drop_geometry() |>
+      select(way_osm_id, hour, routes) |>
+      # Split routes list column in rows
+      tidyr::unnest(routes) |>
+      # Get demand
+      left_join(route_demand |> select(route_id, demand), by = c("routes" = "route_id")) |>
+      # Group back by way_osm_id and hour, summing demand
+      group_by(way_osm_id, hour) |>
+      summarise(demand = sum(demand, na.rm = TRUE), .groups = "drop")      
+      
     prioritization <- prioritization |>
-      rowwise() |>
-      mutate(
-        demand = sum(route_demand$demand[route_demand$route_id %in% routes], na.rm = TRUE)
-      ) |>
-      ungroup()
+      left_join(priotitization_demand, by = c("way_osm_id", "hour"))
   }
   st_write(prioritization |> mutate(
     routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
@@ -223,6 +235,8 @@ for (i in 1:nrow(regions)) {
   ), function(df) {
     # 1. Extract first row and convert to list
     static_df <- df[1, ] %>% select(-way_osm_id, -hour, -frequency)
+    # Asd emand is daily, get max demand for the way_osm_id across all hours (when most routes go through it)
+    static_df$demand <- if ("demand" %in% colnames(df)) max(df$demand, na.rm = TRUE) else NA 
     static_info <- as.list(static_df)
 
     # 2. Extract values from list-columns and wrap routes/shapes in I()
@@ -468,7 +482,7 @@ for (i in 1:nrow(regions)) {
     )
   }
   demand_list <- NA
-  if (!is.null(region$demand_for_route) && !is.na(region$demand_for_route) && length(region$demand_for_route) > 0 && !is.null(region$demand_for_route[[1]]) && length(region$demand_for_route[[1]]) > 0 && !all(is.na(region$demand_for_route[[1]]))) {
+  if (has_demand) {
     demand_list <- list(
       notes = region$demand_notes
     )

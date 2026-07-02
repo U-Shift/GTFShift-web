@@ -1271,7 +1271,7 @@
                             >
                                 <p>
                                     Road segments with bus service are colored
-                                    by demand, from the <span
+                                    by passenger demand, from the <span
                                         style="color: {COLOR_GRADIENT[0]}"
                                         class="bg-black/50 font-bold px-1 rounded"
                                         >P5 ({geoData.metadata.data_census.demand_length?.p5?.toFixed(
