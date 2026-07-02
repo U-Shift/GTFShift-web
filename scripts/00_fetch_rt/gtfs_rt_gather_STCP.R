@@ -1,11 +1,7 @@
----
-title: An R Markdown document converted from "1. GTFS RT aggregation.ipynb"
-output: html_document
----
-
 # GTFS RT aggregation
+# Run with: $ Rscript 00_fetch_rt/gtfs_rt_gather_STCP.R
 
-```{r}
+
 # Native R implementation of the GTFS RT aggregation workflow
 library(jsonlite)
 library(lubridate)
@@ -13,51 +9,51 @@ library(geosphere)
 library(dplyr)
 library(readr)
 library(sf)
-```
+
+
+
 
 ## Parameters
 
-**Important!** Before running, make sure to have `stop_times.txt` GTFS file at `stop_times` folder, with both `.txt` and `.csv` extensions!
-
-```{r}
-folder_path <- "../data/cm_20260413_220260430_business/updates"
-output_folder <- "../data/cm_20260413_220260430_business"
-stop_times <- "../data/cm_20260413_220260430_business/stop_times.txt"
-
-SPEED_STOPPED <- 6 # Only consider updates with <6km/h speed (100 meters difference in 1 min)
 THRESHOLD_UPDATES_PER_TRIP_MIN = 20
 THRESHOLD_SPEED_MAX = 140
 THRESHOLD_TIME_BETWEEN_UPDATES_MAX = 60
 METRIC_CRS <- 3763 # Portugal
-timezone <- lubridate::tz(ymd_hms("2026-01-01 00:00:00", tz = "Europe/Lisbon"))
-```
+
+# Carris Municipal
+folder_path <- "data/stcp_20260413_220260430_business/updates"
+output_folder <- "data/stcp_20260413_220260430_business"
 
 ## Methods
-
-```{r}
 process_json <- function(data, filename, RECORDS_LIST, agency_id = NULL) {
-  day <- strsplit(filename, "_", fixed = TRUE)[[1]][1]
+  # Get timestamp from file name (Eg. 'data/barreiro_20260511_20260515/updates/20260511_000002.json')
+  day <- strsplit(filename, "_", fixed = TRUE)[[1]][2]
 
   for (e in data$entities) {
     vehicle <- e$vehicle
-    if (is.null(vehicle$trip)) {
+    if (is.null(vehicle$trip$trip_id)) {
       message("Skipping vehicle with no trip information in file: ", filename)
       next
     }
 
+    # Get timestamp from file name (Eg. 'data/barreiro_20260511_20260515/updates/20260511_000002.json')
+    # In Python: timestamp = int(datetime.strptime(filename.split('/')[-1].split('.')[0], "%Y%m%d_%H%M%S").timestamp())
+    timestamp <- as.numeric(as.POSIXct(strptime(gsub(".json", "", basename(filename)), "%Y%m%d_%H%M%S"), tz = "Europe/Lisbon"))
+
     trip_id <- vehicle$trip$trip_id
     route_id <- vehicle$trip$route_id
     trip_id_day <- paste0(trip_id, "_", day)
-
-    
+    latitude <- vehicle$position$latitude
+    longitude <- vehicle$position$longitude
+    timestamp <- vehicle$timestamp
 
     # If previous has same timestamp, skip (to avoid duplicates)
     if (is.null(RECORDS_LIST[[trip_id_day]])) {
       RECORDS_LIST[[trip_id_day]] <- data.frame()
     }
     if (nrow(RECORDS_LIST[[trip_id_day]]) > 0 && RECORDS_LIST[[trip_id_day]] |>
-        slice(1) |>
-        pull(timestamp) == vehicle$timestamp) 
+      slice_tail(n = 1) |>
+      pull(timestamp) == timestamp)
     {
       #message("Skipping duplicate timestamp for trip_id: ", trip_id, " on day: ", day)
       next
@@ -67,49 +63,21 @@ process_json <- function(data, filename, RECORDS_LIST, agency_id = NULL) {
       trip_id = trip_id,
       route_id = route_id,
       day = day,
-      latitude = vehicle$position$latitude,
-      longitude = vehicle$position$longitude,
-      timestamp = vehicle$timestamp,
-      current_stop_sequence = vehicle$current_stop_sequence
+      latitude = latitude,
+      longitude = longitude,
+      timestamp = timestamp
     ))
   }
 
   RECORDS_LIST
 }
-```
 
-```{r}
-process_stop_times <- function(file_path) {
-  df <- readr::read_csv(file_path, show_col_types = FALSE)
-  df$stop_sequence <- as.integer(df$stop_sequence)
-  df %>%
-    group_by(trip_id) %>%
-    summarise(min = min(stop_sequence, na.rm = TRUE), max = max(stop_sequence, na.rm = TRUE), .groups = "drop")
-}
-```
-
-```{r}
-get_trip_stops <- function(trips_stops, trip_id) {
-  filtered <- trips_stops[trips_stops$trip_id == trip_id, ]
-
-  if (nrow(filtered) > 0) {
-    c(as.integer(filtered$min[[1]]), as.integer(filtered$max[[1]]))
-  } else {
-    message("Trip ID not found: ", trip_id)
-    c(NA_integer_, NA_integer_)
-  }
-}
-```
-
-```{r}
-process_trip <- function(RECORDS, TRIPS_STOPS) {
+process_trip <- function(RECORDS) {
   trips_processed <- RECORDS |>
-    filter(trip_id %in% TRIPS_STOPS$trip_id) |> # Only valid trip_id
     sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) |>
     sf::st_transform(crs = METRIC_CRS) |>
     group_split(trip_id) |>
     purrr::map_dfr(function(trip_df) {
-      trip_trips_stops = TRIPS_STOPS |> filter(trip_id == trip_df$trip_id[1])
       return(trip_df |> mutate(
         time_since_prev_sec = timestamp - lag(timestamp),
         euclidean_distance_since_prev_meters = units::drop_units(st_distance(lag(geometry), geometry, by_element = TRUE)),
@@ -118,38 +86,15 @@ process_trip <- function(RECORDS, TRIPS_STOPS) {
         manhattan_speed_kmh = (manhattan_distance_since_prev_meters / 1000) / (time_since_prev_sec / 3600),
       ) |> filter(
         !is.na(euclidean_speed_kmh)
-        & # Remove first and last stop (as bus tends to stop there for a while)
-          current_stop_sequence > trip_trips_stops$min[[1]] &
-          current_stop_sequence < trip_trips_stops$max[[1]]
       ) |> select(-geometry))
     })
 }
-```
 
 ## Analysis
 
-### 0. Load stop_times and for each, get min and max stop_sequence
-
-```{r}
-trips_stops <- process_stop_times(stop_times)
-print(trips_stops)
-# Save to a CSV file if needed
-# readr::write_csv(trips_stops, "trip_stop_sequences.csv")
-```
-
-```{r}
-mi_ma <- get_trip_stops(trips_stops, "6348_20260101_106_0_8")
-print(mi_ma[1])
-print(mi_ma[2])
-
-mi_ma <- get_trip_stops(trips_stops, "abc")
-print(mi_ma[1])
-print(mi_ma[2])
-```
-
 ### 1. Aggregate JSONs (one per minute) by trip_id, with record of all updates per trip
 
-```{r}
+
 print("\n1. Starting aggregation of GTSF-RT files...")
 if (!dir.exists(folder_path)) {
   stop(sprintf("Folder '%s' does not exist.", folder_path))
@@ -186,15 +131,17 @@ for (date in json_files_dates) {
   rm(RECORDS_LIST, RECORDS, avg_updates)
   gc()  # Call garbage collector to free up memory
 }
-```
+
+
+
 
 ### 2. Compute speeds for each update (relating each update with previous, Euclidean distance)
 
-```{r}
+
 print("\n2. Starting computation of average speed between updates...")
 for (date in json_files_dates) {
     RECORDS <- read.csv(file.path(output_folder, sprintf("updates_raw_%s.csv", date)))
-    result <- process_trip(RECORDS, trips_stops) |> 
+    result <- process_trip(RECORDS) |> 
       st_drop_geometry()
     
     metrics = result |> group_by(trip_id) |>
@@ -214,4 +161,3 @@ for (date in json_files_dates) {
 
     write.csv(result |> sf::st_drop_geometry(), file.path(output_folder, sprintf("updates_with_speed_%s.csv", date)), row.names = FALSE)
 }
-```
