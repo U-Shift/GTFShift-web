@@ -10,11 +10,13 @@
         selected_shape_id = $bindable(),
         geoData,
         criteria_hour,
+        display_rt
     }: {
         selectedWayId: string | undefined;
         selected_shape_id: string | undefined;
         geoData: GeoPrioritization | null;
         criteria_hour: number;
+        display_rt: boolean;
     } = $props();
 </script>
 
@@ -389,6 +391,134 @@
                     <span>23h</span>
                 </div>
             </section>
+            
+            {#if display_rt && way.hour_speed_avg && Object.values(way.hour_speed_avg)?.some((v) => v != null)}
+                <section
+                    class="space-y-3 p-4 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50"
+                >
+                    <h5 class="text-sm font-bold flex items-center gap-2">
+                        <i class="fas fa-chart-bar text-primary/70"></i>
+                        24h Average Speed
+                    </h5>
+                    <div
+                        class="flex items-end gap-[2px] h-24 pt-2 border-l border-b border-muted-foreground/30 px-1"
+                    >
+                        {#each Array(24) as _, i}
+                            {@const avg_speed = way.hour_speed_avg?.[i] || 0}
+                            {@const maxSpeed =
+                                Math.max(
+                                    ...(Object.values(
+                                        way.hour_speed_avg || { 0: 1 },
+                                    ) as number[]),
+                                ) || 1}
+                            {@const height = Math.max((avg_speed / maxSpeed) * 100, 2)}
+                            {@const hourFreqCensus =
+                                geoData.metadata.data_census.frequency_hour[i]}
+                            {@const barColor = hourFreqCensus
+                                ? getColorFromGradient(
+                                      avg_speed,
+                                      hourFreqCensus.p5,
+                                      hourFreqCensus.p95,
+                                      COLOR_GRADIENT_RED.slice().reverse(),
+                                  )
+                                : "var(--primary)"}
+                            <div
+                                class="flex-1 transition-colors rounded-t-[1px] relative group"
+                                style="height: {height}%; background-color: {barColor}88;"
+                                title="{i}:00 - {avg_speed} km/h"
+                            >
+                                <div
+                                    class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-foreground text-background text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20"
+                                >
+                                    {i}:00: {avg_speed} km/h
+                                </div>
+                            </div>
+                        {/each}
+                    </div>
+                    <div
+                        class="flex justify-between text-[9px] text-muted-foreground font-mono uppercase tracking-tighter mt-1"
+                    >
+                        <span>0h</span>
+                        <span>6h</span>
+                        <span>12h</span>
+                        <span>18h</span>
+                        <span>23h</span>
+                    </div>
+
+                    <div class="overflow-x-auto pt-1">
+                        <table class="w-full min-w-[860px] border-separate border-spacing-x-[2px] border-spacing-y-1">
+                            <tbody>
+                                <tr>
+                                    <th
+                                        class="text-[9px] font-mono font-semibold text-muted-foreground text-left px-2 py-1"
+                                    >
+                                        Metric\Hour
+                                    </th>
+                                    {#each Array(24) as _, i}
+                                        <th
+                                            class="text-[9px] font-mono font-semibold text-muted-foreground text-center px-1 py-1"
+                                        >
+                                            {i}h
+                                        </th>
+                                    {/each}
+                                </tr>
+                                <tr>
+                                    <th
+                                        class="text-[9px] font-semibold text-muted-foreground text-left px-2 py-1 whitespace-nowrap"
+                                    >
+                                        Average speed (km/h)
+                                    </th>
+                                    {#each Array(24) as _, i}
+                                        {@const avgSpeed = way.hour_speed_avg?.[i]}
+                                        <td
+                                            class="text-[10px] font-medium text-center px-1 py-1 rounded bg-background/70 border border-border/30"
+                                            title="{i}:00 hour_speed_avg"
+                                        >
+                                            {avgSpeed == null ? "-" : avgSpeed.toFixed(1)}
+                                        </td>
+                                    {/each}
+                                </tr>
+                                <tr>
+                                    <th
+                                        class="text-[9px] font-semibold text-muted-foreground text-left px-2 py-1 whitespace-nowrap"
+                                    >
+                                        Median speed (km/h)
+                                    </th>
+                                    {#each Array(24) as _, i}
+                                        {@const medianSpeed =
+                                            way.hour_speed_median?.[i]}
+                                        <td
+                                            class="text-[10px] font-medium text-center px-1 py-1 rounded bg-background/70 border border-border/30"
+                                            title="{i}:00 hour_speed_median"
+                                        >
+                                            {medianSpeed == null
+                                                ? "-"
+                                                : medianSpeed.toFixed(1)}
+                                        </td>
+                                    {/each}
+                                </tr>
+                                <tr>
+                                    <th
+                                        class="text-[9px] font-semibold text-muted-foreground text-left px-2 py-1 whitespace-nowrap"
+                                    >
+                                        Speed copunt (nr.)
+                                    </th>
+                                    {#each Array(24) as _, i}
+                                        {@const speedCount =
+                                            way.hour_speed_count?.[i]}
+                                        <td
+                                            class="text-[10px] font-medium text-center px-1 py-1 rounded bg-background/70 border border-border/30"
+                                            title="{i}:00 hour_speed_count"
+                                        >
+                                            {speedCount == null ? "-" : speedCount}
+                                        </td>
+                                    {/each}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            {/if}
         </div>
     </div>
 {/if}

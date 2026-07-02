@@ -1,6 +1,7 @@
 # Initialization -------------------------------------------------------
 output <- "web_data"
 stop_buffer_size <- 15 # meters
+min_updates_for_speed <- 5  # number
 GTFShiftVersion <- "0.10 (dev version)" # as.character(packageVersion("GTFShift"))
 
 # Define regions to analyse
@@ -234,10 +235,14 @@ regions <- bind_rows(
     rt_collection_manipulate = I(list(function(df) {
       df |>
         mutate(
-          speed = as.numeric(euclidean_speed_kmh)
+          speed = as.numeric(euclidean_speed_kmh),
+          # Extract HH from epoch, in local time (Europe/Lisbon)
+          # For instance, 1778737681, which is 2026-05-14 05:48:01 UTC, should return 6, as in 06:48:01 in Europe/Lisbon timezone
+          hh = as.integer(format(as.POSIXct(timestamp, origin = "1970-01-01", tz = "Europe/Lisbon"), "%H"))
         ) |>
         st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
     })),
+    rt_collection_per_hour = TRUE,
     rt_notes = "Due to the fact that TCB GTFS-RT does not disclose vehicles' momentary speed, a proxy was computed for each TripUpdate considering the time and euclidean distance between each update and the previous one. Refer to the <a href=\"https://github.com/U-Shift/GTFShift-web/blob/main/scripts/00_fetch_rt/gtfs_rt_gather_TCBarreiro.Rmd\" target=\"_blank\">script</a> for more details.",
     geofabrik_region = "europe/portugal",
     metric_crs = 3763

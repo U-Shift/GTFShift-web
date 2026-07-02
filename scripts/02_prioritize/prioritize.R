@@ -17,8 +17,8 @@ source("02_prioritize/prioritize_parameters.R")
 
 regions <- regions |>
   # filter(name %in% c("lisboa_rt", "aml_rt", "barreiro", "stcp"))
-  filter(name %in% c("lisboa_rt"))
-  # filter(name %in% c("barreiro"))
+  # filter(name %in% c("lisboa_rt"))
+  filter(name %in% c("barreiro"))
   # filter(name %in% c("aml_rt_area_3"))
 
 # main()
@@ -101,18 +101,6 @@ for (i in 1:nrow(regions)) {
   prioritization <- prioritization |>
     select(way_osm_id, hour, frequency, is_bus_lane, n_lanes_parking, n_lanes_circulation, n_directions, n_lanes_circulation_direction, routes, shapes, name, geometry)
 
-  write.csv(
-    prioritization |>
-      sf::st_drop_geometry() |>
-      mutate(
-        # Convert vector of strings to single string with ";" separator
-        routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
-        shapes = sapply(shapes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE)
-      ),
-    sprintf("%s/prioritization_%s_gtfs%s_run%s.csv", output_region, region$name, gtfs_day_str, run_day),
-    row.names = FALSE
-  )
-
   prioritization_area_polygon <- prioritization |>
     st_union() |>
     st_convex_hull()
@@ -167,14 +155,49 @@ for (i in 1:nrow(regions)) {
     rt_collection_filtered <- rt_collection[lengths(within_distance) == 0, ]
 
     # Extend prioritization with real-time data
-    prioritization <- rt_extend_prioritization(
-      lane_prioritization = prioritization,
+    prioritization_speeds <- rt_extend_prioritization(
+      lane_prioritization = prioritization |> select(way_osm_id) |> distinct(),
       rt_collection = rt_collection_filtered,
       metric_crs = region$metric_crs
-    ) |> mutate(
+    ) |> 
+    filter(speed_count >= min_updates_for_speed) |>
+    mutate(
       # Round all columns that start with speed_ to 2 decimals
       across(starts_with("speed_"), ~ round(., 2))
-    )
+    ) |> st_drop_geometry()
+    prioritization <- prioritization |>
+      left_join(prioritization_speeds, by = "way_osm_id")
+
+    # RT analysis per hour
+    if (isTRUE(region$rt_collection_per_hour) && "hh" %in% colnames(rt_collection_filtered)) {
+      message("Extending prioritization with real-time data per hour...")
+      hours <- unique(rt_collection_filtered$hh)
+      prioritization_hour_aggregated <- data.frame()
+      for (h in hours) {
+        rt_collection_hour <- rt_collection_filtered |> filter(hh == h)
+        prioritization_hour <- prioritization |> filter(hour == h) |> select(way_osm_id, hour) # No need for distinct(), as it already has one row per way_osm_id and hour
+        if (nrow(rt_collection_hour) > 0 && nrow(prioritization_hour) > 0) {
+          prioritization_hour_extended <- rt_extend_prioritization(
+            lane_prioritization = prioritization_hour,
+            rt_collection = rt_collection_hour,
+            metric_crs = region$metric_crs
+          ) |> 
+          filter(speed_count >= min_updates_for_speed) |>
+          mutate(
+            # Round all columns that start with speed_ to 2 decimals
+            across(starts_with("speed_"), ~ round(., 2))
+          ) |> 
+          # Prepend all columns that start with speed_ with hour_
+          rename_with(.cols = starts_with("speed_"), .fn = ~ paste0("hour_", .)) |>
+          st_drop_geometry()
+          # Update prioritization_hour with extended data for this hour
+          prioritization_hour_aggregated <- bind_rows(prioritization_hour_aggregated, prioritization_hour_extended)
+        }
+      }
+      # Left join prioritization with prioritization_hour_aggregated by way_osm_id and hour
+      prioritization <- prioritization |>
+        left_join(prioritization_hour_aggregated, by = c("way_osm_id", "hour"))
+    }
   }
 
   # 3.2. Extend with route demand data if available
@@ -207,6 +230,17 @@ for (i in 1:nrow(regions)) {
     prioritization <- prioritization |>
       left_join(priotitization_demand, by = c("way_osm_id", "hour"))
   }
+  write.csv(
+    prioritization |>
+      sf::st_drop_geometry() |>
+      mutate(
+        # Convert vector of strings to single string with ";" separator
+        routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
+        shapes = sapply(shapes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE)
+      ),
+    sprintf("%s/prioritization_%s_gtfs%s_run%s.csv", output_region, region$name, gtfs_day_str, run_day),
+    row.names = FALSE
+  )
   st_write(prioritization |> mutate(
     routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
     shapes = sapply(shapes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE)
@@ -234,8 +268,8 @@ for (i in 1:nrow(regions)) {
     prioritization$way_osm_id
   ), function(df) {
     # 1. Extract first row and convert to list
-    static_df <- df[1, ] %>% select(-way_osm_id, -hour, -frequency)
-    # Asd emand is daily, get max demand for the way_osm_id across all hours (when most routes go through it)
+    static_df <- df[1, ] %>% select(-way_osm_id, -hour, -frequency, -starts_with("hour_"))
+    # As demand is daily, get max demand for the way_osm_id across all hours (when most routes go through it)
     static_df$demand <- if ("demand" %in% colnames(df)) max(df$demand, na.rm = TRUE) else NA 
     static_info <- as.list(static_df)
 
@@ -260,8 +294,26 @@ for (i in 1:nrow(regions)) {
     # 3. Hourly frequencies (auto_unbox will handle these as single numbers)
     hourly_freqs <- setNames(as.list(df$frequency), df$hour)
 
+    # 4. Hourly speeds (auto_unbox will handle these as single numbers)
+    if ("hour_speed_avg" %in% colnames(df)) {
+      # For avg, meadian, p25, p75 and count
+      hourly_speeds_avg <- setNames(as.list(df$hour_speed_avg), df$hour)
+      hourly_speeds_median <- setNames(as.list(df$hour_speed_median), df$hour)
+      hourly_speeds_p25 <- setNames(as.list(df$hour_speed_p25), df$hour)
+      hourly_speeds_p75 <- setNames(as.list(df$hour_speed_p75), df$hour)
+      hourly_speeds_count <- setNames(as.list(df$hour_speed_count), df$hour)
+      return(c(static_info, list(
+        hour_frequency = hourly_freqs,
+        hour_speed_avg = hourly_speeds_avg,
+        hour_speed_median = hourly_speeds_median,
+        hour_speed_p25 = hourly_speeds_p25,
+        hour_speed_p75 = hourly_speeds_p75,
+        hour_speed_count = hourly_speeds_count
+      )))
+    }
+
     # Combine
-    c(static_info, list(hour_frequency = hourly_freqs))
+    return (c(static_info, list(hour_frequency = hourly_freqs)))
   })
   json_string <- toJSON(
     nested_data,

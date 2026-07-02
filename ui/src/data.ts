@@ -355,7 +355,6 @@ export const DB_REGIONS: DataRegion[] = [
                     zip: BASE_URL + '/data/barreiro/barreiro.zip'
                 }
             },
-            
             {
                 id: 'barreiro_after_crs_fix',
                 name: 'After CRS fix, Euclidean Speed Avg',
@@ -370,6 +369,22 @@ export const DB_REGIONS: DataRegion[] = [
                     route_data: BASE_URL + '/data/barreiro/after_crs_fix/route_data_barreiro_gtfs20260520_run20260701.json',
                     shape_data: BASE_URL + '/data/barreiro/after_crs_fix/shape_data_barreiro_gtfs20260520_run20260701.json',
                     zip: BASE_URL + '/data/barreiro/after_crs_fix/barreiro.zip'
+                }
+            },
+            {
+                id: 'barreiro_speed_by_hour',
+                name: 'After CRS fix, Euclidean Speed Avg, Speed by hour',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 97.2,
+                files: {
+                    ways: BASE_URL + '/data/barreiro/speed_by_hour/ways_barreiro_gtfs20260520_run20260702.geojson',
+                    boundaries: BASE_URL + '/data/barreiro/speed_by_hour/prioritization_area_polygon_barreiro_gtfs20260520_run20260702.geojson',
+                    way_data: BASE_URL + '/data/barreiro/speed_by_hour/way_data_barreiro_gtfs20260520_run20260702.json',
+                    metadata: BASE_URL + '/data/barreiro/speed_by_hour/metadata_barreiro_gtfs20260520_run20260702.json',
+                    route_data: BASE_URL + '/data/barreiro/speed_by_hour/route_data_barreiro_gtfs20260520_run20260702.json',
+                    shape_data: BASE_URL + '/data/barreiro/speed_by_hour/shape_data_barreiro_gtfs20260520_run20260702.json',
+                    zip: BASE_URL + '/data/barreiro/speed_by_hour/barreiro.zip'
                 }
             },
         ]

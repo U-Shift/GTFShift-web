@@ -1363,6 +1363,7 @@
     bind:selected_shape_id
     {geoData}
     {criteria_hour}
+    {display_rt}
 />
 
 <!-- Route Details Panel (shown when a shape is selected and no way is selected) -->
