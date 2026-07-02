@@ -34,17 +34,21 @@ regions <- bind_rows(
     metric_crs = 3763,
     rt_interval = "13-30/04/2026 (Business Days)",
     rt_collection = I(list(as.character(list.files(
-      "data/cm_20260413_220260430_business/processing_after_duplicate_timestamp_fix_withFirstAndLastStops",
+      "data/cm_20260413_220260430_business/processing_after_duplicate_timestamp_fix",
       pattern = "^updates_with_speed_.*\\.csv$",
       full.names = TRUE
     )))),
     rt_collection_manipulate = I(list(function(df) {
       df |>
         mutate(
-          speed = as.numeric(euclidean_speed_kmh)
+          speed = as.numeric(euclidean_speed_kmh),
+          # Extract HH from epoch, in local time (Europe/Lisbon)
+          # For instance, 1778737681, which is 2026-05-14 05:48:01 UTC, should return 6, as in 06:48:01 in Europe/Lisbon timezone
+          hh = as.integer(format(as.POSIXct(timestamp, origin = "1970-01-01", tz = "Europe/Lisbon"), "%H"))
         ) |>
         st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
     })),
+    rt_collection_per_hour = TRUE,
     rt_notes = "Due to the fact that Carris GTFS-RT does not disclose vehicles' momentary speed, a proxy was computed for each TripUpdate considering the time and euclidean distance between each update and the previous one. Refer to the <a href=\"https://github.com/U-Shift/GTFShift-web/blob/main/scripts/00_fetch_rt/gtfs_rt_gather_CarrisMunicipal.Rmd\" target=\"_blank\">script</a> for more details.",
     geofabrik_region = "europe/portugal"
   )

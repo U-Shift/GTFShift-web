@@ -110,20 +110,21 @@ export const DB_REGIONS: DataRegion[] = [
 
             },
             {
-                id: 'route_data_lisboa_rt_gtfs20260520_run20260702_lanes_fix_2',
-                name: 'After CRS fix, Euclidean Speed Avg (Avoid Duplicate Timestamps, Parking Fix)',
+                id: 'same_data_crs_fix_speed_per_hour',
+                name: 'After CRS fix, Euclidean Speed Avg (Avoid Duplicate Timestamps, Parking Fix, Speed per hour)',
                 date: 'May 2026',
                 rt_data: true,
                 matched_frequencies_peak: 98.9,
                 files: {
-                    ways: BASE_URL + '/data/lisbon/lanes_fix_2/ways_lisboa_rt_gtfs20260520_run20260702.geojson',
-                    boundaries: BASE_URL + '/data/lisbon/lanes_fix_2/prioritization_area_polygon_lisboa_rt_gtfs20260520_run20260702.geojson',
-                    way_data: BASE_URL + '/data/lisbon/lanes_fix_2/way_data_lisboa_rt_gtfs20260520_run20260702.json',
-                    metadata: BASE_URL + '/data/lisbon/lanes_fix_2/metadata_lisboa_rt_gtfs20260520_run20260702.json',
-                    route_data: BASE_URL + '/data/lisbon/lanes_fix_2/route_data_lisboa_rt_gtfs20260520_run20260702.json',
-                    shape_data: BASE_URL + '/data/lisbon/lanes_fix_2/shape_data_lisboa_rt_gtfs20260520_run20260702.json',
-                    zip: BASE_URL + '/data/lisbon/lanes_fix_2/lisbon.zip'
+                    ways: BASE_URL + '/data/lisbon/same_data_crs_fix_speed_per_hour/ways_lisboa_rt_gtfs20260520_run20260702.geojson',
+                    boundaries: BASE_URL + '/data/lisbon/same_data_crs_fix_speed_per_hour/prioritization_area_polygon_lisboa_rt_gtfs20260520_run20260702.geojson',
+                    way_data: BASE_URL + '/data/lisbon/same_data_crs_fix_speed_per_hour/way_data_lisboa_rt_gtfs20260520_run20260702.json',
+                    metadata: BASE_URL + '/data/lisbon/same_data_crs_fix_speed_per_hour/metadata_lisboa_rt_gtfs20260520_run20260702.json',
+                    route_data: BASE_URL + '/data/lisbon/same_data_crs_fix_speed_per_hour/route_data_lisboa_rt_gtfs20260520_run20260702.json',
+                    shape_data: BASE_URL + '/data/lisbon/same_data_crs_fix_speed_per_hour/shape_data_lisboa_rt_gtfs20260520_run20260702.json',
+                    zip: BASE_URL + '/data/lisbon/same_data_crs_fix_speed_per_hour/lisbon.zip'
                 }
+
             },
             {
                 id: 'route_data_lisboa_rt_gtfs20260520_run20260702_same_data_crs_fix_with_first_and_last_stops',

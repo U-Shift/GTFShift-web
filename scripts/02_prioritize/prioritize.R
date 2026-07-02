@@ -17,8 +17,8 @@ source("02_prioritize/prioritize_parameters.R")
 
 regions <- regions |>
   # filter(name %in% c("lisboa_rt", "aml_rt", "barreiro", "stcp"))
-  # filter(name %in% c("lisboa_rt"))
-  filter(name %in% c("barreiro"))
+  filter(name %in% c("lisboa_rt"))
+  # filter(name %in% c("barreiro"))
   # filter(name %in% c("aml_rt_area_3"))
 
 # main()
