@@ -205,7 +205,7 @@
             );
             display_demand = Object.values(geoData.wayData).some((data: any) => {
                 const demandValue = Number(data.demand);
-                return !Number.isNaN(demandValue);
+                return data.demand!==null && !Number.isNaN(demandValue);
             });
 
             // Set criteria base values
