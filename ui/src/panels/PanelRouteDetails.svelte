@@ -160,10 +160,13 @@
         {#if shapeWays.length > 0}
             <section class="space-y-2">
                 <h5
-                    class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                    class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-0"
                 >
                     Road Segment Indicators
                 </h5>
+                <p class="col-span-3 text-[10px] text-muted-foreground mb-2">
+                    Average values weighted by segment length.
+                </p>
                 <div class="grid grid-cols-3 gap-2">
                     <!-- Speed indicators -->
                     {#if shape.stats?.speed_min && shape.stats?.speed_max && shape.stats?.speed_avg}
@@ -215,6 +218,9 @@
                                 >
                             </p>
                         </div>
+                        <p class="col-span-3 text-[10px] text-muted-foreground">
+                            Speed metrics considering speed at segment level (which considers all routes that go through it). 
+                        </p>
                     {/if}
 
                     <!-- Lanes indicators -->

@@ -10,17 +10,13 @@ https://ushift.pt/apps/gtfshift
 
 ## About 
 
-**GTFShift** emerged from the necessity to understand how to get an
-overview of where bus lanes should be prioritized for a given territory, using General Transit Feed Specification (GTFS) and OpenStreetMap (OSM) data.
+**GTFShift Bus lane prioritization tool** is an interactive dashboard that provides a comprehensive bundle of indicators to support the identification and prioritization of road segments where bus lanes should be implemented for some case studies.
 
-It provides several methods to identify road segments where bus lanes should be implemented, 
-enabling for a transparent and data-driven decision-making process, suitable to different contexts
-and criteria. 
+It covers several dimensions of this problem, namely bus frequency, infrastructure availability, traffic conditions, passenger demand and network continuity. Together, these can be used to identify road segments where bus lanes should be implemented, enabling for a transparent and data-driven decision-making process, suitable to different contexts and criteria.
 
-This web app provides a user-friendly interface to explore the functionalities of the R package, 
-that can be found at [github.com/U-Shift/GTFShift](https://github.com/U-Shift/GTFShift). Refer to the 
-[official documentation](https://u-shift.github.io/GTFShift/index.html) for more details.
+The results are based on the application of the **GTFShift R package**, an open-source software tool that implements the methodology behind this dashboard, allowing for the replication and application of the methodology to other case studies.
 
+For details on the methodology and code, refer to R package the [official documentation](https://u-shift.github.io/GTFShift/index.html) and the code repository, at [github.com/U-Shift/GTFShift](https://github.com/U-Shift/GTFShift). 
 
 ## Acknowledgement
 

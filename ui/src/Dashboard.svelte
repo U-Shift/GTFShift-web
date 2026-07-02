@@ -1068,7 +1068,7 @@
                 <Accordion.Item value={DisplayOptions.BUS_LANES.toString()}>
                     <Accordion.Trigger
                         class="text-sm font-medium hover:no-underline"
-                        >Bus lanes</Accordion.Trigger
+                        >Existing bus lanes</Accordion.Trigger
                     >
                     <Accordion.Content>
                         <p class="text-xs text-muted-foreground pt-2">
@@ -1105,7 +1105,7 @@
                 <Accordion.Item value={DisplayOptions.FREQUENCY.toString()}>
                     <Accordion.Trigger
                         class="text-sm font-medium hover:no-underline"
-                        >Transit frequency</Accordion.Trigger
+                        >Bus frequency</Accordion.Trigger
                     >
                     <Accordion.Content>
                         <div
@@ -1113,7 +1113,7 @@
                         >
                             <p>
                                 Road segments with bus service are colored by
-                                frequency, from the <span
+                                frequency, for the selected hour, from the <span
                                     style="color: {COLOR_GRADIENT[0]}"
                                     class="bg-black/50 font-bold px-1 rounded"
                                     >P5 ({geoData.metadata.data_census
@@ -1226,7 +1226,8 @@
                             >
                                 <p>
                                     Road segments with bus service are colored
-                                    by the average speed measured, from the <span
+                                    by the average speed measured (for the full days of the real-time data 
+                                    collection interval), from the <span
                                         style="color: {COLOR_GRADIENT_RED.slice().reverse()[0]}"
                                         class="font-bold"
                                         >P5 ({geoData.metadata.data_census.speed_avg_length?.p5?.toFixed(
@@ -1263,7 +1264,7 @@
                     <Accordion.Item value={DisplayOptions.DEMAND.toString()}>
                         <Accordion.Trigger
                             class="text-sm font-medium hover:no-underline"
-                            >Demand</Accordion.Trigger
+                            >Passenger demand</Accordion.Trigger
                         >
                         <Accordion.Content>
                             <div
@@ -1271,7 +1272,8 @@
                             >
                                 <p>
                                     Road segments with bus service are colored
-                                    by passenger demand, from the <span
+                                    by passenger demand (cumulative for the representative day in study), 
+                                    from the <span
                                         style="color: {COLOR_GRADIENT[0]}"
                                         class="bg-black/50 font-bold px-1 rounded"
                                         >P5 ({geoData.metadata.data_census.demand_length?.p5?.toFixed(

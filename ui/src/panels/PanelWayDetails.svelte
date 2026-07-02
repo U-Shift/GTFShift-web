@@ -178,6 +178,9 @@
                                 <span class="text-[10px] font-normal">km/h</span
                                 >
                             </p>
+                            <p class="text-[10px] text-muted-foreground">
+                                For whole RT data collection interval
+                            </p>
                             {#if speedColor}
                                 <div
                                     class="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-xl"
@@ -189,7 +192,7 @@
                 {/if}
 
                 <!-- Demand Card -->
-                {#if !Number.isNaN(Number(way.demand))}
+                {#if way.demand!=null}
                     <div
                         class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
                     >
