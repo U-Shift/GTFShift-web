@@ -20,6 +20,7 @@ export const COLOR_GRADIENT_RED: string[] = ["#ffffcc", "#fffecb", "#fffec9", "#
 // From https://observablehq.com/@d3/color-schemes
 
 export const DB_REGIONS: DataRegion[] = [
+    /*
     {
         id: 'aml_unified',
         name: 'Lisbon Metro Area',
@@ -47,7 +48,8 @@ export const DB_REGIONS: DataRegion[] = [
                 }
             }
         ]
-    },
+    }
+    */
     {
         id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260316',
         name: 'Carris',
@@ -59,10 +61,10 @@ export const DB_REGIONS: DataRegion[] = [
         layers: [
             {
                 id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260316',
-                name: 'All network',
+                name: 'Original data, Euclidean Speed Avg (No CRS fix)',
                 date: 'May 2026',
                 rt_data: true,
-                matched_frequencies_peak: 99.7,
+                matched_frequencies_peak: 98.9,
                 files: {
                     ways: BASE_URL + '/data/lisbon/ways_lisboa_rt_gtfs2026-05-20_run20260518.geojson',
                     boundaries: BASE_URL + '/data/lisbon/prioritization_area_polygon_lisboa_rt_gtfs2026-05-20_run20260518.geojson',
@@ -72,18 +74,86 @@ export const DB_REGIONS: DataRegion[] = [
                     shape_data: BASE_URL + '/data/lisbon/shape_data_lisboa_rt_gtfs2026-05-20_run20260518.json',
                     zip: BASE_URL + '/data/lisbon/lisbon.zip'
                 }
+            },
+            {
+                id: 'prioritization_lisboa_rt_gtfs20260520_run20260630',
+                name: 'After CRS fix, Euclidean Speed Avg',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.9,
+                files: {
+                    ways: BASE_URL + '/data/lisbon/same_data_crs_fix/ways_lisboa_rt_gtfs20260520_run20260630.geojson',
+                    boundaries: BASE_URL + '/data/lisbon/same_data_crs_fix/prioritization_area_polygon_lisboa_rt_gtfs20260520_run20260630.geojson',
+                    way_data: BASE_URL + '/data/lisbon/same_data_crs_fix/way_data_lisboa_rt_gtfs20260520_run20260630.json',
+                    metadata: BASE_URL + '/data/lisbon/same_data_crs_fix/metadata_lisboa_rt_gtfs20260520_run20260630.json',
+                    route_data: BASE_URL + '/data/lisbon/same_data_crs_fix/route_data_lisboa_rt_gtfs20260520_run20260630.json',
+                    shape_data: BASE_URL + '/data/lisbon/same_data_crs_fix/shape_data_lisboa_rt_gtfs20260520_run20260630.json',
+                    zip: BASE_URL + '/data/lisbon/same_data_crs_fix/lisbon.zip'
+                }
+
+            },
+            {
+                id: 'route_data_lisboa_rt_gtfs20260520_run20260701_no_stop_buffer',
+                name: 'After CRS fix, Euclidean Speed Avg (No Stop Buffer)',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.9,
+                files: {
+                    ways: BASE_URL + '/data/lisbon/same_data_crs_fix_no_stop_buffer/ways_lisboa_rt_gtfs20260520_run20260701.geojson',
+                    boundaries: BASE_URL + '/data/lisbon/same_data_crs_fix_no_stop_buffer/prioritization_area_polygon_lisboa_rt_gtfs20260520_run20260701.geojson',
+                    way_data: BASE_URL + '/data/lisbon/same_data_crs_fix_no_stop_buffer/way_data_lisboa_rt_gtfs20260520_run20260701.json',
+                    metadata: BASE_URL + '/data/lisbon/same_data_crs_fix_no_stop_buffer/metadata_lisboa_rt_gtfs20260520_run20260701.json',
+                    route_data: BASE_URL + '/data/lisbon/same_data_crs_fix_no_stop_buffer/route_data_lisboa_rt_gtfs20260520_run20260701.json',
+                    shape_data: BASE_URL + '/data/lisbon/same_data_crs_fix_no_stop_buffer/shape_data_lisboa_rt_gtfs20260520_run20260701.json',
+                    zip: BASE_URL + '/data/lisbon/same_data_crs_fix_no_stop_buffer/lisbon.zip'
+                }
+
+            },
+            {
+                id: 'route_data_lisboa_rt_gtfs20260520_run20260702_lanes_fix_2',
+                name: 'After CRS fix, Euclidean Speed Avg (Avoid Duplicate Timestamps, Parking Fix)',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.9,
+                files: {
+                    ways: BASE_URL + '/data/lisbon/lanes_fix_2/ways_lisboa_rt_gtfs20260520_run20260702.geojson',
+                    boundaries: BASE_URL + '/data/lisbon/lanes_fix_2/prioritization_area_polygon_lisboa_rt_gtfs20260520_run20260702.geojson',
+                    way_data: BASE_URL + '/data/lisbon/lanes_fix_2/way_data_lisboa_rt_gtfs20260520_run20260702.json',
+                    metadata: BASE_URL + '/data/lisbon/lanes_fix_2/metadata_lisboa_rt_gtfs20260520_run20260702.json',
+                    route_data: BASE_URL + '/data/lisbon/lanes_fix_2/route_data_lisboa_rt_gtfs20260520_run20260702.json',
+                    shape_data: BASE_URL + '/data/lisbon/lanes_fix_2/shape_data_lisboa_rt_gtfs20260520_run20260702.json',
+                    zip: BASE_URL + '/data/lisbon/lanes_fix_2/lisbon.zip'
+                }
+            },
+            {
+                id: 'route_data_lisboa_rt_gtfs20260520_run20260702_same_data_crs_fix_with_first_and_last_stops',
+                name: 'After CRS fix, Euclidean Speed Avg (With First and Last Stops)',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.9,
+                files: {
+                    ways: BASE_URL + '/data/lisbon/same_data_crs_fix_with_first_and_last_stops/ways_lisboa_rt_gtfs20260520_run20260702.geojson',
+                    boundaries: BASE_URL + '/data/lisbon/same_data_crs_fix_with_first_and_last_stops/prioritization_area_polygon_lisboa_rt_gtfs20260520_run20260702.geojson',
+                    way_data: BASE_URL + '/data/lisbon/same_data_crs_fix_with_first_and_last_stops/way_data_lisboa_rt_gtfs20260520_run20260702.json',
+                    metadata: BASE_URL + '/data/lisbon/same_data_crs_fix_with_first_and_last_stops/metadata_lisboa_rt_gtfs20260520_run20260702.json',
+                    route_data: BASE_URL + '/data/lisbon/same_data_crs_fix_with_first_and_last_stops/route_data_lisboa_rt_gtfs20260520_run20260702.json',
+                    shape_data: BASE_URL + '/data/lisbon/same_data_crs_fix_with_first_and_last_stops/shape_data_lisboa_rt_gtfs20260520_run20260702.json',
+                    zip: BASE_URL + '/data/lisbon/same_data_crs_fix_with_first_and_last_stops/lisbon.zip'
+                }
             }
+
         ]
     },
     {
         id: 'aml',
-        name: 'Carris Metropolitana',
+        name: 'Carris Metropolitana (Area 3)',
         region: 'Lisbon Metro Area, PT',
         rt_data: true,
         logo: BASE_URL + '/static/regions/carrismetropolitana.png',
         date: 'Feb - May 2026',
         color: '#ffdd01',
         layers: [
+            /*
             {
                 id: 'aml_1_2_3_4',
                 name: 'All network',
@@ -132,9 +202,10 @@ export const DB_REGIONS: DataRegion[] = [
                     zip: BASE_URL + '/data/aml_2/aml_2.zip'
                 }
             },
+            */
             {
                 id: 'aml_a3',
-                name: 'Area 3',
+                name: 'Original data, Instant Speed Avg',
                 date: 'May 2026',
                 rt_data: true,
                 matched_frequencies_peak: 98.7,
@@ -148,6 +219,71 @@ export const DB_REGIONS: DataRegion[] = [
                     zip: BASE_URL + '/data/aml_3/aml_3.zip'
                 }
             },
+            {
+                id: 'aml_a3_after_crs_fix',
+                name: 'After CRS fix, Instant Avg Speed',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.7,
+                files: {
+                    ways: BASE_URL + '/data/aml_3/same_data_crs_fix/ways_aml_rt_area_3_gtfs20260520_run20260701.geojson',
+                    boundaries: BASE_URL + '/data/aml_3/same_data_crs_fix/prioritization_area_polygon_aml_rt_area_3_gtfs20260520_run20260701.geojson',
+                    way_data: BASE_URL + '/data/aml_3/same_data_crs_fix/way_data_aml_rt_area_3_gtfs20260520_run20260701.json',
+                    metadata: BASE_URL + '/data/aml_3/same_data_crs_fix/metadata_aml_rt_area_3_gtfs20260520_run20260701.json',
+                    route_data: BASE_URL + '/data/aml_3/same_data_crs_fix/route_data_aml_rt_area_3_gtfs20260520_run20260701.json',
+                    shape_data: BASE_URL + '/data/aml_3/same_data_crs_fix/shape_data_aml_rt_area_3_gtfs20260520_run20260701.json',
+                    zip: BASE_URL + '/data/aml_3/same_data_crs_fix/aml_3.zip'
+                }
+            },
+            {
+                id: 'aml_a3_after_crs_fix_no_stop_buffer',
+                name: 'After CRS fix, Instant Avg Speed (No Stop Buffer)',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.7,
+                files: {
+                    ways: BASE_URL + '/data/aml_3/same_data_crs_fix_no_stop_buffer/ways_aml_rt_area_3_gtfs20260520_run20260701.geojson',
+                    boundaries: BASE_URL + '/data/aml_3/same_data_crs_fix_no_stop_buffer/prioritization_area_polygon_aml_rt_area_3_gtfs20260520_run20260701.geojson',
+                    way_data: BASE_URL + '/data/aml_3/same_data_crs_fix_no_stop_buffer/way_data_aml_rt_area_3_gtfs20260520_run20260701.json',
+                    metadata: BASE_URL + '/data/aml_3/same_data_crs_fix_no_stop_buffer/metadata_aml_rt_area_3_gtfs20260520_run20260701.json',
+                    route_data: BASE_URL + '/data/aml_3/same_data_crs_fix_no_stop_buffer/route_data_aml_rt_area_3_gtfs20260520_run20260701.json',
+                    shape_data: BASE_URL + '/data/aml_3/same_data_crs_fix_no_stop_buffer/shape_data_aml_rt_area_3_gtfs20260520_run20260701.json',
+                    zip: BASE_URL + '/data/aml_3/same_data_crs_fix/aml_3.zip'
+                }
+            },
+            {
+                id: 'aml_a3_after_crs_fix_with_demand_fix_3',
+                name: 'After CRS fix, Instant Avg Speed, With Demand',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.7,
+                files: {
+                    ways: BASE_URL + '/data/aml_3/same_data_crs_fix_with_demand_fix_3/ways_aml_rt_area_3_gtfs20260520_run20260702.geojson',
+                    boundaries: BASE_URL + '/data/aml_3/same_data_crs_fix_with_demand_fix_3/prioritization_area_polygon_aml_rt_area_3_gtfs20260520_run20260702.geojson',
+                    way_data: BASE_URL + '/data/aml_3/same_data_crs_fix_with_demand_fix_3/way_data_aml_rt_area_3_gtfs20260520_run20260702.json',
+                    metadata: BASE_URL + '/data/aml_3/same_data_crs_fix_with_demand_fix_3/metadata_aml_rt_area_3_gtfs20260520_run20260702.json',
+                    route_data: BASE_URL + '/data/aml_3/same_data_crs_fix_with_demand_fix_3/route_data_aml_rt_area_3_gtfs20260520_run20260702.json',
+                    shape_data: BASE_URL + '/data/aml_3/same_data_crs_fix_with_demand_fix_3/shape_data_aml_rt_area_3_gtfs20260520_run20260702.json',
+                    zip: BASE_URL + '/data/aml_3/same_data_crs_fix_with_demand_fix_3/aml_3.zip'
+                }
+            },
+            {
+                id: 'aml_a3_speed_euclidean',
+                name: 'After CRS fix, Euclidean Speed',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.7,
+                files: {
+                    ways: BASE_URL + '/data/aml_3/speed_euclidean/ways_aml_rt_area_3_gtfs20260520_run20260702.geojson',
+                    boundaries: BASE_URL + '/data/aml_3/speed_euclidean/prioritization_area_polygon_aml_rt_area_3_gtfs20260520_run20260702.geojson',
+                    way_data: BASE_URL + '/data/aml_3/speed_euclidean/way_data_aml_rt_area_3_gtfs20260520_run20260702.json',
+                    metadata: BASE_URL + '/data/aml_3/speed_euclidean/metadata_aml_rt_area_3_gtfs20260520_run20260702.json',
+                    route_data: BASE_URL + '/data/aml_3/speed_euclidean/route_data_aml_rt_area_3_gtfs20260520_run20260702.json',
+                    shape_data: BASE_URL + '/data/aml_3/speed_euclidean/shape_data_aml_rt_area_3_gtfs20260520_run20260702.json',
+                    zip: BASE_URL + '/data/aml_3/speed_euclidean/aml_3.zip'
+                }
+            }
+            /*
             {
                 id: 'aml_a4',
                 name: 'Area 4',
@@ -163,10 +299,10 @@ export const DB_REGIONS: DataRegion[] = [
                     shape_data: BASE_URL + '/data/aml_4/shape_data_aml_rt_area_4_gtfs2026-05-20_run20260518.json',
                     zip: BASE_URL + '/data/aml_4/aml_4.zip'
                 }
-            }
+            }*/
         ]
     },
-    {
+    /*{
         id: 'cascais',
         name: 'MobiCascais',
         region: 'Cascais, PT',
@@ -193,6 +329,7 @@ export const DB_REGIONS: DataRegion[] = [
             }
         ]
     },
+    */
     {
         id: 'barreiro',
         name: 'Barreiro',
@@ -204,7 +341,7 @@ export const DB_REGIONS: DataRegion[] = [
         layers: [
             {
                 id: 'barreiro',
-                name: 'All network',
+                name: 'Original Data, geopy.distance.geodesic speed without CRS fix',
                 date: 'May 2026',
                 rt_data: true,
                 matched_frequencies_peak: 97.2,
@@ -217,7 +354,24 @@ export const DB_REGIONS: DataRegion[] = [
                     shape_data: BASE_URL + '/data/barreiro/shape_data_barreiro_gtfs2026-05-20_run20260519.json',
                     zip: BASE_URL + '/data/barreiro/barreiro.zip'
                 }
-            }
+            },
+            
+            {
+                id: 'barreiro_after_crs_fix',
+                name: 'After CRS fix, Euclidean Speed Avg',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 97.2,
+                files: {
+                    ways: BASE_URL + '/data/barreiro/after_crs_fix/ways_barreiro_gtfs20260520_run20260701.geojson',
+                    boundaries: BASE_URL + '/data/barreiro/after_crs_fix/prioritization_area_polygon_barreiro_gtfs20260520_run20260701.geojson',
+                    way_data: BASE_URL + '/data/barreiro/after_crs_fix/way_data_barreiro_gtfs20260520_run20260701.json',
+                    metadata: BASE_URL + '/data/barreiro/after_crs_fix/metadata_barreiro_gtfs20260520_run20260701.json',
+                    route_data: BASE_URL + '/data/barreiro/after_crs_fix/route_data_barreiro_gtfs20260520_run20260701.json',
+                    shape_data: BASE_URL + '/data/barreiro/after_crs_fix/shape_data_barreiro_gtfs20260520_run20260701.json',
+                    zip: BASE_URL + '/data/barreiro/after_crs_fix/barreiro.zip'
+                }
+            },
         ]
     },
     {
@@ -231,7 +385,7 @@ export const DB_REGIONS: DataRegion[] = [
         layers: [
             {
                 id: 'porto',
-                name: 'All network',
+                name: 'Original data, Instant Speed Avg',
                 date: 'May 2026',
                 rt_data: true,
                 matched_frequencies_peak: 72.0,
@@ -244,9 +398,26 @@ export const DB_REGIONS: DataRegion[] = [
                     shape_data: BASE_URL + '/data/porto/shape_data_stcp_gtfs2026-05-20_run20260519.json',
                     zip: BASE_URL + '/data/porto/porto.zip'
                 }
+            },
+            {
+                id: 'porto_after_crs_fix',
+                name: 'After CRS fix, Euclidean Speed Avg',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 72.0,
+                files: {
+                    ways: BASE_URL + '/data/porto/after_crs_fix/ways_stcp_gtfs20260520_run20260702.geojson',
+                    boundaries: BASE_URL + '/data/porto/after_crs_fix/prioritization_area_polygon_stcp_gtfs20260520_run20260702.geojson',
+                    way_data: BASE_URL + '/data/porto/after_crs_fix/way_data_stcp_gtfs20260520_run20260702.json',
+                    metadata: BASE_URL + '/data/porto/after_crs_fix/metadata_stcp_gtfs20260520_run20260702.json',
+                    route_data: BASE_URL + '/data/porto/after_crs_fix/route_data_stcp_gtfs20260520_run20260702.json',
+                    shape_data: BASE_URL + '/data/porto/after_crs_fix/shape_data_stcp_gtfs20260520_run20260702.json',
+                    zip: BASE_URL + '/data/porto/after_crs_fix/porto.zip'
+                }
             }
         ]
-    },
+    }
+    /*
     {
         id: 'madrid',
         name: 'EMT Madrid',
@@ -274,4 +445,5 @@ export const DB_REGIONS: DataRegion[] = [
             }
         ]
     }
+        */
 ]
