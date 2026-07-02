@@ -1,0 +1,25 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: GTFShift: Bus lane prioritization tool
+message: 'If you use this software, please cite it as below.'
+type: software
+authors:
+  - family-names: Matos
+    given-names: Gonçalo F.
+    orcid: 'https://orcid.org/0009-0001-3489-1732'
+  - family-names: Félix
+    given-names: Rosa
+    orcid: 'https://orcid.org/0000-0002-5642-6006'
+repository-code: 'https://github.com/U-Shift/GTFShift-web'
+url: 'https://ushift.pt/apps/gtfshift'
+keywords:
+  - Bus lanes
+  - GTFS
+  - Transit planning
+  - Network prioritization
+  - Decision support tool
+license: GPL-3.0
+version: '1.1'
+date-released: '2026-05-29'
