@@ -41,14 +41,15 @@ shape_case_study = gtfs_shapes_sf |>
 updates = read.csv(UPDATES_RAW)
 names(updates)
 updates_case_study = updates |> 
-  filter(trip_id==TRIP_ID_UPDATES) |>
+  filter(trip_id==TRIP_ID_UPDATES)
+updates_case_study_sf = updates_case_study |> 
   st_as_sf(coords=c("lon","lat"), crs=4326)
 nrow(updates_case_study)
 names(updates_case_study)
 updates_case_study
 
 mapview(shape_case_study, color="navyblue", lwd=3, layer.name="GTFS Shape", alpha=0.3) + 
-    mapview(updates_case_study, zcol="timestamp", layer.name="GTFS-RT updates") 
+    mapview(updates_case_study_sf, zcol="timestamp", layer.name="GTFS-RT updates") 
   
 ## Store sample 
-write.csv(updates_case_study |> st_drop_geometry(), paste0("data/samples/updates_case_study_", OPERATOR,"_", TRIP_ID_UPDATES, ".csv"), row.names=FALSE)
+write.csv(updates_case_study, paste0("data/samples/updates_case_study_", OPERATOR,"_", TRIP_ID_UPDATES, ".csv"), row.names=FALSE)

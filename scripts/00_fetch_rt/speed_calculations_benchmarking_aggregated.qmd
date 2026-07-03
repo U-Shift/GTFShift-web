@@ -1,0 +1,120 @@
+---
+title: "Speed Calculations Thresholds Benchmarking for STCP, Porto"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+---
+
+This document aims to evaluate different thresholds to consider GTFS-RT updates as valid for speed calculations.
+
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(sf)
+library(mapview)
+library(tidyr)
+library(knitr)
+```
+
+
+## Parameters
+
+### Case study
+
+```{r} 
+UPDATES_RAW = "/home/goncalo/Documents/ushift/GTFShift-web/scripts/data/stcp_20260413_220260430_business/updates_prev_crs_fix.csv"
+```
+
+```{r, eval=FALSE, echo=FALSE} 
+UPDATES_RAW = "/home/goncalo/Documents/ushift/GTFShift-web/scripts/data/cmet_20260413_220260430_business_a3/updates_instantSpeeds.csv"
+```
+
+```{r, eval=FALSE, echo=FALSE} 
+UPDATES_RAW = "/home/goncalo/Documents/ushift/GTFShift-web/scripts/data/cm_20260413_220260430_business/processing_20260508/updates.csv"
+```
+
+### Algorithm criteria
+
+```{r}
+THRESHOLD_UPDATES_PER_TRIP_MIN = c(5, 10, 20, 30, 40, 50, 60) # absolute nr
+THRESHOLD_TIME_BETWEEN_UPDATES_MAX = c(60, 90, 120, 150, 180, 240, 300) # seconds
+```
+
+## Set up initial data 
+
+### Get updates 
+
+```{r}
+updates = read.csv(UPDATES_RAW)
+```
+
+```{r, echo=FALSE}
+message("Number of updates: ", nrow(updates))
+message("Number of trips: ", length(unique(updates$trip_id)))
+message("Timestamp range: ", 
+  as.POSIXct(min(updates$timestamp), origin="1970-01-01", tz="UTC"), 
+  " to ",
+  as.POSIXct(max(updates$timestamp), origin="1970-01-01", tz="UTC")
+)
+```
+
+## Calculate indicators
+
+```{r}
+updates_indicators = updates |> 
+  group_split(trip_id) |>
+    purrr::map_dfr(function(trip_df) {
+      trip_df = trip_df |> arrange(timestamp)
+      return(trip_df |> mutate(
+        time_since_prev_sec = timestamp - lag(timestamp)
+      ))
+    })
+
+summary(updates_indicators$time_since_prev_sec)
+sd(updates_indicators$time_since_prev_sec, na.rm = TRUE)
+
+n_updates_per_trip = updates_indicators |>
+  group_by(trip_id) |>
+  summarise(n_updates = n(), .groups = "drop")
+
+summary(n_updates_per_trip$n_updates)
+sd(n_updates_per_trip$n_updates, na.rm = TRUE)
+
+summary(updates$speed)
+sd(updates$speed, na.rm = TRUE)
+```
+
+## Benchmark different approaches
+```{r, echo=FALSE}
+time_threshold_results <- lapply(THRESHOLD_TIME_BETWEEN_UPDATES_MAX, function(threshold) {
+  filtered_data <- updates_indicators |>
+    filter(time_since_prev_sec > threshold)
+  n_exceeding <- nrow(filtered_data)
+  return(data.frame(threshold = threshold, n_exceeding = n_exceeding))
+})
+time_threshold_results_df <- do.call(rbind, time_threshold_results)
+
+n_updates_per_trip_results <- lapply(THRESHOLD_UPDATES_PER_TRIP_MIN, function(threshold) {
+  filtered_data <- updates_indicators |>
+    group_by(trip_id) |>
+    summarise(n_updates = n(), .groups = "drop") |>
+    filter(n_updates < threshold)
+  n_exceeding <- nrow(filtered_data)
+  return(data.frame(threshold = threshold, n_exceeding = n_exceeding))
+})
+n_updates_per_trip_results_df <- do.call(rbind, n_updates_per_trip_results)
+
+# Display knits table with original n, n exceeding, and percentage exceeding for each threshold (for both time and updates per trip)
+threshold_summary <- function(results_df, threshold_type) {
+  results_df <- results_df |>
+    mutate(
+      total_trips = nrow(updates_indicators |> group_by(trip_id) |> summarise(n_updates = n(), .groups = "drop")),
+      percentage_exceeding = round((n_exceeding / total_trips) * 100, 2)
+    )
+  
+  knitr::kable(results_df, caption = paste("Threshold Summary for", threshold_type))
+}
+threshold_summary(time_threshold_results_df, "Time Between Updates")
+threshold_summary(n_updates_per_trip_results_df, "Number of Updates Per Trip")
+```
