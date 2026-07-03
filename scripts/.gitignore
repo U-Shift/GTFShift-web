@@ -13,3 +13,6 @@ osm_scrap/*
 
 osm_gtfs/*
 gtfs_external/*
+*/*_files/*
+**/html*
+*.html

@@ -1,0 +1,410 @@
+---
+title: "Speed Calculations Benchmarking for STCP, Porto"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+---
+
+This document aims to evaluate different approaches to compute speed for GTFS-RT updates.
+
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(sf)
+library(mapview)
+library(tidyr)
+library(knitr)
+```
+
+
+## Parameters
+
+Case study
+
+```{r, eval=FALSE, echo=FALSE}
+GTFS_RT_SAMPLE = "https://github.com/U-Shift/GTFShift-web/releases/download/v1.1/updates_case_study_carris_20260416_41474_20260101_190_0_3.csv"
+GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris.zip"
+OSM_SHAPES = "https://github.com/U-Shift/busclar/releases/download/0.9/shapes_match_carris_gtfs20260527_run20260626.gpkg"
+TRIP_ID_UPDATES = "20260416_41474_20260101_190_0_3"
+TRIP_ID_GTFS = "41474_20260101_190_0_3"
+```
+
+```{r, eval=FALSE, echo=FALSE}
+GTFS_RT_SAMPLE = "https://github.com/U-Shift/GTFShift-web/releases/download/v1.1/updates_case_study_cmet_20260413_.KFULM.3526_1_1_0930_0959_0_ESC_DU.csv"
+GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris_metropolitana.zip"
+OSM_SHAPES = "https://github.com/U-Shift/busclar/releases/download/0.9/shapes_match_carris_metropolitana_gtfs20260527_run20260626.gpkg"
+TRIP_ID_UPDATES = "20260413_[KFULM]3526_1_1_0930_0959_0_ESC_DU"
+TRIP_ID_GTFS = "3526_1_1_0930_0959_0_ESC_DU"
+```
+
+```{r}
+GTFS_RT_SAMPLE = "https://github.com/U-Shift/GTFShift-web/releases/download/v1.1/updates_case_study_stcp_20260421_600_0_2.224.D1.T8.N7.csv"
+GTFS_FEED_URL = "https://opendata.porto.digital/dataset/5275c986-592c-43f5-8f87-aabbd4e4f3a4/resource/d4bc4f97-5a43-42a4-b30d-09dd9604f90c/download/gtfs_feed.zip"
+OSM_SHAPES = "https://github.com/U-Shift/GTFShift/releases/download/v0.9/shapes_match_stcp_gtfs2026-05-07_run20260507.gpkg"
+TRIP_ID_UPDATES = "20260421_600_0_2|224|D1|T8|N7"
+TRIP_ID_GTFS = "600_0_2\\|224\\|D1\\|T8\\|N7"
+```
+
+
+Algorithm criteria
+
+```{r}
+METRIC_CRS = 3763 # ETRS89 / Portugal TM06
+SHAPE_SAMPLE_METERS = 10 # Segments to consider when sampling the shape for distance along shape calculations
+THRESHOLD_UPDATES_PER_TRIP_MIN = 20
+THRESHOLD_SPEED_MAX = 140
+THRESHOLD_TIME_BETWEEN_UPDATES_MAX = c(60, 90, 120, 150, 180, 240, 300) # seconds
+```
+
+
+## Set up initial data 
+
+### Get shape for trip
+
+```{r}
+gtfs = tidytransit::read_gtfs(GTFS_FEED_URL)
+trip_info = gtfs$trips |> filter(grepl(TRIP_ID_GTFS, trip_id))
+trip_shape_id = trip_info$shape_id[[1]]
+if (is.na(trip_shape_id)) {
+  stop("No shape_id found for trip_id: ", TRIP_ID_GTFS)
+}
+gtfs_shapes_sf = tidytransit::shapes_as_sf(gtfs$shapes)
+shape_case_study = gtfs_shapes_sf |> filter(shape_id==trip_shape_id)
+shape_case_study$shape_id <- gsub("^\\[[^]]*\\]\\s*", "", shape_case_study$shape_id) # Compatibility with Carris Metropolitana
+trip_shape_id <- gsub("^\\[[^]]*\\]\\s*", "", trip_shape_id)
+```
+
+
+### Get OSM shape for trip
+
+```{r}
+osm_shapes = st_read(OSM_SHAPES)
+osm_shape = osm_shapes |> filter(shape_id == trip_shape_id) 
+if (nrow(osm_shape) == 0) {
+  stop("No OSM shape found for trip_id: ", shape_case_study$shape_id[[1]])
+}
+```
+
+
+### Get updates for trip
+
+```{r}
+updates_case_study = read.csv(GTFS_RT_SAMPLE) |>
+  # For each trip_id, ignore duplicate timestamp
+  group_by(trip_id, timestamp) |>
+  slice(1) |>
+  ungroup()
+required_cols = c("timestamp", "lat", "lon")
+if (!all(required_cols %in% colnames(updates_case_study))) {
+  stop("Missing required columns in GTFS-RT updates: ", paste(setdiff(required_cols, colnames(updates_case_study)), collapse=", "))
+}
+updates_case_study = updates_case_study |> 
+  st_as_sf(coords=c("lon","lat"), crs=4326)
+```
+
+
+### Visualize initial data 
+
+```{r}
+mapview(shape_case_study, color="blue", lwd=3, layer.name="GTFS Shape", alpha=0.3) + 
+  mapview(osm_shape, color="navyblue", lwd=3, layer.name="OSM Shape", alpha=0.3) +
+    mapview(updates_case_study, zcol="timestamp", layer.name="GTFS-RT updates") 
+```
+
+
+
+## Instant speed 
+
+> Disregard this metric for Carris, Lisboa, as it is not provided by the GTFS-RT feed. The values presented were computed with the previous Python script that had CRS errors.
+
+```{r}
+if ("speed" %in% colnames(updates_case_study)) {
+  summary(updates_case_study$speed)
+  sd(updates_case_study$speed)
+
+  mapview(osm_shape, color="navyblue", lwd=3, layer.name="OSM Shape", alpha=0.3) +
+    mapview(updates_case_study, zcol="speed", layer.name="GTFS-RT updates (Instant speed)") 
+} 
+```
+
+
+## Euclidean distance speed
+
+```{r}
+timestamp_euclidean_start <- Sys.time()
+trips_processed_euclidean <- updates_case_study |>
+    sf::st_transform(crs = METRIC_CRS) |>
+    group_split(trip_id) |>
+    purrr::map_dfr(function(trip_df) {
+      return(trip_df |> 
+      arrange(timestamp) |>
+      mutate(
+        time_since_prev_sec = timestamp - lag(timestamp),
+        euclidean_distance_since_prev_meters = units::drop_units(st_distance(lag(geometry), geometry, by_element = TRUE)),
+        euclidean_speed_kmh = (euclidean_distance_since_prev_meters / 1000) / (time_since_prev_sec / 3600),
+        euclidean_distance_since_prev_meters = round(euclidean_distance_since_prev_meters, 2),
+        euclidean_speed_kmh = round(euclidean_speed_kmh, 2)
+      ) |> filter(
+        !is.na(euclidean_speed_kmh)
+      ) |> select(-geometry))
+    })
+timestamp_euclidean_end <- Sys.time()
+
+message("Euclidean speed calculations completed in ", round(difftime(timestamp_euclidean_end, timestamp_euclidean_start, units="secs"), 2), " seconds.")
+
+summary(trips_processed_euclidean$euclidean_speed_kmh)
+sd(trips_processed_euclidean$euclidean_speed_kmh)
+
+mapview(osm_shape, color="navyblue", lwd=3, layer.name="OSM Shape", alpha=0.3) +
+  mapview(trips_processed_euclidean, zcol="euclidean_speed_kmh", layer.name="GTFS-RT updates (Euclidean speed)")
+```
+
+
+## Shape distance speed
+
+For each update, find the closest point on the shape and compute the distance along the shape to the previous update. Then compute speed based on that distance and time difference.
+
+```{r}
+timestamp_shape_distance_start <- Sys.time()
+trips_processed_shape_distance <- updates_case_study |>
+  sf::st_transform(crs = METRIC_CRS) |>
+  group_split(trip_id) |>
+  purrr::map_dfr(function(trip_df) {
+    trip_df <- trip_df |> arrange(timestamp) |> st_transform(crs = METRIC_CRS)
+    shape_line <- shape_case_study |> filter(shape_id == trip_shape_id) |> st_transform(crs = METRIC_CRS)
+    
+    # Find the closest point on the shape for each update
+    closest_points <- st_nearest_points(trip_df$geometry, shape_line$geometry)
+    pts_all <- st_cast(closest_points, "POINT")
+    n <- length(closest_points)
+    matched_on_shape <- pts_all[seq(2, length(pts_all), by = 2)]
+    trip_df <- trip_df |> dplyr::mutate(closest_on_shape = matched_on_shape)
+    # mapview(shape_line, color="navyblue", lwd=3, layer.name="OSM Shape", alpha=0.3) +
+      # mapview(trip_df, zcol="timestamp", layer.name="GTFS-RT updates") +
+      # mapview(closest_points, color="red", lwd=2, layer.name="sf::st_nearest_points") + 
+      # mapview(trip_df$closest_on_shape, color="green", lwd=2, layer.name="Matched points on shape")
+
+    # Sample shape_line with segments of 10 meters
+    line_len_m <- as.numeric(st_length(shape_line))
+    shape_line_sampled <- st_line_sample(shape_line, density = 1/SHAPE_SAMPLE_METERS)
+    shape_line_sampled_points <- st_cast(shape_line_sampled, "POINT")
+    cumdist_m <- seq(0, line_len_m, length.out = length(shape_line_sampled_points))
+    # mapview(shape_line_sampled_points, color="orange", lwd=2, layer.name="Sampled shape line")    
+    
+    # Get closest sampled point on shape for each update and compute distance along shape
+    idx <- st_nearest_feature(trip_df$closest_on_shape, shape_line_sampled_points)
+    dist_along_m <- cumdist_m[idx]
+    trip_df$distance_along_shape_m <- dist_along_m
+    trip_df <- trip_df |> mutate(
+      time_since_prev_sec = timestamp - lag(timestamp),
+      shape_distance_since_prev_meters = distance_along_shape_m - lag(distance_along_shape_m),
+      shape_speed_kmh = (shape_distance_since_prev_meters / 1000) / (time_since_prev_sec / 3600),
+      shape_distance_since_prev_meters = round(shape_distance_since_prev_meters, 2),
+      shape_speed_kmh = round(shape_speed_kmh, 2),
+      shape_position_m = round(distance_along_shape_m, 2)
+    ) |> filter(
+        !is.na(shape_speed_kmh) &
+        shape_speed_kmh>=0 # Remove negative speeds
+    ) |> select(-distance_along_shape_m) 
+
+    return(trip_df)
+  })
+timestamp_shape_distance_end <- Sys.time()
+message("Shape distance speed calculations completed in ", round(difftime(timestamp_shape_distance_end, timestamp_shape_distance_start, units="secs"), 2), " seconds.")
+
+summary(trips_processed_shape_distance$shape_speed_kmh)
+sd(trips_processed_shape_distance$shape_speed_kmh)
+
+mapview(shape_case_study, color="blue", lwd=3, layer.name="GTFS Shape", alpha=0.3) + 
+  mapview(trips_processed_shape_distance, zcol="shape_speed_kmh", layer.name="GTFS-RT updates (Shape distance speed)")
+```
+
+
+# Benchmark different approaches
+
+## Aggregated results and differences between speed calculations
+
+```{r, echo=FALSE}
+trips_processed_aggregated = updates_case_study |> select(any_of(c("trip_id", "timestamp", "speed"))) |>
+  left_join(trips_processed_euclidean |> st_drop_geometry() |> select(trip_id, timestamp, euclidean_speed_kmh, euclidean_distance_since_prev_meters, time_since_prev_sec), by=c("trip_id", "timestamp")) |>
+  left_join(trips_processed_shape_distance |> st_drop_geometry() |> select(trip_id, timestamp, shape_speed_kmh, shape_distance_since_prev_meters, shape_position_m), by=c("trip_id", "timestamp")) |>
+  mutate(
+    instant_vs_euclidean_diff = round(abs(speed - euclidean_speed_kmh), 2),
+    instant_vs_shape_diff = round(abs(speed - shape_speed_kmh), 2),
+    euclidean_vs_shape_diff = round(abs(euclidean_speed_kmh - shape_speed_kmh), 2)
+  )
+
+mapview(osm_shape, color="navyblue", lwd=3, layer.name="OSM Shape", alpha=0.3) +
+  mapview(trips_processed_aggregated, zcol="euclidean_vs_shape_diff", layer.name="GTFS-RT updates (Euclidean vs Shape)") +
+  mapview(trips_processed_aggregated, zcol="instant_vs_euclidean_diff", layer.name="GTFS-RT updates (Instant vs Euclidean)", hide = TRUE) +
+  mapview(trips_processed_aggregated, zcol="instant_vs_shape_diff", layer.name="GTFS-RT updates (Instant vs Shape)", hide = TRUE)
+```
+
+```{r}
+summary(trips_processed_aggregated$instant_vs_euclidean_diff)
+summary(trips_processed_aggregated$instant_vs_shape_diff)
+summary(trips_processed_aggregated$euclidean_vs_shape_diff)
+```
+
+
+## Measures of central tendency and dispersion for each speed calculation method
+
+```{r, echo=FALSE}
+speed_metrics <- trips_processed_aggregated |>
+  st_drop_geometry() |>
+  summarise(
+    n_updates_instant = n(),
+    mean_instant_speed_kmh = mean(speed, na.rm=TRUE),
+    sd_instant_speed_kmh = sd(speed, na.rm=TRUE),
+    median_instant_speed_kmh = median(speed, na.rm=TRUE),
+    min_instant_speed_kmh = min(speed, na.rm=TRUE),
+    p5_instant = quantile(speed, 0.05, na.rm=TRUE),
+    p95_instant = quantile(speed, 0.95, na.rm=TRUE),
+    max_instant_speed_kmh = max(speed, na.rm=TRUE),
+
+    n_updates_euclidean = sum(!is.na(euclidean_speed_kmh)),
+    mean_euclidean_speed_kmh = mean(euclidean_speed_kmh, na.rm=TRUE),
+    sd_euclidean_speed_kmh = sd(euclidean_speed_kmh, na.rm=TRUE),
+    median_euclidean_speed_kmh = median(euclidean_speed_kmh, na.rm=TRUE),
+    min_euclidean_speed_kmh = min(euclidean_speed_kmh, na.rm=TRUE),
+    p5_euclidean = quantile(euclidean_speed_kmh, 0.05, na.rm=TRUE),
+    p95_euclidean = quantile(euclidean_speed_kmh, 0.95, na.rm=TRUE),
+    max_euclidean_speed_kmh = max(euclidean_speed_kmh, na.rm=TRUE),
+
+    # Count only the updates where shape_speed_kmh is not NA, since some updates may not have a valid shape speed due to missing or invalid data.
+    n_updates_shape = sum(!is.na(shape_speed_kmh)),
+    mean_shape_speed_kmh = mean(shape_speed_kmh, na.rm=TRUE),
+    sd_shape_speed_kmh = sd(shape_speed_kmh, na.rm=TRUE),
+    median_shape_speed_kmh = median(shape_speed_kmh, na.rm=TRUE),
+    min_shape_speed_kmh = min(shape_speed_kmh, na.rm=TRUE),
+    p5_shape = quantile(shape_speed_kmh, 0.05, na.rm=TRUE),
+    p95_shape = quantile(shape_speed_kmh, 0.95, na.rm=TRUE),
+    max_shape_speed_kmh = max(shape_speed_kmh, na.rm=TRUE)
+  )
+
+speed_metrics_long <- speed_metrics %>%
+  pivot_longer(
+    cols = matches("^(mean|sd|median|min|p5|p95|max|n_updates)_"),
+    names_to = c("metric", "speed_type"),
+    names_pattern = "^(mean|sd|median|min|p5|p95|max|n_updates)_(instant|euclidean|shape)(?:_speed_kmh|_speed)?$",
+    values_to = "value"
+  ) %>%
+  pivot_wider(names_from = speed_type, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("mean","sd","median","min","p5","p95","max","n_updates"))) %>%
+  arrange(metric)
+
+knitr::kable(speed_metrics_long, caption = "Speed metrics for different speed calculation methods")
+```
+
+
+## Measures of central tendency and dispersion for distance
+
+```{r, echo=FALSE}
+distance_metrics <- trips_processed_aggregated |>
+  st_drop_geometry() |>
+  summarise(
+    n_updates_euclidean = sum(!is.na(euclidean_speed_kmh)),
+    mean_euclidean_distance_m = mean(euclidean_distance_since_prev_meters, na.rm=TRUE),
+    sd_euclidean_distance_m = sd(euclidean_distance_since_prev_meters, na.rm=TRUE),
+    median_euclidean_distance_m = median(euclidean_distance_since_prev_meters, na.rm=TRUE),
+    min_euclidean_distance_m = min(euclidean_distance_since_prev_meters, na.rm=TRUE),
+    p5_euclidean_distance_m = quantile(euclidean_distance_since_prev_meters, 0.05, na.rm=TRUE),
+    p95_euclidean_distance_m = quantile(euclidean_distance_since_prev_meters, 0.95, na.rm=TRUE),
+    max_euclidean_distance_m = max(euclidean_distance_since_prev_meters, na.rm=TRUE),
+
+    n_updates_shape = sum(!is.na(shape_speed_kmh)),
+    mean_shape_distance_m = mean(shape_distance_since_prev_meters, na.rm=TRUE),
+    sd_shape_distance_m = sd(shape_distance_since_prev_meters, na.rm=TRUE),
+    median_shape_distance_m = median(shape_distance_since_prev_meters, na.rm=TRUE),
+    min_shape_distance_m = min(shape_distance_since_prev_meters, na.rm=TRUE),
+    p5_shape_distance_m = quantile(shape_distance_since_prev_meters, 0.05, na.rm=TRUE),
+    p95_shape_distance_m = quantile(shape_distance_since_prev_meters, 0.95, na.rm=TRUE),
+    max_shape_distance_m = max(shape_distance_since_prev_meters, na.rm=TRUE)
+  )
+
+distance_metrics_long <- distance_metrics %>%
+  pivot_longer(
+    cols = matches("^(mean|sd|median|min|p5|p95|max|n_updates)_"),
+    names_to = c("metric", "distance_type"),
+    names_pattern = "^(mean|sd|median|min|p5|p95|max|n_updates)_(euclidean|shape)(?:_distance_m)?$",
+    values_to = "value"
+  ) %>%
+  pivot_wider(names_from = distance_type, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("mean","sd","median","min","p5","p95","max","n_updates"))) %>%
+  arrange(metric)
+
+knitr::kable(distance_metrics_long, caption = "Distance metrics for different distance calculation methods")
+```
+
+
+## Measures of central tendency and dispersion for time between updates
+
+```{r, echo=FALSE}
+time_metrics <- trips_processed_aggregated |>
+  st_drop_geometry() |>
+  summarise(
+    n_updates = n(),
+    mean_time_between_updates_sec = mean(time_since_prev_sec, na.rm=TRUE),
+    sd_time_between_updates_sec = sd(time_since_prev_sec, na.rm=TRUE),
+    median_time_between_updates_sec = median(time_since_prev_sec, na.rm=TRUE),
+    min_time_between_updates_sec = min(time_since_prev_sec, na.rm=TRUE),
+    p5_time_between_updates_sec = quantile(time_since_prev_sec, 0.05, na.rm=TRUE),
+    p95_time_between_updates_sec = quantile(time_since_prev_sec, 0.95, na.rm=TRUE),
+    max_time_between_updates_sec = max(time_since_prev_sec, na.rm=TRUE)
+  )
+
+time_metrics_long <- time_metrics %>%
+  pivot_longer(
+    cols = matches("^(mean|sd|median|min|p5|p95|max|n_updates)_"),
+    names_to = c("metric", "time_type"),
+    names_pattern = "^(mean|sd|median|min|p5|p95|max|n_updates)_(time_between_updates_sec)$",
+    values_to = "value"
+  ) %>%
+  pivot_wider(names_from = time_type, values_from = value) %>%
+  mutate(metric = factor(metric, levels = c("mean","sd","median","min","p5","p95","max","n_updates"))) %>%
+  arrange(metric)
+
+knitr::kable(time_metrics_long, caption = "Time between updates metrics")
+```
+
+
+## Study correlation between different speed calculations
+
+```{r, echo=FALSE}
+correlation_matrix <- trips_processed_aggregated |>
+  st_drop_geometry() |>
+  select(any_of(c("speed", "euclidean_speed_kmh", "shape_speed_kmh"))) |>
+  cor(use = "pairwise.complete.obs")
+correlation_matrix
+```
+
+
+## Threshold validations
+
+```{r, echo=FALSE}
+trips_processed_aggregated_speed_criteria_instant <- trips_processed_aggregated |>
+  filter(speed > THRESHOLD_SPEED_MAX)
+trips_processed_aggregated_speed_criteria_euclidean <- trips_processed_aggregated |>
+  filter(euclidean_speed_kmh > THRESHOLD_SPEED_MAX)
+trips_processed_aggregated_speed_criteria_shape <- trips_processed_aggregated |>
+  filter(shape_speed_kmh > THRESHOLD_SPEED_MAX)
+time_threshold_results <- lapply(THRESHOLD_TIME_BETWEEN_UPDATES_MAX, function(threshold) {
+  filtered_data <- trips_processed_aggregated |>
+    filter(time_since_prev_sec > threshold)
+  n_exceeding <- nrow(filtered_data)
+  return(data.frame(threshold = threshold, n_exceeding = n_exceeding))
+})
+time_threshold_results_df <- do.call(rbind, time_threshold_results)
+
+# Display knits table with original n, n exceeding, and percentage exceeding for each threshold, for all three speed calculations and time between updates
+threshold_summary <- data.frame(
+  threshold = c(THRESHOLD_SPEED_MAX, THRESHOLD_SPEED_MAX, THRESHOLD_SPEED_MAX, time_threshold_results_df$threshold),
+  metric = c("instant_speed", "euclidean_speed", "shape_speed", rep("time_between_updates", length(THRESHOLD_TIME_BETWEEN_UPDATES_MAX))),
+  n_exceeding = c(nrow(trips_processed_aggregated_speed_criteria_instant), nrow(trips_processed_aggregated_speed_criteria_euclidean), nrow(trips_processed_aggregated_speed_criteria_shape), time_threshold_results_df$n_exceeding),
+  n_total = c(nrow(trips_processed_aggregated), nrow(trips_processed_aggregated), nrow(trips_processed_aggregated), rep(nrow(trips_processed_aggregated), length(THRESHOLD_TIME_BETWEEN_UPDATES_MAX)))  
+)
+threshold_summary <- threshold_summary |>
+  mutate(percentage_exceeding = round((n_exceeding / n_total) * 100, 2))
+knitr::kable(threshold_summary, caption = "Threshold validation summary for speed and time between updates")
+```
