@@ -165,7 +165,32 @@ mapview(osm_shape, color="navyblue", lwd=3, layer.name="OSM Shape", alpha=0.3) +
 
 For each update, find the closest point on the shape and compute the distance along the shape to the previous update. Then compute speed based on that distance and time difference.
 
-```{r}
+```{r, warning=FALSE}
+timestamp_shape_distance_start <- Sys.time()
+trips_processed_shape_distance <- GTFShift::rt_commercial_speed(
+  rt_collection = updates_case_study,
+  trips_geometries = shape_case_study |> mutate(trip_id = updates_case_study$trip_id[[1]]), # Add trip_id to shape_case_study for compatibility,
+  geometry_sample_meters = SHAPE_SAMPLE_METERS,
+  metric_crs = METRIC_CRS
+) |> st_drop_geometry() |> rename(
+  shape_distance_since_prev_meters = distance_since_prev_meters,
+  shape_speed_kmh = speed_kmh,
+  shape_position_m = distance_along_geometry
+)
+
+timestamp_shape_distance_end <- Sys.time()
+message("Shape distance speed calculations completed in ", round(difftime(timestamp_shape_distance_end, timestamp_shape_distance_start, units="secs"), 2), " seconds.")
+
+summary(trips_processed_shape_distance$shape_speed_kmh)
+sd(trips_processed_shape_distance$shape_speed_kmh)
+
+mapview(shape_case_study, color="blue", lwd=3, layer.name="GTFS Shape", alpha=0.3) + 
+  mapview(
+    updates_case_study |> left_join(trips_processed_shape_distance, by=c("trip_id", "timestamp"))
+    , zcol="shape_speed_kmh", layer.name="GTFS-RT updates (Shape distance speed)")
+```
+
+```{r, echo = FALSE, eval = FALSE}
 timestamp_shape_distance_start <- Sys.time()
 trips_processed_shape_distance <- updates_case_study |>
   sf::st_transform(crs = METRIC_CRS) |>
