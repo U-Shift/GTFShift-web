@@ -1,5 +1,5 @@
 ---
-title: "Speed Calculations Thresholds Benchmarking for STCP, Porto"
+title: "Speed Calculations Thresholds Benchmarking for Carris Metripolitana (Area 3), Lisboaa"
 output: 
   html_document:
     toc: true
@@ -18,30 +18,69 @@ library(knitr)
 ```
 
 
+
+
+
+
 ## Parameters
 
 ### Case study
 
-```{r} 
+```{r, eval=FALSE, echo=FALSE} 
 UPDATES_RAW = "/home/goncalo/Documents/ushift/GTFShift-web/scripts/data/stcp_20260413_220260430_business/updates_prev_crs_fix.csv"
+GTFS_FEED_URL = "https://opendata.porto.digital/dataset/5275c986-592c-43f5-8f87-aabbd4e4f3a4/resource/d4bc4f97-5a43-42a4-b30d-09dd9604f90c/download/gtfs_feed.zip"
 ```
 
-```{r, eval=FALSE, echo=FALSE} 
+```{r} 
 UPDATES_RAW = "/home/goncalo/Documents/ushift/GTFShift-web/scripts/data/cmet_20260413_220260430_business_a3/updates_instantSpeeds.csv"
+GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris_metropolitana.zip"
 ```
 
 ```{r, eval=FALSE, echo=FALSE} 
 UPDATES_RAW = "/home/goncalo/Documents/ushift/GTFShift-web/scripts/data/cm_20260413_220260430_business/processing_20260508/updates.csv"
+GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris.zip"
 ```
+
+
+
+
 
 ### Algorithm criteria
 
 ```{r}
-THRESHOLD_UPDATES_PER_TRIP_MIN = c(5, 10, 20, 30, 40, 50, 60) # absolute nr
+THRESHOLD_UPDATES_PER_TRIP_MIN = c(5, 10, 15, 20, 25, 30, 40, 50, 60) # absolute nr
+THRESHOLD_PERCENTAGE_UPDATES_PER_TRIP_MIN = c(1, 0.95, 0.9, 0.85, 0.8, 0.75, 0.5) # determined expected nr of updates per trip considering trip time and time threshold, minimum threshold (%) of expected updates to consider trip valid
 THRESHOLD_TIME_BETWEEN_UPDATES_MAX = c(60, 90, 120, 150, 180, 240, 300) # seconds
 ```
 
+
+
+
+
 ## Set up initial data 
+
+### Load GTFS 
+
+```{r}
+gtfs = tidytransit::read_gtfs(GTFS_FEED_URL)
+gtfs_trip_duration = gtfs$stop_times |>
+  arrange(trip_id, stop_sequence) |>
+  mutate(
+    # Convert "HH:MM:SS" to ephoch time (seconds since 1970-01-01)
+    departure_time = as.numeric(as.POSIXct(departure_time, format="%H:%M:%S", tz="UTC")),
+    arrival_time = as.numeric(as.POSIXct(arrival_time, format="%H:%M:%S", tz="UTC"))
+  ) |>
+  group_by(trip_id) |>
+  summarise(
+    departure_time = min(departure_time),
+    arrival_time = max(arrival_time),
+    trip_duration = as.numeric(difftime(arrival_time, departure_time, units = "secs")) / 60, 
+    .groups = "drop"
+  )
+```
+
+
+
 
 ### Get updates 
 
@@ -58,6 +97,10 @@ message("Timestamp range: ",
   as.POSIXct(max(updates$timestamp), origin="1970-01-01", tz="UTC")
 )
 ```
+
+
+
+
 
 ## Calculate indicators
 
@@ -83,9 +126,27 @@ sd(n_updates_per_trip$n_updates, na.rm = TRUE)
 
 summary(updates$speed)
 sd(updates$speed, na.rm = TRUE)
+
+gtfs_trip_duration_measurements = gtfs_trip_duration |>
+  summarise(
+    p5_duration = quantile(trip_duration, 0.05),
+    p95_duration = quantile(trip_duration, 0.95),
+    min_duration = min(trip_duration),
+    max_duration = max(trip_duration),
+    mean_duration = mean(trip_duration),
+    median_duration = median(trip_duration),
+    sd_duration = sd(trip_duration)
+  )
+
+knitr::kable(gtfs_trip_duration_measurements, caption = "Trip duration measurements (in seconds) for the GTFS feed")
 ```
 
+
+
+
+
 ## Benchmark different approaches
+
 ```{r, echo=FALSE}
 time_threshold_results <- lapply(THRESHOLD_TIME_BETWEEN_UPDATES_MAX, function(threshold) {
   filtered_data <- updates_indicators |>
@@ -105,16 +166,67 @@ n_updates_per_trip_results <- lapply(THRESHOLD_UPDATES_PER_TRIP_MIN, function(th
 })
 n_updates_per_trip_results_df <- do.call(rbind, n_updates_per_trip_results)
 
-# Display knits table with original n, n exceeding, and percentage exceeding for each threshold (for both time and updates per trip)
-threshold_summary <- function(results_df, threshold_type) {
-  results_df <- results_df |>
-    mutate(
-      total_trips = nrow(updates_indicators |> group_by(trip_id) |> summarise(n_updates = n(), .groups = "drop")),
-      percentage_exceeding = round((n_exceeding / total_trips) * 100, 2)
+trip_updates_with_duration <- n_updates_per_trip |>
+  mutate(
+      # Remove leading date from trip_id, for instance 20260413_3526_1_1_0930_0959_0_ESC_DU becomes 3526_1_1_0930_0959_0_ESC_DU
+      trip_id = sub("^[0-9]+_", "", trip_id),
+      # Compatibility with Carris Metropolitana (remove leading exploration plan id)
+      trip_id = gsub("^\\[[^]]*\\]\\s*", "", trip_id)
+  ) |>
+  left_join(
+    gtfs_trip_duration |> 
+      select(trip_id, trip_duration) |>
+      mutate(
+        # Compatibility with Carris Metropolitana (remove leading exploration plan id)
+      trip_id = gsub("^\\[[^]]*\\]\\s*", "", trip_id)
+      )
+    , by = "trip_id", multiple="first") |>
+  # Only consider trips with valid trip_duration (i.e., present in GTFS feed)
+  filter(!is.na(trip_duration))
+
+
+percentage_updates_per_trip_results <- lapply(THRESHOLD_TIME_BETWEEN_UPDATES_MAX, function(time_threshold_sec) {
+  trip_eval <- trip_updates_with_duration |>
+    mutate(expected_updates = pmax(1, ceiling((trip_duration * 60) / time_threshold_sec)))
+
+  do.call(rbind, lapply(THRESHOLD_PERCENTAGE_UPDATES_PER_TRIP_MIN, function(percentage_threshold) {
+    trip_eval_threshold <- trip_eval |>
+      mutate(min_required_updates = pmax(1, ceiling(expected_updates * percentage_threshold)))
+
+    n_exceeding <- trip_eval_threshold |>
+      filter(n_updates < min_required_updates) |>
+      nrow()
+
+    data.frame(
+      time_threshold_sec = time_threshold_sec,
+      percentage_threshold = percentage_threshold,
+      n_exceeding = n_exceeding,
+      total_trips = nrow(trip_eval_threshold)
     )
-  
-  knitr::kable(results_df, caption = paste("Threshold Summary for", threshold_type))
-}
-threshold_summary(time_threshold_results_df, "Time Between Updates")
-threshold_summary(n_updates_per_trip_results_df, "Number of Updates Per Trip")
+  }))
+})
+percentage_updates_per_trip_results_df <- do.call(rbind, percentage_updates_per_trip_results)
+
+results_df_time <- time_threshold_results_df |>
+  mutate(
+    total_updates = nrow(updates_indicators),
+    percentage_exceeding = round((n_exceeding / total_updates) * 100, 2)
+  )
+knitr::kable(results_df_time, caption = paste("Threshold Summary for", "Time Between Updates"))
+
+results_df_updates <- n_updates_per_trip_results_df |>
+  mutate(
+    total_trips = length(unique(updates_indicators$trip_id)),
+    percentage_exceeding = round((n_exceeding / total_trips) * 100, 2)
+  )
+knitr::kable(results_df_updates, caption = paste("Threshold Summary for", "Number of Updates Per Trip"))
+
+message("Number of trips with valid trip_duration: ", nrow(trip_updates_with_duration), " out of ", nrow(n_updates_per_trip), " total trips (", round((nrow(trip_updates_with_duration) / nrow(n_updates_per_trip)) * 100, 2), "%)")
+
+results_df_percentage <- percentage_updates_per_trip_results_df |>
+  mutate(
+    percentage_exceeding = round((n_exceeding / total_trips) * 100, 2)
+  ) |>
+  arrange(time_threshold_sec, desc(percentage_threshold))
+knitr::kable(results_df_percentage, caption = paste("Threshold Summary for", "Percentage of Expected Updates Per Trip"))
 ```
