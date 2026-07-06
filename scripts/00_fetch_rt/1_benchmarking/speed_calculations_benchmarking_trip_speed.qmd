@@ -1,5 +1,5 @@
 ---
-title: "Speed Calculations Benchmarking for STCP, Porto"
+title: "Speed Calculations Benchmarking for CMET"
 output: 
   html_document:
     toc: true
@@ -9,7 +9,7 @@ output:
 
 This document aims to evaluate different approaches to compute speed for GTFS-RT updates.
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, load-packages}
 library(dplyr)
 library(sf)
 library(mapview)
@@ -22,15 +22,19 @@ library(knitr)
 
 Case study
 
-```{r, eval=FALSE, echo=FALSE}
+```{r, eval=FALSE, echo=FALSE, case-study-carris}
 GTFS_RT_SAMPLE = "https://github.com/U-Shift/GTFShift-web/releases/download/v1.1/updates_case_study_carris_20260416_41474_20260101_190_0_3.csv"
 GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris.zip"
 OSM_SHAPES = "https://github.com/U-Shift/busclar/releases/download/0.9/shapes_match_carris_gtfs20260527_run20260626.gpkg"
 TRIP_ID_UPDATES = "20260416_41474_20260101_190_0_3"
 TRIP_ID_GTFS = "41474_20260101_190_0_3"
+
+# GTFS_RT_SAMPLE = "https://github.com/U-Shift/GTFShift-web/releases/download/v1.1/updates_case_study_carris_20260428_5977_20260101_108_3_2.csv"
+# TRIP_ID_UPDATES = "20260428_5977_20260101_108_3_2"
+# TRIP_ID_GTFS = "5977_20260101_108_3_2"
 ```
 
-```{r, eval=FALSE, echo=FALSE}
+```{r, eval=FALSE, echo=FALSE, case-study-carris_met}
 GTFS_RT_SAMPLE = "https://github.com/U-Shift/GTFShift-web/releases/download/v1.1/updates_case_study_cmet_20260413_.KFULM.3526_1_1_0930_0959_0_ESC_DU.csv"
 GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris_metropolitana.zip"
 OSM_SHAPES = "https://github.com/U-Shift/busclar/releases/download/0.9/shapes_match_carris_metropolitana_gtfs20260527_run20260626.gpkg"
@@ -38,7 +42,7 @@ TRIP_ID_UPDATES = "20260413_[KFULM]3526_1_1_0930_0959_0_ESC_DU"
 TRIP_ID_GTFS = "3526_1_1_0930_0959_0_ESC_DU"
 ```
 
-```{r}
+```{r, eval=FALSE, echo=FALSE, case-study-stcp}
 GTFS_RT_SAMPLE = "https://github.com/U-Shift/GTFShift-web/releases/download/v1.1/updates_case_study_stcp_20260421_600_0_2.224.D1.T8.N7.csv"
 GTFS_FEED_URL = "https://opendata.porto.digital/dataset/5275c986-592c-43f5-8f87-aabbd4e4f3a4/resource/d4bc4f97-5a43-42a4-b30d-09dd9604f90c/download/gtfs_feed.zip"
 OSM_SHAPES = "https://github.com/U-Shift/GTFShift/releases/download/v0.9/shapes_match_stcp_gtfs2026-05-07_run20260507.gpkg"
@@ -46,10 +50,18 @@ TRIP_ID_UPDATES = "20260421_600_0_2|224|D1|T8|N7"
 TRIP_ID_GTFS = "600_0_2\\|224\\|D1\\|T8\\|N7"
 ```
 
+```{r case-study-tcb}
+GTFS_RT_SAMPLE = "https://github.com/U-Shift/GTFShift-web/releases/download/v1.1/updates_case_study_tcb_20260513_DUPE_7-PTABB-TERM_0_DUPE_22_0925.csv"
+GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_tcb.zip"
+OSM_SHAPES = "https://github.com/U-Shift/busclar/releases/download/0.9/shapes_match_tcb_gtfs20260527_run20260626.gpkg"
+TRIP_ID_UPDATES = "20260513_DUPE_7-PTABB-TERM_0_DUPE_22_0925"
+TRIP_ID_GTFS = "7-PTABB-TERM_0_DUPE_22_0925"
+```
+
 
 Algorithm criteria
 
-```{r}
+```{r, params-algorithm}
 METRIC_CRS = 3763 # ETRS89 / Portugal TM06
 SHAPE_SAMPLE_METERS = 10 # Segments to consider when sampling the shape for distance along shape calculations
 THRESHOLD_UPDATES_PER_TRIP_MIN = 20
@@ -62,7 +74,7 @@ THRESHOLD_TIME_BETWEEN_UPDATES_MAX = c(60, 90, 120, 150, 180, 240, 300) # second
 
 ### Get shape for trip
 
-```{r}
+```{r, load-gtfs}
 gtfs = tidytransit::read_gtfs(GTFS_FEED_URL)
 trip_info = gtfs$trips |> filter(grepl(TRIP_ID_GTFS, trip_id))
 trip_shape_id = trip_info$shape_id[[1]]
@@ -73,12 +85,18 @@ gtfs_shapes_sf = tidytransit::shapes_as_sf(gtfs$shapes)
 shape_case_study = gtfs_shapes_sf |> filter(shape_id==trip_shape_id)
 shape_case_study$shape_id <- gsub("^\\[[^]]*\\]\\s*", "", shape_case_study$shape_id) # Compatibility with Carris Metropolitana
 trip_shape_id <- gsub("^\\[[^]]*\\]\\s*", "", trip_shape_id)
+
+start_point = gtfs$stops |> filter(
+    stop_id == (gtfs$stop_times |> 
+    filter(grepl(TRIP_ID_GTFS, trip_id)) |> arrange(stop_sequence) |> slice(1) |> 
+    select(stop_id) |> pull(stop_id)
+  )) |> st_as_sf(coords = c("stop_lon", "stop_lat"), crs = 4326)
 ```
 
 
 ### Get OSM shape for trip
 
-```{r}
+```{r, warning=FALSE, message=FALSE, load-osm}
 osm_shapes = st_read(OSM_SHAPES)
 osm_shape = osm_shapes |> filter(shape_id == trip_shape_id) 
 if (nrow(osm_shape) == 0) {
@@ -86,10 +104,22 @@ if (nrow(osm_shape) == 0) {
 }
 ```
 
+```{r, warning=FALSE, osm-multiline-to-linestring}
+timestamp_osm_shape_linestring_start <- Sys.time()
+osm_shapes_trip_linestring = GTFShift::multiline_to_sorted_linestring(
+  osm_shape,
+  start_point = start_point$geometry,
+  metric_crs = METRIC_CRS
+)
+timestamp_osm_shape_linestring_end <- Sys.time()
+message("OSM shape linestring conversion completed in ", round(difftime(timestamp_osm_shape_linestring_end, timestamp_osm_shape_linestring_start, units="secs"), 2), " seconds.")
+osm_shape$geom = osm_shapes_trip_linestring
+```
+
 
 ### Get updates for trip
 
-```{r}
+```{r, load-updates}
 updates_case_study = read.csv(GTFS_RT_SAMPLE) |>
   # For each trip_id, ignore duplicate timestamp
   group_by(trip_id, timestamp) |>
@@ -106,7 +136,7 @@ updates_case_study = updates_case_study |>
 
 ### Visualize initial data 
 
-```{r}
+```{r, visualize-initial-data}
 mapview(shape_case_study, color="blue", lwd=3, layer.name="GTFS Shape", alpha=0.3) + 
   mapview(osm_shape, color="navyblue", lwd=3, layer.name="OSM Shape", alpha=0.3) +
     mapview(updates_case_study, zcol="timestamp", layer.name="GTFS-RT updates") 
@@ -118,7 +148,7 @@ mapview(shape_case_study, color="blue", lwd=3, layer.name="GTFS Shape", alpha=0.
 
 > Disregard this metric for Carris, Lisboa, as it is not provided by the GTFS-RT feed. The values presented were computed with the previous Python script that had CRS errors.
 
-```{r}
+```{r, instant-speed}
 if ("speed" %in% colnames(updates_case_study)) {
   summary(updates_case_study$speed)
   sd(updates_case_study$speed)
@@ -131,7 +161,7 @@ if ("speed" %in% colnames(updates_case_study)) {
 
 ## Euclidean distance speed
 
-```{r}
+```{r, euclidean-speed}
 timestamp_euclidean_start <- Sys.time()
 trips_processed_euclidean <- updates_case_study |>
     sf::st_transform(crs = METRIC_CRS) |>
@@ -165,9 +195,11 @@ mapview(osm_shape, color="navyblue", lwd=3, layer.name="OSM Shape", alpha=0.3) +
 
 For each update, find the closest point on the shape and compute the distance along the shape to the previous update. Then compute speed based on that distance and time difference.
 
-```{r, warning=FALSE}
+### Using GTFS Shapes
+
+```{r, warning=FALSE, shapes-speed-gtfs}
 timestamp_shape_distance_start <- Sys.time()
-trips_processed_shape_distance <- GTFShift::rt_commercial_speed(
+trips_processed_shape_gtfs_distance <- GTFShift::rt_commercial_speed(
   rt_collection = updates_case_study,
   trips_geometries = shape_case_study |> mutate(trip_id = updates_case_study$trip_id[[1]]), # Add trip_id to shape_case_study for compatibility,
   geometry_sample_meters = SHAPE_SAMPLE_METERS,
@@ -181,16 +213,43 @@ trips_processed_shape_distance <- GTFShift::rt_commercial_speed(
 timestamp_shape_distance_end <- Sys.time()
 message("Shape distance speed calculations completed in ", round(difftime(timestamp_shape_distance_end, timestamp_shape_distance_start, units="secs"), 2), " seconds.")
 
-summary(trips_processed_shape_distance$shape_speed_kmh)
-sd(trips_processed_shape_distance$shape_speed_kmh)
+summary(trips_processed_shape_gtfs_distance$shape_speed_kmh)
+sd(trips_processed_shape_gtfs_distance$shape_speed_kmh, na.rm = TRUE)
 
 mapview(shape_case_study, color="blue", lwd=3, layer.name="GTFS Shape", alpha=0.3) + 
+  mapview(
+    updates_case_study |> left_join(trips_processed_shape_gtfs_distance, by=c("trip_id", "timestamp"))
+    , zcol="shape_speed_kmh", layer.name="GTFS-RT updates (Shape distance speed)")
+```
+
+### Using OSM shapes
+
+```{r, warning=FALSE, shapes-speed-osm}
+timestamp_shape_distance_start <- Sys.time()
+trips_processed_shape_distance <- GTFShift::rt_commercial_speed(
+  rt_collection = updates_case_study,
+  trips_geometries = osm_shape |> mutate(trip_id = updates_case_study$trip_id[[1]]), # Add trip_id to shape_case_study for compatibility,
+  geometry_sample_meters = SHAPE_SAMPLE_METERS,
+  metric_crs = METRIC_CRS
+) |> st_drop_geometry() |> rename(
+  shape_distance_since_prev_meters = distance_since_prev_meters,
+  shape_speed_kmh = speed_kmh,
+  shape_position_m = distance_along_geometry
+)
+
+timestamp_shape_distance_end <- Sys.time()
+message("Shape distance speed calculations completed in ", round(difftime(timestamp_shape_distance_end, timestamp_shape_distance_start, units="secs"), 2), " seconds.")
+
+summary(trips_processed_shape_distance$shape_speed_kmh)
+sd(trips_processed_shape_distance$shape_speed_kmh, na.rm = TRUE)
+
+mapview(osm_shape, color="navyblue", lwd=3, layer.name="OSM Shape", alpha=0.3) +
   mapview(
     updates_case_study |> left_join(trips_processed_shape_distance, by=c("trip_id", "timestamp"))
     , zcol="shape_speed_kmh", layer.name="GTFS-RT updates (Shape distance speed)")
 ```
 
-```{r, echo = FALSE, eval = FALSE}
+```{r, echo = FALSE, eval = FALSE, shapes-speed-gtfs-old}
 timestamp_shape_distance_start <- Sys.time()
 trips_processed_shape_distance <- updates_case_study |>
   sf::st_transform(crs = METRIC_CRS) |>
@@ -239,7 +298,7 @@ timestamp_shape_distance_end <- Sys.time()
 message("Shape distance speed calculations completed in ", round(difftime(timestamp_shape_distance_end, timestamp_shape_distance_start, units="secs"), 2), " seconds.")
 
 summary(trips_processed_shape_distance$shape_speed_kmh)
-sd(trips_processed_shape_distance$shape_speed_kmh)
+sd(trips_processed_shape_distance$shape_speed_kmh, na.rm = TRUE)
 
 mapview(shape_case_study, color="blue", lwd=3, layer.name="GTFS Shape", alpha=0.3) + 
   mapview(trips_processed_shape_distance, zcol="shape_speed_kmh", layer.name="GTFS-RT updates (Shape distance speed)")
@@ -250,7 +309,7 @@ mapview(shape_case_study, color="blue", lwd=3, layer.name="GTFS Shape", alpha=0.
 
 ## Aggregated results and differences between speed calculations
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, benchmark-initial}
 trips_processed_aggregated = updates_case_study |> select(any_of(c("trip_id", "timestamp", "speed"))) |>
   left_join(trips_processed_euclidean |> st_drop_geometry() |> select(trip_id, timestamp, euclidean_speed_kmh, euclidean_distance_since_prev_meters, time_since_prev_sec), by=c("trip_id", "timestamp")) |>
   left_join(trips_processed_shape_distance |> st_drop_geometry() |> select(trip_id, timestamp, shape_speed_kmh, shape_distance_since_prev_meters, shape_position_m), by=c("trip_id", "timestamp")) |>
@@ -266,7 +325,7 @@ mapview(osm_shape, color="navyblue", lwd=3, layer.name="OSM Shape", alpha=0.3) +
   mapview(trips_processed_aggregated, zcol="instant_vs_shape_diff", layer.name="GTFS-RT updates (Instant vs Shape)", hide = TRUE)
 ```
 
-```{r}
+```{r, , benchmark-initial-summary}
 summary(trips_processed_aggregated$instant_vs_euclidean_diff)
 summary(trips_processed_aggregated$instant_vs_shape_diff)
 summary(trips_processed_aggregated$euclidean_vs_shape_diff)
@@ -275,7 +334,7 @@ summary(trips_processed_aggregated$euclidean_vs_shape_diff)
 
 ## Measures of central tendency and dispersion for each speed calculation method
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, benchmark-speed-metrics}
 speed_metrics <- trips_processed_aggregated |>
   st_drop_geometry() |>
   summarise(
@@ -325,7 +384,7 @@ knitr::kable(speed_metrics_long, caption = "Speed metrics for different speed ca
 
 ## Measures of central tendency and dispersion for distance
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, benchmark-distance-metrics}
 distance_metrics <- trips_processed_aggregated |>
   st_drop_geometry() |>
   summarise(
@@ -365,7 +424,7 @@ knitr::kable(distance_metrics_long, caption = "Distance metrics for different di
 
 ## Measures of central tendency and dispersion for time between updates
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, benchmark-time-metrics}
 time_metrics <- trips_processed_aggregated |>
   st_drop_geometry() |>
   summarise(
@@ -396,7 +455,7 @@ knitr::kable(time_metrics_long, caption = "Time between updates metrics")
 
 ## Study correlation between different speed calculations
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, benchmark-correlation}
 correlation_matrix <- trips_processed_aggregated |>
   st_drop_geometry() |>
   select(any_of(c("speed", "euclidean_speed_kmh", "shape_speed_kmh"))) |>
@@ -407,7 +466,7 @@ correlation_matrix
 
 ## Threshold validations
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, theshold-validation}
 trips_processed_aggregated_speed_criteria_instant <- trips_processed_aggregated |>
   filter(speed > THRESHOLD_SPEED_MAX)
 trips_processed_aggregated_speed_criteria_euclidean <- trips_processed_aggregated |>

@@ -7,6 +7,9 @@ UPDATES_RAW = "data/cm_20260413_220260430_business/processing_20260508/updates.c
 GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris.zip"
 TRIP_ID_UPDATES = "20260416_41474_20260101_190_0_3"
 TRIP_ID_GTFS = "41474_20260101_190_0_3"
+# Carris Route 108_3
+TRIP_ID_UPDATES = "20260428_5977_20260101_108_3_2"
+TRIP_ID_GTFS = "5977_20260101_108_3_2"
 
 OPERATOR = "cmet"
 UPDATES_RAW = "data/cmet_20260413_220260430_business_a3/updates_instantSpeeds.csv"
@@ -19,6 +22,14 @@ UPDATES_RAW = "data/stcp_20260413_220260430_business/updates_prev_crs_fix.csv"
 GTFS_FEED_URL = "https://opendata.porto.digital/dataset/5275c986-592c-43f5-8f87-aabbd4e4f3a4/resource/d4bc4f97-5a43-42a4-b30d-09dd9604f90c/download/gtfs_feed.zip"
 TRIP_ID_UPDATES = "20260421_600_0_2|224|D1|T8|N7"
 TRIP_ID_GTFS = "600_0_2\\|224\\|D1\\|T8\\|N7"
+
+OPERATOR = "tcb"
+UPDATES_RAW = "data/barreiro_20260511_20260515/calculations_before_crs_fix/updates_beforeCRSFix.csv"
+GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_tcb.zip"
+TRIP_ID_UPDATES = "20260513_DUPE_7-PTABB-TERM_0_DUPE_22_0925"
+TRIP_ID_GTFS = "7-PTABB-TERM_0_DUPE_22_0925"
+# Shape 7-PTABB-TERM, Route 7_7-PTABB-TERM
+
 
 # Get shape for TRIP
 gtfs = tidytransit::read_gtfs(GTFS_FEED_URL)
