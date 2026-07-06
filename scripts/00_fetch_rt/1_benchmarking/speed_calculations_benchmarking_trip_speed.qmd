@@ -202,6 +202,7 @@ timestamp_shape_distance_start <- Sys.time()
 trips_processed_shape_gtfs_distance <- GTFShift::rt_commercial_speed(
   rt_collection = updates_case_study,
   trips_geometries = shape_case_study |> mutate(trip_id = updates_case_study$trip_id[[1]]), # Add trip_id to shape_case_study for compatibility,
+  rt_collection_trips_geometries_match_col = "trip_id",
   geometry_sample_meters = SHAPE_SAMPLE_METERS,
   metric_crs = METRIC_CRS
 ) |> st_drop_geometry() |> rename(
