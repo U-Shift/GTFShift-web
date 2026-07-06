@@ -10,32 +10,20 @@ library(dplyr)
 library(readr)
 library(sf)
 
-
-
-
-
 ## Parameters
 
 # **Important!** Before running, make sure to have `stop_times.txt` GTFS file at `stop_times` folder, with both `.txt` and `.csv` extensions!
-
-
 THRESHOLD_UPDATES_PER_TRIP_MIN = 20
 THRESHOLD_SPEED_MAX = 140
-THRESHOLD_TIME_BETWEEN_UPDATES_MAX = 60
+THRESHOLD_TIME_BETWEEN_UPDATES_MAX = 90
 METRIC_CRS <- 3763 # Portugal
-
-
 
 # Carris Municipal
 folder_path <- "data/cm_20260413_220260430_business/updates"
 output_folder <- "data/cm_20260413_220260430_business/processing_after_duplicate_timestamp_fix_withFirstAndLastStops"
 stop_times <- "data/cm_20260413_220260430_business/stop_times.txt"
 
-
-
 ## Methods
-
-
 process_json <- function(data, filename, RECORDS_LIST, agency_id = NULL) {
   day <- strsplit(filename, "_", fixed = TRUE)[[1]][1]
 
@@ -63,6 +51,8 @@ process_json <- function(data, filename, RECORDS_LIST, agency_id = NULL) {
       #message("Skipping duplicate timestamp for trip_id: ", trip_id, " on day: ", day)
       next
     }
+
+    # TOO Compute time between 
 
     RECORDS_LIST[[trip_id_day]] <- bind_rows(RECORDS_LIST[[trip_id_day]], data.frame(
       trip_id = trip_id,
@@ -214,7 +204,7 @@ for (date in json_files_dates) {
     result <- result |>
       # Consider only trips with +20 updates
       filter(trip_id %in% metrics$trip_id) |>
-      # Consider only updates with <60 sec between them
+      # Consider only updates with < sec between them
       filter(time_since_prev_sec < THRESHOLD_TIME_BETWEEN_UPDATES_MAX) |>
       # Filter outlier speeds 
       filter(euclidean_speed_kmh < THRESHOLD_SPEED_MAX)
