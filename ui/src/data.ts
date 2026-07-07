@@ -61,7 +61,7 @@ export const DB_REGIONS: DataRegion[] = [
         layers: [
             {
                 id: 'prioritization_lisboa_rt_gtfs2026-02-04_run20260316',
-                name: 'Original data, Euclidean Speed Avg (No CRS fix)',
+                name: 'Original data, Euclidean Speed Avg',
                 date: 'May 2026',
                 rt_data: true,
                 matched_frequencies_peak: 98.9,
@@ -75,6 +75,7 @@ export const DB_REGIONS: DataRegion[] = [
                     zip: BASE_URL + '/data/lisbon/lisbon.zip'
                 }
             },
+            /*
             {
                 id: 'prioritization_lisboa_rt_gtfs20260520_run20260630',
                 name: 'After CRS fix, Euclidean Speed Avg',
@@ -140,6 +141,38 @@ export const DB_REGIONS: DataRegion[] = [
                     route_data: BASE_URL + '/data/lisbon/same_data_crs_fix_with_first_and_last_stops/route_data_lisboa_rt_gtfs20260520_run20260702.json',
                     shape_data: BASE_URL + '/data/lisbon/same_data_crs_fix_with_first_and_last_stops/shape_data_lisboa_rt_gtfs20260520_run20260702.json',
                     zip: BASE_URL + '/data/lisbon/same_data_crs_fix_with_first_and_last_stops/lisbon.zip'
+                }
+            },*/
+            {
+                id: 'shapes_distance_all',
+                name: 'After CRS fix, Shapes Distance (All OSM geometries)',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.9,
+                files: {
+                    ways: BASE_URL + '/data/lisbon/shapes_distance_all/ways_lisboa_rt_gtfs20260520_run20260707.geojson',
+                    boundaries: BASE_URL + '/data/lisbon/shapes_distance_all/prioritization_area_polygon_lisboa_rt_gtfs20260520_run20260707.geojson',
+                    way_data: BASE_URL + '/data/lisbon/shapes_distance_all/way_data_lisboa_rt_gtfs20260520_run20260707.json',
+                    metadata: BASE_URL + '/data/lisbon/shapes_distance_all/metadata_lisboa_rt_gtfs20260520_run20260707.json',
+                    route_data: BASE_URL + '/data/lisbon/shapes_distance_all/route_data_lisboa_rt_gtfs20260520_run20260707.json',
+                    shape_data: BASE_URL + '/data/lisbon/shapes_distance_all/shape_data_lisboa_rt_gtfs20260520_run20260707.json',
+                    zip: BASE_URL + '/data/lisbon/shapes_distance_all/lisbon.zip'
+                }
+            },
+            {
+                id: 'shapes_distance_threshold',
+                name: 'After CRS fix, Shapes Distance (OSM shapes with distance threshold)',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.9,
+                files: {
+                    ways: BASE_URL + '/data/lisbon/shapes_distance_threshold/ways_lisboa_rt_gtfs20260520_run20260707.geojson',
+                    boundaries: BASE_URL + '/data/lisbon/shapes_distance_threshold/prioritization_area_polygon_lisboa_rt_gtfs20260520_run20260707.geojson',
+                    way_data: BASE_URL + '/data/lisbon/shapes_distance_threshold/way_data_lisboa_rt_gtfs20260520_run20260707.json',
+                    metadata: BASE_URL + '/data/lisbon/shapes_distance_threshold/metadata_lisboa_rt_gtfs20260520_run20260707.json',
+                    route_data: BASE_URL + '/data/lisbon/shapes_distance_threshold/route_data_lisboa_rt_gtfs20260520_run20260707.json',
+                    shape_data: BASE_URL + '/data/lisbon/shapes_distance_threshold/shape_data_lisboa_rt_gtfs20260520_run20260707.json',
+                    zip: BASE_URL + '/data/lisbon/shapes_distance_threshold/lisbon.zip'
                 }
             }
 

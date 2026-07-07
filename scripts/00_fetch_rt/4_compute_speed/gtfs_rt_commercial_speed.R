@@ -1,5 +1,5 @@
 # GTFS RT commercial speed computation
-# Run with: $ Rscript 00_fetch_rt/4_compute_speed/gtfs_rt_commercial_speed.R > data/cm_20260413_220260430_business/processing_speed_shape_distance/gtfs_rt_commercial_speed.log 2>&1
+# Run with: $ Rscript 00_fetch_rt/4_compute_speed/gtfs_rt_commercial_speed.R > data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance/gtfs_rt_commercial_speed.log 2>&1
 
 library(jsonlite)
 library(lubridate)
@@ -10,23 +10,48 @@ library(sf)
 
 ## Parameters ---------------------------------------------------------------------
 METRIC_CRS <- 3763 # Portugal
+THRESHOLD_GEOMETRY_DISTANCE_DIFF <- 1000
+THRESHOLD_GEOMETRY_POINTS_DIFF <- 500
 
 # > Carris, Lisboa, Portugal
-UPDATES_RAW_FOLDER <- "data/cm_20260413_220260430_business/processing_speed_shape_distance"
-OUTPUT_FOLDER <- "data/cm_20260413_220260430_business/processing_speed_shape_distance"
-GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris.zip"
-OSM_SHAPES = "https://github.com/U-Shift/busclar/releases/download/0.9/shapes_match_carris_gtfs20260527_run20260626.gpkg"
+# UPDATES_RAW_FOLDER <- "data/cm_20260413_220260430_business/processing_speed_shape_distance"
+# OUTPUT_FOLDER <- "data/cm_20260413_220260430_business/processing_speed_shape_distance_osm_thresholds"
+# GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris.zip"
+# GTFS_MANIPULATE = NULL
+# OSM_SHAPES = "https://github.com/U-Shift/busclar/releases/download/0.9/shapes_match_carris_gtfs20260527_run20260626.gpkg"
+
+# > Carris Metropolitana, Area 3
+UPDATES_RAW_FOLDER <- "data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance"
+OUTPUT_FOLDER <- "data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance"
+GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris_metropolitana.zip"
+GTFS_MANIPULATE = "manipulate_carris_met"
+OSM_SHAPES = "https://github.com/U-Shift/busclar/releases/download/0.9/shapes_match_carris_metropolitana_gtfs20260527_run20260626.gpkg"
+manipulate_carris_met <- function(gtfs) {
+  # Remove offer plan id from trip_id (e.g., "[43]trip_id" -> "trip_id")
+  gtfs$trips$trip_id <- stringr::str_replace_all(gtfs$trips$trip_id, "\\[.*\\]", "")
+  return(gtfs)
+}
 
 ## main() ---------------------------------------------------------------------
+
+if (!dir.exists(OUTPUT_FOLDER)) {
+  dir.create(OUTPUT_FOLDER, recursive = TRUE)
+}
 
 ### 1. Load GTFS 
 message("Loading GTFS feed...")
 gtfs = tidytransit::read_gtfs(GTFS_FEED_URL)
+if (!is.null(GTFS_MANIPULATE)) {
+  message(sprintf("Manipulating GTFS feed with function: %s", GTFS_MANIPULATE))
+  gtfs = do.call(GTFS_MANIPULATE, list(gtfs))
+}
 
 ### 2. Load OSM shapes 
 message("Loading OSM shapes...")
-osm_shapes = st_read(OSM_SHAPES) 
-nrow(osm_shapes)
+osm_shapes = st_read(OSM_SHAPES)
+message(sprintf("Loaded %d OSM shapes", nrow(osm_shapes)))
+osm_shapes = osm_shapes |> filter(distance_diff < THRESHOLD_GEOMETRY_DISTANCE_DIFF & points_diff < THRESHOLD_GEOMETRY_POINTS_DIFF)
+message(sprintf("Filtered OSM shapes to %d with distance_diff < %d and points_diff < %d", nrow(osm_shapes), THRESHOLD_GEOMETRY_DISTANCE_DIFF, THRESHOLD_GEOMETRY_POINTS_DIFF))
 # mapview(osm_shapes)
 
 ### 3. Convert OSM shapes to LINESTRING  
@@ -87,6 +112,10 @@ if (file.exists(osm_shapes_file)) {
   st_write(osm_shapes_linestring, osm_shapes_file, delete_dsn = TRUE)
 }
 
+# Filter osm_shapes_linestring to those on osm_shapes (that match thresholds)
+osm_shapes_linestring = osm_shapes_linestring |> filter(osm_id %in% osm_shapes$osm_id)
+message(sprintf("Filtered OSM shapes LINESTRING to %d with distance_diff < %d and points_diff < %d", nrow(osm_shapes_linestring), THRESHOLD_GEOMETRY_DISTANCE_DIFF, THRESHOLD_GEOMETRY_POINTS_DIFF))
+
 ### 4. Compute speed between updates
 message("Starting computation of average speed between updates...")
 csv_files <- list.files(UPDATES_RAW_FOLDER, pattern = "updates_raw.*\\.csv$", full.names = TRUE)
@@ -94,7 +123,7 @@ csv_files <- list.files(UPDATES_RAW_FOLDER, pattern = "updates_raw.*\\.csv$", fu
 csv_files_dates <- sort(unique( substr(basename(csv_files), 13, 20) ))
 for (date in csv_files_dates) {
   message(sprintf("> Processing date: %s", date))
-  RECORDS <- read.csv(file.path(OUTPUT_FOLDER, sprintf("updates_raw_%s.csv", date)))
+  RECORDS <- read.csv(file.path(UPDATES_RAW_FOLDER, sprintf("updates_raw_%s.csv", date)))
 
   # Get shape_id for each trip 
   RECORDS <- RECORDS |>
@@ -115,17 +144,22 @@ for (date in csv_files_dates) {
   RECORDS_WITH_GTFS_AND_OSM_MATCH <- RECORDS |> filter(!is.na(shape_id) & !is.na(osm_id))
   message(sprintf("> Number of records with GTFS and OSM match: %d (%.2f%%)", nrow(RECORDS_WITH_GTFS_AND_OSM_MATCH), nrow(RECORDS_WITH_GTFS_AND_OSM_MATCH) / nrow(RECORDS) * 100))
 
+  start_time = Sys.time()
   result <- GTFShift::rt_commercial_speed(
     rt_collection = RECORDS_WITH_GTFS_AND_OSM_MATCH |> st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE),
     trips_geometries = osm_shapes_linestring,
     rt_collection_trips_geometries_match_col = "osm_id",
     metric_crs = METRIC_CRS
   )
+  end_time = Sys.time()
+  message(sprintf("> Done! Time taken to compute speed for %d records: %.2f seconds", nrow(result), as.numeric(difftime(end_time, start_time, units = "secs"))))
   
   message(sprintf("> Computed speed for %d records, with %.2f average updates per trip and an average speed of %.2f km/h", 
     nrow(result), 
     mean(result |> group_by(trip_id) |> summarise(updates_count = n(), .groups = "drop") |> pull(updates_count), na.rm = TRUE), 
     mean(result$speed_kmh, na.rm = TRUE))
   )
-  write.csv(result |> sf::st_drop_geometry(), file.path(OUTPUT_FOLDER, sprintf("updates_with_speed_%s.csv", date)), row.names = FALSE)
+  write.csv(result |> sf::st_drop_geometry() |> select(-any_of("closest_on_shape")), file.path(OUTPUT_FOLDER, sprintf("updates_with_speed_%s.csv", date)), row.names = FALSE)
 }
+
+warnings()

@@ -4,6 +4,9 @@ gtfs_rt_gather <- function(FOLDER_PATH, OUTPUT_FOLDER, process_json) {
   if (!dir.exists(FOLDER_PATH)) {
     stop(sprintf("Folder '%s' does not exist.", FOLDER_PATH))
   }
+  if (!dir.exists(OUTPUT_FOLDER)) {
+    dir.create(OUTPUT_FOLDER, recursive = TRUE)
+  }
 
   json_files <- list.files(FOLDER_PATH, pattern = "\\.json$", full.names = TRUE)
   json_files_dates <- sort(unique(substr(basename(json_files), 1, 8)))

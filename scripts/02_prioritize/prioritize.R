@@ -10,7 +10,7 @@ library(osmdata)
 library(Hmisc) # For  Weighted Statistical Estimates
 # set_overpass_url("https://overpass-api.de/api/interpreter")
 
-# Run with: $ Rscript 02_prioritize/prioritize.R
+# Run with: $ Rscript 02_prioritize/prioritize.R > prioritize.log 2>&1
 
 # Refer to prioritize_parameters.R to define parameters before running this script!
 source("02_prioritize/prioritize_parameters.R")
@@ -48,6 +48,7 @@ for (i in 1:nrow(regions)) {
   }
 
   gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers)) unlist(region$gtfs_url_headers[[1]]) else NULL)
+  gtfs_original <- gtfs
   # assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
   gtfs_file_location <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str)
   if (!file.exists(gtfs_file_location)) {
@@ -125,6 +126,21 @@ for (i in 1:nrow(regions)) {
     message("Extending with real-time data...")
     rt_files <- as.character(region$rt_collection[[1]])
 
+    gtfs_trip_duration = gtfs_original$stop_times |>
+      arrange(trip_id, stop_sequence) |>
+      mutate(
+        # Convert "HH:MM:SS" to ephoch time (seconds since 1970-01-01)
+        departure_time = as.numeric(as.POSIXct(departure_time, format="%H:%M:%S", tz="UTC")),
+        arrival_time = as.numeric(as.POSIXct(arrival_time, format="%H:%M:%S", tz="UTC"))
+      ) |>
+      group_by(trip_id) |>
+      summarise(
+        departure_time = min(departure_time),
+        arrival_time = max(arrival_time),
+        trip_duration = as.numeric(difftime(arrival_time, departure_time, units = "secs")), # Seconds 
+        .groups = "drop"
+      )
+
     rt_collection_manipulate <- if (!is.null(region$rt_collection_manipulate) &&
       length(region$rt_collection_manipulate) > 0 &&
       !is.null(region$rt_collection_manipulate[[1]])) {
@@ -141,7 +157,7 @@ for (i in 1:nrow(regions)) {
     }
 
     rt_collection_raw <- dplyr::bind_rows(lapply(rt_files, read.csv))
-    rt_collection <- rt_collection_manipulate(rt_collection_raw)
+    rt_collection <- rt_collection_manipulate(rt_collection_raw, gtfs_trip_duration)
 
     if (!inherits(rt_collection, c("sf", "sfc"))) {
       stop(sprintf("rt_collection_manipulate must return an sf object for region '%s'", region$name))
@@ -160,7 +176,7 @@ for (i in 1:nrow(regions)) {
       rt_collection = rt_collection_filtered,
       metric_crs = region$metric_crs
     ) |> 
-    filter(speed_count >= min_updates_for_speed) |>
+    filter(speed_count >= THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED) |>
     mutate(
       # Round all columns that start with speed_ to 2 decimals
       across(starts_with("speed_"), ~ round(., 2))
@@ -182,7 +198,7 @@ for (i in 1:nrow(regions)) {
             rt_collection = rt_collection_hour,
             metric_crs = region$metric_crs
           ) |> 
-          filter(speed_count >= min_updates_for_speed) |>
+          filter(speed_count >= THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED) |>
           mutate(
             # Round all columns that start with speed_ to 2 decimals
             across(starts_with("speed_"), ~ round(., 2))
