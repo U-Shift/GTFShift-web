@@ -139,7 +139,9 @@ for (i in 1:nrow(regions)) {
         arrival_time = max(arrival_time),
         trip_duration = as.numeric(difftime(arrival_time, departure_time, units = "secs")), # Seconds 
         .groups = "drop"
-      )
+      ) |> # Get route_short_name and route_long_name from gtfs$trips and gtfs$routes
+      left_join(gtfs_original$trips |> select(trip_id, route_id), by = "trip_id") |>
+      left_join(gtfs_original$routes |> select(route_id, route_short_name, route_long_name), by = "route_id")
 
     rt_collection_manipulate <- if (!is.null(region$rt_collection_manipulate) &&
       length(region$rt_collection_manipulate) > 0 &&

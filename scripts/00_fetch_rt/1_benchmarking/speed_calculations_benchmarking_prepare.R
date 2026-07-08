@@ -11,9 +11,14 @@ TRIP_ID_GTFS = "41474_20260101_190_0_3"
 TRIP_ID_UPDATES = "20260428_5977_20260101_108_3_2"
 TRIP_ID_GTFS = "5977_20260101_108_3_2"
 
-PDATES_RAW = "data/cm_20260413_220260430_business/processing_speed_shape_distance/updates_with_speed_20260415.csv"
+UPDATES_RAW = "data/cm_20260413_220260430_business/processing_speed_shape_distance/updates_with_speed_20260415.csv"
 TRIP_ID_UPDATES = "22224_20260101_251_0_21"
 TRIP_ID_GTFS = "22224_20260101_251_0_21" # Circular geometry
+
+UPDATES_RAW = "data/cm_20260413_220260430_business/processing_speed_shape_distance_osm_thresholds_circular_fix/updates_with_speed_20260413.csv"
+TRIP_ID_UPDATES = "19141_20260101_226_0_6" # Circular geometry II
+TRIP_ID_GTFS = "19141_20260101_226_0_6" 
+
 
 OPERATOR = "cmet"
 UPDATES_RAW = "data/cmet_20260413_220260430_business_a3/updates_instantSpeeds.csv"

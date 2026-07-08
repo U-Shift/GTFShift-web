@@ -7,7 +7,7 @@ GTFShiftVersion <- "0.10 (dev version)" # as.character(packageVersion("GTFShift"
 THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED = 3  # number of updates per road segment to compute speed
 THRESHOLD_TIME_BETWEEN_UPDATES_MAX = 90 # seconds, maximum time between updates to consider them valid for speed computation
 THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN = 0.7 # minimum ratio of updates per trip (against planned updates) to consider the trip valid for speed computation 
-THRESHOLD_DISTANCE_TO_GEOMETRY_MAX = 50 # meters, maximum distance to closest shape point to consider the update valid for speed computation
+THRESHOLD_DISTANCE_TO_GEOMETRY_MAX = 100 # meters, maximum distance to closest shape point to consider the update valid for speed computation
 
 # Define regions to analyse
 regions <- data.frame(
@@ -44,6 +44,9 @@ regions <- bind_rows(
       full.names = TRUE
     )))),
     rt_collection_manipulate = I(list(function(df, gtfs_trip_duration) {
+      # Remove trips from trams, ascensors (end with "E") and neighbourhood buses (end with "B")
+      message("Filtering out tram and neighbourhood bus trips from GTFS trip duration data...")
+      gtfs_trip_duration <- gtfs_trip_duration |> filter(!stringr::str_detect(route_short_name, "E$|B$"))
       message(sprintf("> Manipulating RT collection, with %d records", nrow(df)))
       # Remove column closest_on_shape, if exists
       df <- df |> select(-any_of("closest_on_shape"))

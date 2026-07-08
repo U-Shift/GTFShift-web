@@ -207,6 +207,38 @@ export const DB_REGIONS: DataRegion[] = [
                     zip: BASE_URL + '/data/lisbon/shapes_distance_circular_fix/lisbon.zip'
                 }
             },
+            {
+                id: 'shapes_distance_circular_fix_no_bs',
+                name: 'After CRS fix, Shapes Distance (OSM shapes with distance threshold + stop buffer + circular geometries fix + NO Bs + 50m distance to geom)',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.9,
+                files: {
+                    ways: BASE_URL + '/data/lisbon/shapes_distance_circular_fix_no_bs/ways_lisboa_rt_gtfs20260520_run20260708.geojson',
+                    boundaries: BASE_URL + '/data/lisbon/shapes_distance_circular_fix_no_bs/prioritization_area_polygon_lisboa_rt_gtfs20260520_run20260708.geojson',
+                    way_data: BASE_URL + '/data/lisbon/shapes_distance_circular_fix_no_bs/way_data_lisboa_rt_gtfs20260520_run20260708.json',
+                    metadata: BASE_URL + '/data/lisbon/shapes_distance_circular_fix_no_bs/metadata_lisboa_rt_gtfs20260520_run20260708.json',
+                    route_data: BASE_URL + '/data/lisbon/shapes_distance_circular_fix_no_bs/route_data_lisboa_rt_gtfs20260520_run20260708.json',
+                    shape_data: BASE_URL + '/data/lisbon/shapes_distance_circular_fix_no_bs/shape_data_lisboa_rt_gtfs20260520_run20260708.json',
+                    zip: BASE_URL + '/data/lisbon/shapes_distance_circular_fix/lisbon.zip'
+                }
+            },
+            {
+                id: 'shapes_distance_circular_fix_no_bs_100m',
+                name: 'After CRS fix, Shapes Distance (OSM shapes with distance threshold + stop buffer + circular geometries fix + NO Bs + 100m distance to geom)',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.9,
+                files: {
+                    ways: BASE_URL + '/data/lisbon/shapes_distance_circular_fix_no_bs_100m/ways_lisboa_rt_gtfs20260520_run20260708.geojson',
+                    boundaries: BASE_URL + '/data/lisbon/shapes_distance_circular_fix_no_bs_100m/prioritization_area_polygon_lisboa_rt_gtfs20260520_run20260708.geojson',
+                    way_data: BASE_URL + '/data/lisbon/shapes_distance_circular_fix_no_bs_100m/way_data_lisboa_rt_gtfs20260520_run20260708.json',
+                    metadata: BASE_URL + '/data/lisbon/shapes_distance_circular_fix_no_bs_100m/metadata_lisboa_rt_gtfs20260520_run20260708.json',
+                    route_data: BASE_URL + '/data/lisbon/shapes_distance_circular_fix_no_bs_100m/route_data_lisboa_rt_gtfs20260520_run20260708.json',
+                    shape_data: BASE_URL + '/data/lisbon/shapes_distance_circular_fix_no_bs_100m/shape_data_lisboa_rt_gtfs20260520_run20260708.json',
+                    zip: BASE_URL + '/data/lisbon/shapes_distance_circular_fix/lisbon.zip'
+                }
+            }
 
         ]
     },
