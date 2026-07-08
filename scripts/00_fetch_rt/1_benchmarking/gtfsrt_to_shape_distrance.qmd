@@ -1,0 +1,135 @@
+---
+title: "GTFS Real-Time Shape Distance Analysis"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+---
+
+This analysis evaluates the distance between real-time vehicle positions and the closest point on their assigned geometry shape. This metric helps understand positioning accuracy and potential GPS/network issues.
+
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(knitr)
+```
+
+```{r}
+rt_collection_files = I(list(as.character(list.files(
+    "../../data/cm_20260413_220260430_business/processing_speed_shape_distance_osm_thresholds_circular_fix",
+    pattern = "^updates_with_speed_.*\\.csv$",
+    full.names = TRUE
+))))
+
+# rt_collection_files = I(list("../../data/cm_20260413_220260430_business/processing_speed_shape_distance_osm_thresholds_circular_fix/updates_with_speed_20260413.csv"))
+
+rt_files <- as.character(rt_collection_files[[1]])
+rt_collection_raw <- dplyr::bind_rows(lapply(rt_files, read.csv))
+```
+
+
+
+## Global Metrics
+
+Overview of distance dispersion across all real-time position records.
+
+```{r}
+# Summary statistics for distance_to_closest_on_geometry
+summary_stats <- rt_collection_raw |>
+  summarise(
+    n_records = n(),
+    mean_distance = mean(distance_to_closest_on_geometry, na.rm = TRUE),
+    median_distance = median(distance_to_closest_on_geometry, na.rm = TRUE),
+    sd_distance = sd(distance_to_closest_on_geometry, na.rm = TRUE),
+    min_distance = min(distance_to_closest_on_geometry, na.rm = TRUE),
+    max_distance = max(distance_to_closest_on_geometry, na.rm = TRUE),
+    p25 = quantile(distance_to_closest_on_geometry, 0.25, na.rm = TRUE),
+    p75 = quantile(distance_to_closest_on_geometry, 0.75, na.rm = TRUE),
+    p95 = quantile(distance_to_closest_on_geometry, 0.95, na.rm = TRUE),
+    p99 = quantile(distance_to_closest_on_geometry, 0.99, na.rm = TRUE),
+    na_count = sum(is.na(distance_to_closest_on_geometry))
+  )
+
+knitr::kable(
+  summary_stats,
+  caption = "Global summary statistics for distance to closest shape point"
+)
+```
+
+
+
+## Distance Thresholds Analysis
+
+Percentage of records within acceptable distance thresholds.
+
+```{r}
+# Threshold analysis
+thresholds <- c(5, 10, 25, 50, 100)
+
+threshold_analysis <- data.frame(
+  threshold_meters = thresholds,
+  count_within = sapply(thresholds, function(t) 
+    sum(rt_collection_raw$distance_to_closest_on_geometry <= t, na.rm = TRUE)),
+  percentage = sapply(thresholds, function(t) 
+    round(100 * sum(rt_collection_raw$distance_to_closest_on_geometry <= t, na.rm = TRUE) / 
+          nrow(rt_collection_raw), 2))
+)
+
+knitr::kable(
+  threshold_analysis,
+  caption = "Threshold analysis: records within distance limits"
+)
+```
+
+
+
+## Analysis by Day and Trip
+
+Detailed breakdown of distance metrics grouped by day and trip_id to identify patterns and problematic routes.
+
+```{r}
+# Prepare data with day extraction
+rt_data_daily <- rt_collection_raw |>
+  filter(!is.na(trip_id) & !is.na(distance_to_closest_on_geometry))
+
+# Summary statistics by day and trip_id
+day_trip_stats <- rt_data_daily |>
+  group_by(day, trip_id) |>
+  summarise(
+    n_records = n(),
+    mean_distance = mean(distance_to_closest_on_geometry, na.rm = TRUE),
+    median_distance = median(distance_to_closest_on_geometry, na.rm = TRUE),
+    sd_distance = sd(distance_to_closest_on_geometry, na.rm = TRUE),
+    max_distance = max(distance_to_closest_on_geometry, na.rm = TRUE),
+    p95_distance = quantile(distance_to_closest_on_geometry, 0.95, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  arrange(desc(mean_distance))
+
+# Show top 10 worst performing trip/day combinations
+knitr::kable(
+  head(day_trip_stats, 10),
+  caption = "Top 10 trip/day combinations with highest mean distance to shape"
+)
+
+# Daily aggregates
+daily_summary <- day_trip_stats |>
+  group_by(day) |>
+  summarise(
+    n_trips = n_distinct(trip_id),
+    n_records = sum(n_records),
+    mean_distance = mean(mean_distance, na.rm = TRUE),
+    median_distance = median(median_distance, na.rm = TRUE),
+    max_distance = max(max_distance, na.rm = TRUE),
+    p95_distance = mean(p95_distance, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  arrange(day)
+
+knitr::kable(
+  daily_summary,
+  caption = "Daily summary across trips"
+)
+```
+
+

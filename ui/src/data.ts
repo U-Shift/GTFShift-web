@@ -174,7 +174,39 @@ export const DB_REGIONS: DataRegion[] = [
                     shape_data: BASE_URL + '/data/lisbon/shapes_distance_threshold/shape_data_lisboa_rt_gtfs20260520_run20260707.json',
                     zip: BASE_URL + '/data/lisbon/shapes_distance_threshold/lisbon.zip'
                 }
-            }
+            },
+            {
+                id: 'shapes_distance_threshold_stop_buffer',
+                name: 'After CRS fix, Shapes Distance (OSM shapes with distance threshold + stop buffer)',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.9,
+                files: {
+                    ways: BASE_URL + '/data/lisbon/shapes_distance_threshold_stop_buffer/ways_lisboa_rt_gtfs20260520_run20260707.geojson',
+                    boundaries: BASE_URL + '/data/lisbon/shapes_distance_threshold_stop_buffer/prioritization_area_polygon_lisboa_rt_gtfs20260520_run20260707.geojson',
+                    way_data: BASE_URL + '/data/lisbon/shapes_distance_threshold_stop_buffer/way_data_lisboa_rt_gtfs20260520_run20260707.json',
+                    metadata: BASE_URL + '/data/lisbon/shapes_distance_threshold_stop_buffer/metadata_lisboa_rt_gtfs20260520_run20260707.json',
+                    route_data: BASE_URL + '/data/lisbon/shapes_distance_threshold_stop_buffer/route_data_lisboa_rt_gtfs20260520_run20260707.json',
+                    shape_data: BASE_URL + '/data/lisbon/shapes_distance_threshold_stop_buffer/shape_data_lisboa_rt_gtfs20260520_run20260707.json',
+                    zip: BASE_URL + '/data/lisbon/shapes_distance_threshold/lisbon.zip'
+                }
+            },
+            {
+                id: 'shapes_distance_circular_fix',
+                name: 'After CRS fix, Shapes Distance (OSM shapes with distance threshold + stop buffer + circular geometries fix)',
+                date: 'May 2026',
+                rt_data: true,
+                matched_frequencies_peak: 98.9,
+                files: {
+                    ways: BASE_URL + '/data/lisbon/shapes_distance_circular_fix/ways_lisboa_rt_gtfs20260520_run20260708.geojson',
+                    boundaries: BASE_URL + '/data/lisbon/shapes_distance_circular_fix/prioritization_area_polygon_lisboa_rt_gtfs20260520_run20260708.geojson',
+                    way_data: BASE_URL + '/data/lisbon/shapes_distance_circular_fix/way_data_lisboa_rt_gtfs20260520_run20260708.json',
+                    metadata: BASE_URL + '/data/lisbon/shapes_distance_circular_fix/metadata_lisboa_rt_gtfs20260520_run20260708.json',
+                    route_data: BASE_URL + '/data/lisbon/shapes_distance_circular_fix/route_data_lisboa_rt_gtfs20260520_run20260708.json',
+                    shape_data: BASE_URL + '/data/lisbon/shapes_distance_circular_fix/shape_data_lisboa_rt_gtfs20260520_run20260708.json',
+                    zip: BASE_URL + '/data/lisbon/shapes_distance_circular_fix/lisbon.zip'
+                }
+            },
 
         ]
     },

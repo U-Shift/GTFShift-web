@@ -7,7 +7,7 @@ GTFShiftVersion <- "0.10 (dev version)" # as.character(packageVersion("GTFShift"
 THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED = 3  # number of updates per road segment to compute speed
 THRESHOLD_TIME_BETWEEN_UPDATES_MAX = 90 # seconds, maximum time between updates to consider them valid for speed computation
 THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN = 0.7 # minimum ratio of updates per trip (against planned updates) to consider the trip valid for speed computation 
-
+THRESHOLD_DISTANCE_TO_GEOMETRY_MAX = 50 # meters, maximum distance to closest shape point to consider the update valid for speed computation
 
 # Define regions to analyse
 regions <- data.frame(
@@ -39,7 +39,7 @@ regions <- bind_rows(
     metric_crs = 3763,
     rt_interval = "13-30/04/2026 (Business Days)",
     rt_collection = I(list(as.character(list.files(
-      "data/cm_20260413_220260430_business/processing_speed_shape_distance_osm_thresholds",
+      "data/cm_20260413_220260430_business/processing_speed_shape_distance_osm_thresholds_circular_fix",
       pattern = "^updates_with_speed_.*\\.csv$",
       full.names = TRUE
     )))),
@@ -47,8 +47,22 @@ regions <- bind_rows(
       message(sprintf("> Manipulating RT collection, with %d records", nrow(df)))
       # Remove column closest_on_shape, if exists
       df <- df |> select(-any_of("closest_on_shape"))
-      # Prepare data for analysis
+      # 1st validation: time between and distance to geometry
+      message(sprintf("> Validating updates, with %d records", nrow(df)))
+      message("> 1st validation: time between updates and distance to geometry")
+      df = df |>
+        mutate(
+          valid_time = ifelse(time_since_prev_sec < THRESHOLD_TIME_BETWEEN_UPDATES_MAX, TRUE, FALSE),
+          valid_distance_to_geometry = ifelse(!is.na(distance_to_closest_on_geometry) & distance_to_closest_on_geometry <= THRESHOLD_DISTANCE_TO_GEOMETRY_MAX, TRUE, FALSE),
+          valid_trip = valid_time & valid_distance_to_geometry
+        )
+      message(sprintf("> After 1st validation, %d (%.2f%%) records are valid for speed computation", nrow(df |> filter(valid_trip)), nrow(df |> filter(valid_trip)) / nrow(df) * 100))
+      message(sprintf("> %d (%.2f%%) records are invalid due to time between updates > %d seconds", nrow(df |> filter(!valid_time)), nrow(df |> filter(!valid_time)) / nrow(df) * 100, THRESHOLD_TIME_BETWEEN_UPDATES_MAX))
+      message(sprintf("> %d (%.2f%%) records are invalid due to distance to geometry > %d meters", nrow(df |> filter(!valid_distance_to_geometry)), nrow(df |> filter(!valid_distance_to_geometry)) / nrow(df) * 100, THRESHOLD_DISTANCE_TO_GEOMETRY_MAX))
+      # 2nd validation: valid updates ratio
+      message("> 2nd validation: valid updates ratio per trip")
       trips_per_day = df |> 
+        filter(valid_trip) |>
         group_by(trip_id, day) |> 
         summarise(updates_count = n(), .groups = "drop") |>
         left_join(
@@ -59,33 +73,32 @@ regions <- bind_rows(
           planned_updates_count = round(trip_duration / THRESHOLD_TIME_BETWEEN_UPDATES_MAX), 
           updates_ratio = updates_count / planned_updates_count
         )
-      message(sprintf("> Found %d trips", nrow(trips_per_day)))
+      message(sprintf("> Found %d valid trips", nrow(trips_per_day)))
       n_at_least_ratio <- nrow(trips_per_day |> filter(updates_ratio >= THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN))
       message(sprintf("> %d (%.2f%%) have at least %.2f%% of updates ratio (updates_count / planned_updates_count)", n_at_least_ratio, n_at_least_ratio / nrow(trips_per_day) * 100, THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN * 100))
-      # Validate updates
       df = df |>
         left_join(
           trips_per_day |> select(trip_id, day, updates_count, planned_updates_count, updates_ratio),
           by = c("trip_id" = "trip_id", "day" = "day")
         ) |>
         mutate(
-          valid_time = ifelse(time_since_prev_sec < THRESHOLD_TIME_BETWEEN_UPDATES_MAX, TRUE, FALSE),
           valid_updates_ratio = ifelse(updates_ratio >= THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN, TRUE, FALSE),
-          valid_trip = valid_time & valid_updates_ratio
+          valid_trip = valid_time & valid_distance_to_geometry & valid_updates_ratio
         )
-      message(sprintf("> After validation, %d (%.2f%%) records are valid for speed computation", nrow(df |> filter(valid_trip)), nrow(df |> filter(valid_trip)) / nrow(df) * 100))
+      message(sprintf("> After 2nd validation, %d (%.2f%%) records are valid for speed computation", nrow(df |> filter(valid_trip)), nrow(df |> filter(valid_trip)) / nrow(df) * 100))
       message(sprintf("> %d (%.2f%%) records do not have a GTFS match (no planned_updates_count)", nrow(df |> filter(is.na(planned_updates_count))), nrow(df |> filter(is.na(planned_updates_count))) / nrow(df) * 100))
-      message(sprintf("> %d (%.2f%%) records are invalid due to time between updates > %d seconds", nrow(df |> filter(!valid_time)), nrow(df |> filter(!valid_time)) / nrow(df) * 100, THRESHOLD_TIME_BETWEEN_UPDATES_MAX))
       message(sprintf("> %d (%.2f%%) records are invalid due to updates_ratio < %.2f%%", nrow(df |> filter(!valid_updates_ratio)), nrow(df |> filter(!valid_updates_ratio)) / nrow(df) * 100, THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN * 100))
-      df |>
-        filter(valid_trip) |>
-        mutate(
-          speed = as.numeric(speed_kmh),
-          # Extract HH from epoch, in local time (Europe/Lisbon)
-          # For instance, 1778737681, which is 2026-05-14 05:48:01 UTC, should return 6, as in 06:48:01 in Europe/Lisbon timezone
-          hh = as.integer(format(as.POSIXct(timestamp, origin = "1970-01-01", tz = "Europe/Lisbon"), "%H"))
-        ) |>
-        st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+      return(
+        df |>
+          filter(valid_trip) |>
+          mutate(
+            speed = as.numeric(speed_kmh),
+            # Extract HH from epoch, in local time (Europe/Lisbon)
+            # For instance, 1778737681, which is 2026-05-14 05:48:01 UTC, should return 6, as in 06:48:01 in Europe/Lisbon timezone
+            hh = as.integer(format(as.POSIXct(timestamp, origin = "1970-01-01", tz = "Europe/Lisbon"), "%H"))
+          ) |>
+          st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+      )
     })),
     rt_collection_per_hour = TRUE,
     rt_notes = "Due to the fact that Carris GTFS-RT does not disclose vehicles' momentary speed, a proxy was computed for each trip update considering the time and route distance between each update and the previous one. Refer to the <a href=\"https://github.com/U-Shift/GTFShift-web/blob/dev/scripts/00_fetch_rt/4_compute_speed/gtfs_rt_commercial_speed.R\" target=\"_blank\">script</a> for more details.",

@@ -11,6 +11,10 @@ TRIP_ID_GTFS = "41474_20260101_190_0_3"
 TRIP_ID_UPDATES = "20260428_5977_20260101_108_3_2"
 TRIP_ID_GTFS = "5977_20260101_108_3_2"
 
+PDATES_RAW = "data/cm_20260413_220260430_business/processing_speed_shape_distance/updates_with_speed_20260415.csv"
+TRIP_ID_UPDATES = "22224_20260101_251_0_21"
+TRIP_ID_GTFS = "22224_20260101_251_0_21" # Circular geometry
+
 OPERATOR = "cmet"
 UPDATES_RAW = "data/cmet_20260413_220260430_business_a3/updates_instantSpeeds.csv"
 GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris_metropolitana.zip"
@@ -54,7 +58,7 @@ names(updates)
 updates_case_study = updates |> 
   filter(trip_id==TRIP_ID_UPDATES)
 updates_case_study_sf = updates_case_study |> 
-  st_as_sf(coords=c("lon","lat"), crs=4326)
+  st_as_sf(coords=c("longitude","latitude"), crs=4326)
 nrow(updates_case_study)
 names(updates_case_study)
 updates_case_study
