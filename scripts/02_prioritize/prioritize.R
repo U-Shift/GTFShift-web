@@ -10,7 +10,7 @@ library(osmdata)
 library(Hmisc) # For  Weighted Statistical Estimates
 # set_overpass_url("https://overpass-api.de/api/interpreter")
 
-# Run with: $ Rscript 02_prioritize/prioritize.R > prioritize.log 2>&1
+# Run with: $ Rscript 02_prioritize/prioritize.R
 
 # Refer to prioritize_parameters.R to define parameters before running this script!
 source("02_prioritize/prioritize_parameters.R")
@@ -141,7 +141,9 @@ for (i in 1:nrow(regions)) {
         .groups = "drop"
       ) |> # Get route_short_name and route_long_name from gtfs$trips and gtfs$routes
       left_join(gtfs_original$trips |> select(trip_id, route_id), by = "trip_id") |>
-      left_join(gtfs_original$routes |> select(route_id, route_short_name, route_long_name), by = "route_id")
+      left_join(gtfs_original$routes |> select(route_id, route_short_name, route_long_name), by = "route_id") |>
+      # Get shape_id from gtfs$trips
+      left_join(gtfs_original$trips |> select(trip_id, shape_id), by = "trip_id")
 
     rt_collection_manipulate <- if (!is.null(region$rt_collection_manipulate) &&
       length(region$rt_collection_manipulate) > 0 &&
@@ -165,12 +167,12 @@ for (i in 1:nrow(regions)) {
       stop(sprintf("rt_collection_manipulate must return an sf object for region '%s'", region$name))
     }
 
+    # deprecated! 
     # Filter updates, to remove those close to bus stops
-    gtfs_stops <- tidytransit::stops_as_sf(gtfs$stops, crs = 4326)
-
-    within_distance <- st_is_within_distance(rt_collection |> st_transform(crs = region$metric_crs), gtfs_stops |> st_transform(crs = region$metric_crs), dist = stop_buffer_size)
-
-    rt_collection_filtered <- rt_collection[lengths(within_distance) == 0, ]
+    # gtfs_stops <- tidytransit::stops_as_sf(gtfs$stops, crs = 4326)
+    # within_distance <- st_is_within_distance(rt_collection |> st_transform(crs = region$metric_crs), gtfs_stops |> st_transform(crs = region$metric_crs), dist = stop_buffer_size)
+    
+    rt_collection_filtered <- rt_collection # [lengths(within_distance) == 0, ]
 
     # Extend prioritization with real-time data
     prioritization_speeds <- rt_extend_prioritization(

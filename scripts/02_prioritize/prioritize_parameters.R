@@ -7,7 +7,8 @@ GTFShiftVersion <- "0.10 (dev version)" # as.character(packageVersion("GTFShift"
 THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED = 3  # number of updates per road segment to compute speed
 THRESHOLD_TIME_BETWEEN_UPDATES_MAX = 90 # seconds, maximum time between updates to consider them valid for speed computation
 THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN = 0.7 # minimum ratio of updates per trip (against planned updates) to consider the trip valid for speed computation 
-THRESHOLD_DISTANCE_TO_GEOMETRY_MAX = 100 # meters, maximum distance to closest shape point to consider the update valid for speed computation
+THRESHOLD_DISTANCE_TO_GEOMETRY_MAX = 50 # meters, maximum distance to closest shape point to consider the update valid for speed computation
+THRESHOLD_EDGE_DISTANCE_DISCARD = 100 # meters, distance from first and last shape point to discard updates for speed computation (to avoid initial and final updates, where updates are usually not accurate due to pings before/after the vehicle is travelling)
 
 # Define regions to analyse
 regions <- data.frame(
@@ -39,17 +40,24 @@ regions <- bind_rows(
     metric_crs = 3763,
     rt_interval = "13-30/04/2026 (Business Days)",
     rt_collection = I(list(as.character(list.files(
-      "data/cm_20260413_220260430_business/processing_speed_shape_distance_osm_thresholds_circular_fix",
+      "data/cm_20260413_220260430_business/osm_multiline_to_line_circular_fix_2",
       pattern = "^updates_with_speed_.*\\.csv$",
       full.names = TRUE
     )))),
     rt_collection_manipulate = I(list(function(df, gtfs_trip_duration) {
+      # Getting OSM shapes length
+      osm_shapes_length = sf::st_read("data/cm_20260413_220260430_business/osm_multiline_to_line_circular_fix_2/osm_shapes_linestring.gpkg") |>
+        st_transform(crs = 3763) |>
+        mutate(length_m = as.numeric(st_length(geom)))
+      
       # Remove trips from trams, ascensors (end with "E") and neighbourhood buses (end with "B")
       message("Filtering out tram and neighbourhood bus trips from GTFS trip duration data...")
       gtfs_trip_duration <- gtfs_trip_duration |> filter(!stringr::str_detect(route_short_name, "E$|B$"))
       message(sprintf("> Manipulating RT collection, with %d records", nrow(df)))
-      # Remove column closest_on_shape, if exists
-      df <- df |> select(-any_of("closest_on_shape"))
+
+      # Remove column closest_on_geometry, if exists (occupies unnecessary space in memory)
+      df <- df |> select(-any_of("closest_on_geometry"))
+
       # 1st validation: time between and distance to geometry
       message(sprintf("> Validating updates, with %d records", nrow(df)))
       message("> 1st validation: time between updates and distance to geometry")
@@ -91,6 +99,20 @@ regions <- bind_rows(
       message(sprintf("> After 2nd validation, %d (%.2f%%) records are valid for speed computation", nrow(df |> filter(valid_trip)), nrow(df |> filter(valid_trip)) / nrow(df) * 100))
       message(sprintf("> %d (%.2f%%) records do not have a GTFS match (no planned_updates_count)", nrow(df |> filter(is.na(planned_updates_count))), nrow(df |> filter(is.na(planned_updates_count))) / nrow(df) * 100))
       message(sprintf("> %d (%.2f%%) records are invalid due to updates_ratio < %.2f%%", nrow(df |> filter(!valid_updates_ratio)), nrow(df |> filter(!valid_updates_ratio)) / nrow(df) * 100, THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN * 100))
+      # 3r validation: distance_along_geometry must be between 100 and the shape length -100
+      # (To avoid initial and final updates, where updates are usually not accurate due to pings before/after the vehicle is travelling)
+      message("> 3rd validation: distance_along_geometry must be between 100 and the shape length -100")
+      df = df |>
+        left_join(
+          osm_shapes_length |> select(shape_id, length_m),
+          by = c("shape_id" = "shape_id")
+        ) |>
+        mutate(
+          valid_distance_along_geometry = ifelse(!is.na(distance_along_geometry) & distance_along_geometry >= THRESHOLD_EDGE_DISTANCE_DISCARD & distance_along_geometry <= (length_m - THRESHOLD_EDGE_DISTANCE_DISCARD), TRUE, FALSE),
+          valid_trip = valid_time & valid_distance_to_geometry & valid_updates_ratio & valid_distance_along_geometry
+        )
+      message(sprintf("> After 3rd validation, %d (%.2f%%) records are valid for speed computation", nrow(df |> filter(valid_trip)), nrow(df |> filter(valid_trip)) / nrow(df) * 100))
+      message(sprintf("> %d (%.2f%%) records are invalid due to distance_along_geometry outside [%.2f, max - %.2f] meters", nrow(df |> filter(!valid_distance_along_geometry)), nrow(df |> filter(!valid_distance_along_geometry)) / nrow(df) * 100, THRESHOLD_EDGE_DISTANCE_DISCARD, THRESHOLD_EDGE_DISTANCE_DISCARD))
       return(
         df |>
           filter(valid_trip) |>
