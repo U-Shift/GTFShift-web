@@ -1,5 +1,5 @@
 # GTFS RT commercial speed computation
-# Run with: $ Rscript 00_fetch_rt/4_compute_speed/gtfs_rt_commercial_speed.R > data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance/gtfs_rt_commercial_speed.log 2>&1
+# Run with: $ Rscript 00_fetch_rt/4_compute_speed/gtfs_rt_commercial_speed.R > data/cm_20260413_220260430_business/osm_multiline_to_line_circular_fix_2/gtfs_rt_commercial_speed.log 2>&1
 
 library(jsonlite)
 library(lubridate)
@@ -14,18 +14,18 @@ THRESHOLD_GEOMETRY_DISTANCE_DIFF <- 1000
 THRESHOLD_GEOMETRY_POINTS_DIFF <- 500
 
 # > Carris, Lisboa, Portugal
-# UPDATES_RAW_FOLDER <- "data/cm_20260413_220260430_business/processing_speed_shape_distance"
-# OUTPUT_FOLDER <- "data/cm_20260413_220260430_business/processing_speed_shape_distance_osm_thresholds"
-# GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris.zip"
-# GTFS_MANIPULATE = NULL
-# OSM_SHAPES = "https://github.com/U-Shift/busclar/releases/download/0.9/shapes_match_carris_gtfs20260527_run20260626.gpkg"
+UPDATES_RAW_FOLDER <- "data/cm_20260413_220260430_business/processing_speed_shape_distance"
+OUTPUT_FOLDER <- "data/cm_20260413_220260430_business/osm_multiline_to_line_circular_fix_2"
+GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris.zip"
+GTFS_MANIPULATE = NULL
+OSM_SHAPES = "https://github.com/U-Shift/busclar/releases/download/0.9/shapes_match_carris_gtfs20260527_run20260626.gpkg"
 
 # > Carris Metropolitana, Area 3
-UPDATES_RAW_FOLDER <- "data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance"
-OUTPUT_FOLDER <- "data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance"
-GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris_metropolitana.zip"
-GTFS_MANIPULATE = "manipulate_carris_met"
-OSM_SHAPES = "https://github.com/U-Shift/busclar/releases/download/0.9/shapes_match_carris_metropolitana_gtfs20260527_run20260626.gpkg"
+# UPDATES_RAW_FOLDER <- "data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance"
+# OUTPUT_FOLDER <- "data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance"
+# GTFS_FEED_URL = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris_metropolitana.zip"
+# GTFS_MANIPULATE = "manipulate_carris_met"
+# OSM_SHAPES = "https://github.com/U-Shift/busclar/releases/download/0.9/shapes_match_carris_metropolitana_gtfs20260527_run20260626.gpkg"
 manipulate_carris_met <- function(gtfs) {
   # Remove offer plan id from trip_id (e.g., "[43]trip_id" -> "trip_id")
   gtfs$trips$trip_id <- stringr::str_replace_all(gtfs$trips$trip_id, "\\[.*\\]", "")
@@ -50,9 +50,7 @@ if (!is.null(GTFS_MANIPULATE)) {
 message("Loading OSM shapes...")
 osm_shapes = st_read(OSM_SHAPES)
 message(sprintf("Loaded %d OSM shapes", nrow(osm_shapes)))
-osm_shapes = osm_shapes |> filter(distance_diff < THRESHOLD_GEOMETRY_DISTANCE_DIFF & points_diff < THRESHOLD_GEOMETRY_POINTS_DIFF)
-message(sprintf("Filtered OSM shapes to %d with distance_diff < %d and points_diff < %d", nrow(osm_shapes), THRESHOLD_GEOMETRY_DISTANCE_DIFF, THRESHOLD_GEOMETRY_POINTS_DIFF))
-# mapview(osm_shapes)
+
 
 ### 3. Convert OSM shapes to LINESTRING  
 message("Converting OSM shapes to LINESTRING...")
@@ -63,36 +61,61 @@ if (file.exists(osm_shapes_file)) {
 } else {
   message(sprintf("OSM shapes LINESTRING file does not exist, creating it: %s", osm_shapes_file))
 
-  # > Get first stop of each shape from GTFS
-  osm_shapes_first_stop = osm_shapes |> 
-    st_drop_geometry() |> 
+  # > Build points per shape from GTFS
+  # > - circular trip (first stop_id == last stop_id): use all stops
+  # > - otherwise: use only first stop
+  trips_by_shape = gtfs$trips |>
+    select(shape_id, trip_id) |>
+    distinct(shape_id, .keep_all = TRUE)
+
+  stop_points_by_trip = gtfs$stop_times |>
+    filter(trip_id %in% trips_by_shape$trip_id) |>
+    select(trip_id, stop_id, stop_sequence) |>
+    arrange(trip_id, stop_sequence) |>
+    group_by(trip_id) |>
+    mutate(
+      first_stop_id = first(stop_id),
+      last_stop_id = last(stop_id),
+      is_circular = first_stop_id == last_stop_id,
+      keep_stop = if_else(is_circular, TRUE, row_number() %in% c(1,2)) # Keep all stops if circular, otherwise keep only first two stops
+    ) |>
+    ungroup() |>
+    filter(keep_stop) |>
+    left_join(
+      gtfs$stops |> select(stop_id, stop_lat, stop_lon),
+      by = c("stop_id" = "stop_id"),
+      multiple = "first"
+    ) |>
+    filter(!is.na(stop_lon) & !is.na(stop_lat)) |>
+    arrange(trip_id, stop_sequence)
+
+  stop_points_by_trip = split(stop_points_by_trip, stop_points_by_trip$trip_id)
+  stop_points_by_trip = tibble::tibble(
+    trip_id = names(stop_points_by_trip),
+    points = lapply(stop_points_by_trip, function(x) {
+      st_as_sf(x, coords = c("stop_lon", "stop_lat"), crs = 4326, remove = FALSE) |> st_geometry()
+    })
+  )
+
+  osm_shapes_points = osm_shapes |>
+    st_drop_geometry() |>
     select(osm_id, shape_id) |>
-    left_join(gtfs$trips |> select(trip_id, shape_id), by = c("shape_id" = "shape_id"), multiple="first") |>
-    left_join(
-      gtfs$stop_times |> 
-        select(trip_id, stop_id, stop_sequence) |>
-        arrange(trip_id, stop_sequence) ,
-      by = c("trip_id" = "trip_id"), multiple="first"
-    ) |>
-    left_join(
-      gtfs$stops |> select(stop_id, stop_name, stop_lat, stop_lon),
-      by = c("stop_id" = "stop_id"), multiple="first"
-    ) |>
-    st_as_sf(coords = c("stop_lon", "stop_lat"), crs = 4326, remove = FALSE) |>
-    rename(first_stop_geometry = geometry)
-  # mapview(osm_shapes_first_stop)
-  assertthat::are_equal(nrow(osm_shapes_first_stop), nrow(osm_shapes))
-  # > Join OSM shapes with first stop geometry
+    left_join(trips_by_shape, by = c("shape_id" = "shape_id"), multiple = "first") |>
+    left_join(stop_points_by_trip, by = c("trip_id" = "trip_id"), multiple = "first")
+
+  # mapview(osm_shapes_points)
+  assertthat::are_equal(nrow(osm_shapes_points), nrow(osm_shapes))
+  # > Join OSM shapes with reference points
   osm_shapes_base_data = osm_shapes |> st_drop_geometry() |> select(osm_id, shape_id) |>
     left_join(
-      osm_shapes_first_stop |> select(osm_id, first_stop_geometry),
+      osm_shapes_points |> select(osm_id, points),
       by = c("osm_id" = "osm_id")
     ) |> 
     left_join(
       osm_shapes |> select(osm_id, geom) |> rename(osm_geometry = geom),
       by = c("osm_id" = "osm_id")
     )
-  # mapview((osm_shapes_base_data[1, ])$osm_geometry) + mapview((osm_shapes_base_data[1, ])$first_stop_geometry)
+  # mapview((osm_shapes_base_data |> filter(shape_id=="109_3_ASC_shp"))$osm_geometry) + mapview((osm_shapes_base_data |> filter(shape_id=="109_3_ASC_shp"))$points)
   # > Convert to LINESTRING
   start_time = Sys.time()
   osm_shapes_linestring = osm_shapes_base_data |>
@@ -100,7 +123,7 @@ if (file.exists(osm_shapes_file)) {
     mutate(
       osm_geometry = GTFShift::multiline_to_sorted_linestring(
         multilinestring = osm_geometry,
-        start_point = first_stop_geometry,
+        points = points,
         metric_crs = METRIC_CRS
       )
     ) |>
@@ -113,8 +136,13 @@ if (file.exists(osm_shapes_file)) {
 }
 
 # Filter osm_shapes_linestring to those on osm_shapes (that match thresholds)
+osm_shapes = osm_shapes |> filter(distance_diff < THRESHOLD_GEOMETRY_DISTANCE_DIFF & points_diff < THRESHOLD_GEOMETRY_POINTS_DIFF)
+message(sprintf("Filtered OSM shapes to %d with distance_diff < %d and points_diff < %d", nrow(osm_shapes), THRESHOLD_GEOMETRY_DISTANCE_DIFF, THRESHOLD_GEOMETRY_POINTS_DIFF))
+# mapview(osm_shapes)
 osm_shapes_linestring = osm_shapes_linestring |> filter(osm_id %in% osm_shapes$osm_id)
 message(sprintf("Filtered OSM shapes LINESTRING to %d with distance_diff < %d and points_diff < %d", nrow(osm_shapes_linestring), THRESHOLD_GEOMETRY_DISTANCE_DIFF, THRESHOLD_GEOMETRY_POINTS_DIFF))
+
+# stop("Stopping execution after OSM shapes LINESTRING conversion. Remove this stop() to proceed with speed computation.")
 
 ### 4. Compute speed between updates
 message("Starting computation of average speed between updates...")

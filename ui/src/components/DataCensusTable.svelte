@@ -34,6 +34,10 @@
                 {/if}
             </tr>
             <tr>
+                <th>Min</th>
+                <td>{census_1.min.toFixed(2)}</td>
+            </tr>
+            <tr>
                 <th>P5</th>
                 <td>{census_1.p5.toFixed(2)}</td>
                 {#if census_2}
@@ -67,6 +71,10 @@
                 {#if census_2}
                     <td>{census_2.p95.toFixed(2)}</td>
                 {/if}
+            </tr>
+            <tr>
+                <th>Max</th>
+                <td>{census_1.max.toFixed(2)}</td>
             </tr>
             <tr>
                 <th>Standard Deviation</th>
