@@ -39,8 +39,9 @@ OSM_ID_DEBUG = 13602671 # 797 ⬜
 OSM_ID_DEBUG = 9486535 # 747 ❌
 OSM_ID_DEBUG = 9963441 # 34B ⬆️
 
-mapview(previous[previous$osm_id == OSM_ID_DEBUG, ], layer.name = "Previous", color = "orange", lwd=10, alpha=0.5) +
-  mapview(new[new$osm_id == OSM_ID_DEBUG, ], layer.name = "New", color = "black")
+mapview(osm_data[osm_data$osm_id == OSM_ID_DEBUG, ], layer.name = "OSM", color = "pink", lwd=5, alpha=0.5) +
+  mapview(previous[previous$osm_id == OSM_ID_DEBUG, ], layer.name = "Previous", color = "orange", lwd=10, alpha=0.5) +
+  mapview(new[new$osm_id == OSM_ID_DEBUG, ], layer.name = "New", color = "black") 
 
 SHAPE_ID_DEBUG = "226_0_CIRC_shp" # 34B ✅
 mapview(previous[previous$shape_id == SHAPE_ID_DEBUG, ], layer.name = "Previous", color = "orange", lwd=10, alpha=0.5) +
