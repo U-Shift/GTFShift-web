@@ -429,7 +429,7 @@
                                         >
                                         <td class="px-4 py-2 text-xs">
                                             Speed was computed based on GTFS-RT updates with 
-                                            <a href="https://u-shift.github.io/GTFShift/reference/rt_commercial_speed.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::rt_commercial_speed()</a>, considering 
+                                            <a href="https://u-shift.github.io/GTFShift/reference/rt_average_speed.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::rt_average_speed()</a>, considering 
                                             the distance traversed along the route geometry and the time between consecutive updates. 
                                             
                                             <br/><br/>
@@ -622,7 +622,7 @@ lane_prioritization = prioritize_lanes(gtfs, osm_q)
 # Extend with real-time data
 rt_collection <- read.csv("updates_collected.csv") |> sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 trips_geometries <- GTFShift::osm_shapes_to_routes(gtfs, osm_q)
-speeds <- GTFShift::rt_commercial_speed(rt_collection, trips_geometries)
+speeds <- GTFShift::rt_average_speed(rt_collection, trips_geometries)
 # ... filtering omitted ...
 lane_prioritization <- GTFShift::rt_extend_prioritization(lane_prioritization, speeds)`: ""),{ language: "r" },).value}</code></pre>
                     </div>

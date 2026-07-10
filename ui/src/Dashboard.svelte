@@ -1234,7 +1234,7 @@
                                 class="text-xs text-muted-foreground space-y-3 pt-2"
                             >
                                 <p>
-                                    Speed computed based on GTFS-RT updates with <a href="https://u-shift.github.io/GTFShift/reference/rt_commercial_speed.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::rt_commercial_speed()</a>, considering 
+                                    Speed computed based on GTFS-RT updates with <a href="https://u-shift.github.io/GTFShift/reference/rt_average_speed.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::rt_average_speed()</a>, considering 
                                     the distance traversed along the route geometry and the time between consecutive updates. 
 
                                 </p>
