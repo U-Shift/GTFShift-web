@@ -504,7 +504,7 @@
                                     <th
                                         class="text-[9px] font-semibold text-muted-foreground text-left px-2 py-1 whitespace-nowrap"
                                     >
-                                        Speed copunt (nr.)
+                                        Speed count (nr.)
                                     </th>
                                     {#each Array(24) as _, i}
                                         {@const speedCount =

@@ -1072,6 +1072,9 @@
                     >
                     <Accordion.Content>
                         <p class="text-xs text-muted-foreground pt-2">
+                            Bus lanes obtained from OSM data, using <a href="https://u-shift.github.io/GTFShift/reference/osm_bus_lanes.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::osm_bus_lanes()</a>.
+                        </p>
+                        <p class="text-xs text-muted-foreground pt-2">
                             Road segments with bus lanes are shown in <span
                                 style="color: {COLOR_TEAL}"
                                 class="font-bold">green</span
@@ -1111,6 +1114,9 @@
                         <div
                             class="text-xs text-muted-foreground space-y-3 pt-2"
                         >
+                            <p>
+                                Bus frequency determined associating GTFS static data with OSM road segments using <a href="https://u-shift.github.io/GTFShift/reference/get_way_frequency_hourly.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::get_way_frequency_hourly()</a>.
+                            </p>
                             <p>
                                 Road segments with bus service are colored by
                                 frequency, for the selected hour, from the <span
@@ -1162,6 +1168,9 @@
                         <div
                             class="text-xs text-muted-foreground space-y-3 pt-2"
                         >
+                            <p>
+                                Number of lanes obtained from OSM data, using <a href="https://u-shift.github.io/GTFShift/reference/prioritize_lanes.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::prioritize_lanes()</a>.
+                            </p>
                             <p>
                                 Road segments with bus service are colored by
                                 number of lanes, from the <span
@@ -1225,6 +1234,11 @@
                                 class="text-xs text-muted-foreground space-y-3 pt-2"
                             >
                                 <p>
+                                    Speed computed based on GTFS-RT updates with <a href="https://u-shift.github.io/GTFShift/reference/rt_commercial_speed.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::rt_commercial_speed()</a>, considering 
+                                    the distance traversed along the route geometry and the time between consecutive updates. 
+
+                                </p>
+                                <p>
                                     Road segments with bus service are colored
                                     by the average speed measured (for the full days of the real-time data 
                                     collection interval), from the <span
@@ -1270,6 +1284,12 @@
                             <div
                                 class="text-xs text-muted-foreground space-y-3 pt-2"
                             >
+
+                                {#if geoData.metadata.demand && geoData.metadata.demand.notes}
+                                    <p class="text-xs text-muted-foreground pt-2">
+                                        {geoData.metadata.demand.notes}
+                                    </p>
+                                {/if}
                                 <p>
                                     Road segments with bus service are colored
                                     by passenger demand (cumulative for the representative day in study), 

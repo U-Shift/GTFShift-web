@@ -421,6 +421,39 @@
                                         >
                                     </tr>
                                 {/if}
+                                {#if geoData.metadata.rt?.thresholds}
+                                    <tr>
+                                        <th
+                                            class="px-4 py-2 text-left font-medium text-muted-foreground"
+                                            >Speed calculation methodology</th
+                                        >
+                                        <td class="px-4 py-2 text-xs">
+                                            Speed was computed based on GTFS-RT updates with 
+                                            <a href="https://u-shift.github.io/GTFShift/reference/rt_commercial_speed.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::rt_commercial_speed()</a>, considering 
+                                            the distance traversed along the route geometry and the time between consecutive updates. 
+                                            
+                                            <br/><br/>
+                                            Aggregation was performed at the segment level (for all routes that go through each), so the speed 
+                                            must be interpreted as the average speed of all vehicles that traversed the segment during the time period considered.
+
+                                            <br/><br/>
+                                            The aggregation was performed using a script available at <a href="https://github.com/U-Shift/GTFShift-web/tree/main/scripts/02_prioritize" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift-web/scripts/02_prioritize</a>.
+                                            
+                                            The following thresholds were used to consider an update valid for speed calculation:
+                                            <ul class="list-disc pl-5 mt-1">
+                                                <li>A maximum speed of <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.max_speed} km/h</span></li>
+                                                <li>A maximum time between updates of <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.max_time_between_updates} seconds</span></li>
+                                                <li>A maximum distance to trip geometry of <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.max_distance_to_geometry} meters</span></li>
+                                                <li>Discard updates in the first and last <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.edge_distance_discard} meters</span> of trip geometry (to avoid initial and final updates, where updates are usually not accurate due to pings before/after the vehicle is travelling)</li>
+                                                <li>Considering the planned trip duration and the <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.max_time_between_updates} seconds</span> threshold, 
+                                                    the number of expected updates per trip is computed, and only trips with a minimum of <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.min_updates_per_trip_margin*100}%</span>  of expected updates received are considered for speed calculation</li>
+                                            </ul>
+
+                                            <br/>
+                                            Speed is only displayed for segments with a minimum of <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.min_updates_per_road_segment_for_speed} updates</span>.
+                                        </td>
+                                    </tr>
+                                {/if}
                                 {#if geoData.metadata.rt && geoData.metadata.rt.notes}
                                     <tr class="bg-muted/30">
                                         <th
@@ -530,13 +563,6 @@
                     relation mapping is well defined for the transit routes. Routes
                     that do not have an OSM match are ignored.
                 </p>
-                {#if geoData?.metadata.rt}
-                    <p>
-                        ³ Real-time data points within {geoData.metadata.rt
-                            .stop_buffer_size} meters from a bus stop are ignored
-                        for speed calculations.
-                    </p>
-                {/if}
             </section>
 
             <section>
@@ -579,10 +605,7 @@
                     <div
                         class="rounded-lg overflow-hidden border border-border/50"
                     >
-                        <pre class="p-4 text-xs overflow-x-auto"><code>
-                            {@html hljs.highlight(
-                                    `
-library(GTFShift)
+<pre class="p-4 text-xs overflow-x-auto"><code>{@html hljs.highlight(`library(GTFShift)
 library(tidytransit)
 library(osmdata)
 library(sf)
@@ -598,13 +621,10 @@ lane_prioritization = prioritize_lanes(gtfs, osm_q)
                                             ? `
 # Extend with real-time data
 rt_collection <- read.csv("updates_collected.csv") |> sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+trips_geometries <- GTFShift::osm_shapes_to_routes(gtfs, osm_q)
+speeds <- GTFShift::rt_commercial_speed(rt_collection, trips_geometries)
 # ... filtering omitted ...
-lane_prioritization <- GTFShift::rt_extend_prioritization(lane_prioritization, rt_collection)
-`
-                                            : ""),
-                                    { language: "r" },
-                                ).value}
-                        </code></pre>
+lane_prioritization <- GTFShift::rt_extend_prioritization(lane_prioritization, speeds)`: ""),{ language: "r" },).value}</code></pre>
                     </div>
                 {/if}
             </section>

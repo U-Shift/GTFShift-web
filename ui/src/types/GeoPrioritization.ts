@@ -90,8 +90,15 @@ export interface GeoPrioritization {
         rt: {
             url: string;
             period: string;
-            stop_buffer_size: number;
             notes?: string;
+            thresholds: {
+                min_updates_per_road_segment_for_speed: number,
+                max_time_between_updates: number,
+                min_updates_per_trip_margin: number,
+                max_distance_to_geometry: number,
+                edge_distance_discard: number,
+                max_speed: number
+            }
         } | undefined;
         demand: {
             notes?: string;

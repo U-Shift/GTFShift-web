@@ -27,15 +27,16 @@ erDiagram
         string name "Street name"
         float length_m "Length of way in meters"
         boolean is_bus_lane "True if segment has a bus lane"
-        int n_lanes "Total number of lanes"
-        int n_lanes_direction "Number of lanes in the digitizing direction"
-        int n_lanes_circulation "Number of circulation lanes"
-        int n_lanes_circulation_direction "Circulation lanes in direction"
         int n_lanes_parking "Number of parking lanes"
+        int n_lanes_circulation "Number of circulation lanes"
         int n_directions "Number of directions (1 or 2)"
+        float n_lanes_circulation_direction "Circulation lanes in direction"
+        float speed_* "Speed metrics for segment (if applicable)"
+        int demand "Passenger demand (if applicable)"
         string_array routes FK "List of route_ids traversing this way"
         string_array shapes FK "List of shape_ids traversing this way"
-        object hour_frequency "Key-value map of hour (0-23) -> transit frequency"
+        object hour_frequency "Key-value map of hour (0-23) transit frequency"
+        object hour_speed_* "Key-value map of hour (0-23) speed metrics (if applicable)"
     }
 
     Shape_Data_JSON {
@@ -56,6 +57,7 @@ erDiagram
         string route_long_name "Public transit route long name"
         string route_color "Hex color code for styling"
         string route_text_color "Hex text color code for contrast"
+        int demand "Passenger demand (if applicable)"
     }
 
     Metadata_JSON {
@@ -66,6 +68,7 @@ erDiagram
         object prioritization_hour "Hourly lists of missing shapes and routes"
         object data_census "Aggregated census metrics (frequency, speed, lanes)"
         object rt "Real-time transit metadata (if applicable)"
+        object demand "Passsenger demand metadata (if applicable)"
         object execution "Execution timestamp and Git commit hash"
         object environment "R environment, OS version, and package versions"
     }
