@@ -549,8 +549,15 @@ for (i in 1:nrow(regions)) {
     rt_list <- list(
       url = "", # To be edited manually
       period = region$rt_interval,
-      stop_buffer_size = stop_buffer_size,
-      notes = region$rt_notes
+      notes = region$rt_notes,
+      thresholds = list(
+        min_updates_per_road_segment_for_speed = THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED,
+        max_time_between_updates = THRESHOLD_TIME_BETWEEN_UPDATES_MAX,
+        min_updates_per_trip_margin = THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN,
+        max_distance_to_geometry = THRESHOLD_DISTANCE_TO_GEOMETRY_MAX,
+        edge_distance_discard = THRESHOLD_EDGE_DISTANCE_DISCARD,
+        max_speed = THRESHOLD_SPEED_MAX
+      )
     )
   }
   demand_list <- NA

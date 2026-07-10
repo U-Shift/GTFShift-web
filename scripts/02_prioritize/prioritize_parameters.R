@@ -1,6 +1,5 @@
 # Initialization -------------------------------------------------------
 output <- "web_data"
-stop_buffer_size <- 15 # meters
 GTFShiftVersion <- "0.10 (dev version)" # as.character(packageVersion("GTFShift"))
 
 # GTFS-RT commercial speed computation parameters
@@ -9,6 +8,7 @@ THRESHOLD_TIME_BETWEEN_UPDATES_MAX = 90 # seconds, maximum time between updates 
 THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN = 0.7 # minimum ratio of updates per trip (against planned updates) to consider the trip valid for speed computation 
 THRESHOLD_DISTANCE_TO_GEOMETRY_MAX = 50 # meters, maximum distance to closest shape point to consider the update valid for speed computation
 THRESHOLD_EDGE_DISTANCE_DISCARD = 100 # meters, distance from first and last shape point to discard updates for speed computation (to avoid initial and final updates, where updates are usually not accurate due to pings before/after the vehicle is travelling)
+THRESHOLD_SPEED_MAX = 140 # km/h, maximum speed to consider the update valid for speed computation (to avoid outliers)
 
 # Define regions to analyse
 regions <- data.frame(
@@ -65,11 +65,13 @@ regions <- bind_rows(
         mutate(
           valid_time = ifelse(time_since_prev_sec < THRESHOLD_TIME_BETWEEN_UPDATES_MAX, TRUE, FALSE),
           valid_distance_to_geometry = ifelse(!is.na(distance_to_closest_on_geometry) & distance_to_closest_on_geometry <= THRESHOLD_DISTANCE_TO_GEOMETRY_MAX, TRUE, FALSE),
-          valid_trip = valid_time & valid_distance_to_geometry
+          valid_speed = ifelse(!is.na(speed_kmh) & speed_kmh <= THRESHOLD_SPEED_MAX, TRUE, FALSE),
+          valid_trip = valid_time & valid_distance_to_geometry & valid_speed
         )
       message(sprintf("> After 1st validation, %d (%.2f%%) records are valid for speed computation", nrow(df |> filter(valid_trip)), nrow(df |> filter(valid_trip)) / nrow(df) * 100))
       message(sprintf("> %d (%.2f%%) records are invalid due to time between updates > %d seconds", nrow(df |> filter(!valid_time)), nrow(df |> filter(!valid_time)) / nrow(df) * 100, THRESHOLD_TIME_BETWEEN_UPDATES_MAX))
       message(sprintf("> %d (%.2f%%) records are invalid due to distance to geometry > %d meters", nrow(df |> filter(!valid_distance_to_geometry)), nrow(df |> filter(!valid_distance_to_geometry)) / nrow(df) * 100, THRESHOLD_DISTANCE_TO_GEOMETRY_MAX))
+      message(sprintf("> %d (%.2f%%) records are invalid due to speed > %d km/h", nrow(df |> filter(!valid_speed)), nrow(df |> filter(!valid_speed)) / nrow(df) * 100, THRESHOLD_SPEED_MAX))
       # 2nd validation: valid updates ratio
       message("> 2nd validation: valid updates ratio per trip")
       trips_per_day = df |> 
@@ -94,7 +96,7 @@ regions <- bind_rows(
         ) |>
         mutate(
           valid_updates_ratio = ifelse(updates_ratio >= THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN, TRUE, FALSE),
-          valid_trip = valid_time & valid_distance_to_geometry & valid_updates_ratio
+          valid_trip = valid_time & valid_distance_to_geometry & valid_speed & valid_updates_ratio
         )
       message(sprintf("> After 2nd validation, %d (%.2f%%) records are valid for speed computation", nrow(df |> filter(valid_trip)), nrow(df |> filter(valid_trip)) / nrow(df) * 100))
       message(sprintf("> %d (%.2f%%) records do not have a GTFS match (no planned_updates_count)", nrow(df |> filter(is.na(planned_updates_count))), nrow(df |> filter(is.na(planned_updates_count))) / nrow(df) * 100))
@@ -104,12 +106,12 @@ regions <- bind_rows(
       message("> 3rd validation: distance_along_geometry must be between 100 and the shape length -100")
       df = df |>
         left_join(
-          osm_shapes_length |> select(shape_id, length_m),
+          osm_shapes_length |> select(shape_id, length_m) |> st_drop_geometry(),
           by = c("shape_id" = "shape_id")
         ) |>
         mutate(
           valid_distance_along_geometry = ifelse(!is.na(distance_along_geometry) & distance_along_geometry >= THRESHOLD_EDGE_DISTANCE_DISCARD & distance_along_geometry <= (length_m - THRESHOLD_EDGE_DISTANCE_DISCARD), TRUE, FALSE),
-          valid_trip = valid_time & valid_distance_to_geometry & valid_updates_ratio & valid_distance_along_geometry
+          valid_trip = valid_time & valid_distance_to_geometry & valid_speed & valid_updates_ratio & valid_distance_along_geometry
         )
       message(sprintf("> After 3rd validation, %d (%.2f%%) records are valid for speed computation", nrow(df |> filter(valid_trip)), nrow(df |> filter(valid_trip)) / nrow(df) * 100))
       message(sprintf("> %d (%.2f%%) records are invalid due to distance_along_geometry outside [%.2f, max - %.2f] meters", nrow(df |> filter(!valid_distance_along_geometry)), nrow(df |> filter(!valid_distance_along_geometry)) / nrow(df) * 100, THRESHOLD_EDGE_DISTANCE_DISCARD, THRESHOLD_EDGE_DISTANCE_DISCARD))
