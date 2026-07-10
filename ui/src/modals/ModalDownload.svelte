@@ -319,9 +319,37 @@ erDiagram
                                     configurations, and census statistics.</td
                                 >
                             </tr>
+                            <tr class="bg-muted/10">
+                                <td class="px-4 py-2 font-mono text-foreground"
+                                    >gtfs_...zip</td
+                                >
+                                <td class="px-4 py-2 text-muted-foreground"
+                                    >Original GTFS file considered in the analysis.</td
+                                >
+                            </tr>
+                            <tr class="bg-muted/10">
+                                <td class="px-4 py-2 font-mono text-foreground"
+                                    >gtfs_..._manipulated.zip</td
+                                >
+                                <td class="px-4 py-2 text-muted-foreground"
+                                    >GTFS file manipulated with necessary adjustments and filtered to analysis day.</td
+                                >
+                            </tr>
+                            <tr class="bg-muted/10">
+                                <td class="px-4 py-2 font-mono text-foreground"
+                                    >prioritization_...csv</td
+                                >
+                                <td class="px-4 py-2 text-muted-foreground"
+                                    >CSV file with result of <a href="https://u-shift.github.io/GTFShift/reference/prioritize_lanes.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::prioritize_lanes()</a> and <a href="https://u-shift.github.io/GTFShift/reference/rt_extend_prioritization.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::rt_extend_prioritization()</a>.</td
+                                >
+                            </tr>
+                            
                         </tbody>
                     </table>
                 </div>
+                <p class="text-muted-foreground text-xs mt-3">
+                    Some files are available in multiple formats (such as GeoJSON and GPKG or JSON and CSV) to facilitate integration with different tools and workflows.
+                </p>
             </section>
 
             <!-- Section 2: Data Relational Model -->
