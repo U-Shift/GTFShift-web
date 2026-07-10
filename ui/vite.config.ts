@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/~ushift.daemon/apps/gtfshift/dev/',
+  base: '/~ushift.daemon/apps/gtfshift/stage/',
   plugins: [svelte(), tailwindcss()],
   resolve: {
     alias: {
