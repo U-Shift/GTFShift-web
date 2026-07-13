@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# 1. Match the exact old path (with or without a trailing slash)
+RewriteCond %{REQUEST_URI} ^/~ushift.daemon/apps/gtfshift/?$ [NC]
+
+# 2. Redirect to the new path (301 Permanent Redirect)
+RewriteRule ^(.*)$ /~ushift.daemon/apps/gtfshift/tag/v1.1 [R=301,L]
