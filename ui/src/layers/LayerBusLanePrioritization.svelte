@@ -13,11 +13,16 @@
         criteriaBusFrequencyEnabled = true,
         criteriaNLanesDirection = 2,
         criteriaNLanesDirectionEnabled = true,
+        criteriaNLanesParking = 1,
+        criteriaNLanesParkingEnabled = false,
         criteriaAvgSpeed = undefined,
         criteriaAvgSpeedEnabled = true,
+        criteriaDemand = undefined,
+        criteriaDemandEnabled = false,
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
+        onVisibleWayIdsChange = (wayIds) => {},
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
@@ -27,11 +32,16 @@
         criteriaBusFrequencyEnabled: boolean;
         criteriaNLanesDirection: number;
         criteriaNLanesDirectionEnabled: boolean;
+        criteriaNLanesParking: number;
+        criteriaNLanesParkingEnabled: boolean;
         criteriaAvgSpeed: number | undefined;
         criteriaAvgSpeedEnabled: boolean;
+        criteriaDemand: number | undefined;
+        criteriaDemandEnabled: boolean;
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
+        onVisibleWayIdsChange: (wayIds: string[]) => void;
         onWaySelect: (wayId: string) => void;
     } = $props();
 
@@ -62,9 +72,14 @@
 
             const lanesOk =
                 !criteriaNLanesDirectionEnabled ||
-                (props.n_lanes !== undefined &&
-                    props.n_lanes_direction !== undefined &&
-                    props.n_lanes_direction >= criteriaNLanesDirection);
+                (props.n_lanes_circulation !== undefined &&
+                    props.n_lanes_circulation_direction !== undefined &&
+                    props.n_lanes_circulation_direction >= criteriaNLanesDirection);
+
+            const parkingOk =
+                !criteriaNLanesParkingEnabled ||
+                (props.n_lanes_parking !== undefined &&
+                    props.n_lanes_parking >= criteriaNLanesParking);
 
             const speedOk =
                 !criteriaAvgSpeedEnabled ||
@@ -72,7 +87,13 @@
                 (props.speed_avg !== undefined &&
                     props.speed_avg <= criteriaAvgSpeed);
 
-            return frequencyOk && lanesOk && speedOk;
+            const demandOk =
+                !criteriaDemandEnabled ||
+                criteriaDemand === undefined ||
+                (!Number.isNaN(Number(props.demand)) &&
+                    Number(props.demand) >= criteriaDemand);
+
+            return frequencyOk && lanesOk && parkingOk && speedOk && demandOk;
         });
     });
 
@@ -85,17 +106,26 @@
                     props.hour_frequency[criteriaHour] >= criteriaBusFrequency);
             const lanesOk =
                 !criteriaNLanesDirectionEnabled ||
-                (props.n_lanes !== undefined &&
-                    props.n_lanes_direction !== undefined &&
-                    props.n_lanes_direction >= criteriaNLanesDirection);
+                (props.n_lanes_circulation !== undefined &&
+                    props.n_lanes_circulation_direction !== undefined &&
+                    props.n_lanes_circulation_direction >= criteriaNLanesDirection);
+            const parkingOk =
+                !criteriaNLanesParkingEnabled ||
+                (props.n_lanes_parking !== undefined &&
+                    props.n_lanes_parking >= criteriaNLanesParking);
             const speedOk =
                 !criteriaAvgSpeedEnabled ||
                 criteriaAvgSpeed === undefined ||
                 (props.speed_avg !== undefined &&
                     props.speed_avg > criteriaAvgSpeed);
+            const demandOk =
+                !criteriaDemandEnabled ||
+                criteriaDemand === undefined ||
+                (!Number.isNaN(Number(props.demand)) &&
+                    Number(props.demand) >= criteriaDemand);
             return {
                 color:
-                    frequencyOk && lanesOk && speedOk
+                    frequencyOk && lanesOk && parkingOk && speedOk && demandOk
                         ? COLOR_TEAL
                         : COLOR_YELLOW,
                 weight: 3.5,
@@ -111,6 +141,9 @@
             "LayerBusLanePrioritization effect running. filteredFeatures length:",
             filteredFeatures.length,
         );
+        const visibleWayIds = filteredFeatures
+            .map((feature) => feature?.properties?.way_osm_id)
+            .filter((wayId): wayId is string => !!wayId);
 
         wayLayerMap = new Map();
 
@@ -164,6 +197,7 @@
         untrack(() => {
             currentLayer = newLayer;
             onLayerCreate(newLayer);
+            onVisibleWayIdsChange(visibleWayIds);
         });
 
         // Zoom to layer (only if there are features with valid bounds)
@@ -179,6 +213,7 @@
                 currentLayer = null;
             }
             wayLayerMap = new Map();
+            onVisibleWayIdsChange([]);
         };
     });
 

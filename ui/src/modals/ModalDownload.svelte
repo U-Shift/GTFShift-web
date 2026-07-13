@@ -27,15 +27,16 @@ erDiagram
         string name "Street name"
         float length_m "Length of way in meters"
         boolean is_bus_lane "True if segment has a bus lane"
-        int n_lanes "Total number of lanes"
-        int n_lanes_direction "Number of lanes in the digitizing direction"
-        int n_lanes_circulation "Number of circulation lanes"
-        int n_lanes_circulation_direction "Circulation lanes in direction"
         int n_lanes_parking "Number of parking lanes"
+        int n_lanes_circulation "Number of circulation lanes"
         int n_directions "Number of directions (1 or 2)"
+        float n_lanes_circulation_direction "Circulation lanes in direction"
+        float speed_* "Speed metrics for segment (if applicable)"
+        int demand "Passenger demand (if applicable)"
         string_array routes FK "List of route_ids traversing this way"
         string_array shapes FK "List of shape_ids traversing this way"
-        object hour_frequency "Key-value map of hour (0-23) -> transit frequency"
+        object hour_frequency "Key-value map of hour (0-23) transit frequency"
+        object hour_speed_* "Key-value map of hour (0-23) speed metrics (if applicable)"
     }
 
     Shape_Data_JSON {
@@ -56,6 +57,7 @@ erDiagram
         string route_long_name "Public transit route long name"
         string route_color "Hex color code for styling"
         string route_text_color "Hex text color code for contrast"
+        int demand "Passenger demand (if applicable)"
     }
 
     Metadata_JSON {
@@ -66,6 +68,7 @@ erDiagram
         object prioritization_hour "Hourly lists of missing shapes and routes"
         object data_census "Aggregated census metrics (frequency, speed, lanes)"
         object rt "Real-time transit metadata (if applicable)"
+        object demand "Passsenger demand metadata (if applicable)"
         object execution "Execution timestamp and Git commit hash"
         object environment "R environment, OS version, and package versions"
     }
@@ -316,9 +319,37 @@ erDiagram
                                     configurations, and census statistics.</td
                                 >
                             </tr>
+                            <tr class="bg-muted/10">
+                                <td class="px-4 py-2 font-mono text-foreground"
+                                    >gtfs_...zip</td
+                                >
+                                <td class="px-4 py-2 text-muted-foreground"
+                                    >Original GTFS file considered in the analysis.</td
+                                >
+                            </tr>
+                            <tr class="bg-muted/10">
+                                <td class="px-4 py-2 font-mono text-foreground"
+                                    >gtfs_..._manipulated.zip</td
+                                >
+                                <td class="px-4 py-2 text-muted-foreground"
+                                    >GTFS file manipulated with necessary adjustments and filtered to analysis day.</td
+                                >
+                            </tr>
+                            <tr class="bg-muted/10">
+                                <td class="px-4 py-2 font-mono text-foreground"
+                                    >prioritization_...csv</td
+                                >
+                                <td class="px-4 py-2 text-muted-foreground"
+                                    >CSV file with result of <a href="https://u-shift.github.io/GTFShift/reference/prioritize_lanes.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::prioritize_lanes()</a> and <a href="https://u-shift.github.io/GTFShift/reference/rt_extend_prioritization.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::rt_extend_prioritization()</a>.</td
+                                >
+                            </tr>
+                            
                         </tbody>
                     </table>
                 </div>
+                <p class="text-muted-foreground text-xs mt-3">
+                    Some files are available in multiple formats (such as GeoJSON and GPKG or JSON and CSV) to facilitate integration with different tools and workflows.
+                </p>
             </section>
 
             <!-- Section 2: Data Relational Model -->

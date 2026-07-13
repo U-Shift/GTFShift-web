@@ -4,6 +4,11 @@
     import { COLOR_GRADIENT } from "../data";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
     import type { Feature } from "geojson";
+    import {
+        bindWayValueTooltip,
+        handleWayMouseOut,
+        handleWayMouseOver,
+    } from "../lib/layerInteractions";
 
     let {
         map,
@@ -12,6 +17,7 @@
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
+        onVisibleWayIdsChange = (wayIds) => {},
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
@@ -20,6 +26,7 @@
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
+        onVisibleWayIdsChange: (wayIds: string[]) => void;
         onWaySelect: (wayId: string) => void;
     } = $props();
 
@@ -28,9 +35,18 @@
 
     import { getColorFromGradient } from "../lib/utils";
 
+    function getFrequencyValue(wayId: string): number {
+        return geoData.wayData[wayId]?.hour_frequency?.[criteriaHour] || 0;
+    }
+
+    function formatFrequencyLabel(wayId: string): string {
+        const frequency = getFrequencyValue(wayId);
+        return `${frequency.toFixed(1)} buses/h`;
+    }
+
     function getFreqStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
-        const freq = props?.hour_frequency?.[criteriaHour] || 0;
+        const freq = getFrequencyValue(wayId);
         const color = getColorFromGradient(
             freq,
             geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5 || 0,
@@ -56,6 +72,9 @@
                 return props?.hour_frequency?.[criteriaHour];
             },
         );
+        const visibleWayIds = filteredFeatures
+            .map((feature) => feature?.properties?.way_osm_id)
+            .filter((wayId): wayId is string => !!wayId);
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(
@@ -81,23 +100,18 @@
                 onEachFeature: (feature, layer) => {
                     const wayId = feature.properties?.way_osm_id;
                     if (wayId) wayLayerMap.set(wayId, layer as L.Path);
+                    if (wayId) {
+                        bindWayValueTooltip(layer, formatFrequencyLabel(wayId));
+                    }
                     layer.on("click", (e) => {
                         L.DomEvent.stopPropagation(e);
                         if (wayId) onWaySelect(wayId);
                     });
                     layer.on("mouseover", () => {
-                        if (wayId && wayId !== selectedWayId) {
-                            (layer as L.Path).setStyle({
-                                color: "#FCF1DD",
-                                weight: 5,
-                            });
-                            (layer as L.Path).bringToFront();
-                        }
+                        handleWayMouseOver(layer, wayId, selectedWayId);
                     });
                     layer.on("mouseout", () => {
-                        if (wayId && wayId !== selectedWayId) {
-                            (layer as L.Path).setStyle(getFreqStyle(wayId));
-                        }
+                        handleWayMouseOut(layer, wayId, selectedWayId, getFreqStyle);
                     });
                 },
             },
@@ -107,6 +121,7 @@
         untrack(() => {
             currentLayer = newLayer;
             onLayerCreate(newLayer);
+            onVisibleWayIdsChange(visibleWayIds);
         });
 
         // Zoom to layer (only if there are features with valid bounds)
@@ -122,6 +137,7 @@
                 currentLayer = null;
             }
             wayLayerMap = new Map();
+            onVisibleWayIdsChange([]);
         };
     });
 

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { untrack } from "svelte";
     import * as L from "leaflet";
-    import { COLOR_GRADIENT_RED, COLOR_GRAY } from "../data";
+    import { COLOR_GRADIENT, COLOR_GRAY } from "../data";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
     import type { Feature } from "geojson";
     import {
@@ -35,29 +35,31 @@
 
     import { getColorFromGradient } from "../lib/utils";
 
-    function formatSpeedLabel(wayId: string): string {
-        const speed = geoData.wayData[wayId]?.speed_avg;
-        const speedValue = Number(speed);
-        if (isNaN(speedValue)) return "Speed: n/a";
-        return `${speedValue.toFixed(1)} km/h`;
+    function getDemandValue(wayId: string | undefined): number | undefined {
+        if (!wayId) return undefined;
+        const demand = geoData.wayData[wayId]?.demand;
+        const demandValue = Number(demand);
+        return Number.isNaN(demandValue) ? undefined : demandValue;
     }
 
-    function getSpeedStyle(wayId: string): L.PathOptions {
-        const props = geoData.wayData[wayId];
-        const speed_avg = props?.speed_avg;
+    function formatDemandLabel(wayId: string): string {
+        const demandValue = getDemandValue(wayId);
+        if (demandValue === undefined) return "Demand: n/a";
+        return `${Math.round(demandValue).toLocaleString()} passengers/day`;
+    }
+
+    function getDemandStyle(wayId: string): L.PathOptions {
+        const demandValue = getDemandValue(wayId);
         let color = COLOR_GRAY;
-        if (speed_avg !== undefined && speed_avg !== null && !isNaN(Number(speed_avg))) {
+        if (demandValue !== undefined) {
             color = getColorFromGradient(
-                speed_avg,
-                geoData.metadata.data_census.speed_avg_length?.p5 || 0,
-                geoData.metadata.data_census.speed_avg_length?.p95 || 1,
-                COLOR_GRADIENT_RED.slice().reverse(),
+                demandValue,
+                geoData.metadata.data_census.demand_length?.p5 || 0,
+                geoData.metadata.data_census.demand_length?.p95 || 1,
+                COLOR_GRADIENT,
             );
         }
-        return {
-            color,
-            weight: 3.5,
-        };
+        return { color, weight: 3.5 };
     }
 
     $effect(() => {
@@ -65,7 +67,6 @@
 
         wayLayerMap = new Map();
 
-        // Filter out features with no speed data
         const filteredFeatures = geoData.features.filter(
             (feature: Feature | undefined) => {
                 const wayId = feature?.properties?.way_osm_id;
@@ -77,40 +78,30 @@
                 ) {
                     return false;
                 }
-                return (
-                    props?.speed_avg !== undefined && 
-                    props?.speed_avg !== null && 
-                    !isNaN(Number(props?.speed_avg))
-                );
+                return getDemandValue(wayId) !== undefined;
             },
         );
         const visibleWayIds = filteredFeatures
             .map((feature) => feature?.properties?.way_osm_id)
             .filter((wayId): wayId is string => !!wayId);
 
-        // Create and add new layer to map
         const newLayer = L.geoJSON(
-            // Order by speed_avg asc, to plot higher speeds on top
             filteredFeatures.sort((a, b) => {
-                const propsA = a.properties?.way_osm_id
-                    ? geoData.wayData[a.properties.way_osm_id]
-                    : null;
-                const propsB = b.properties?.way_osm_id
-                    ? geoData.wayData[b.properties.way_osm_id]
-                    : null;
-                return (propsA?.speed_avg || 0) - (propsB?.speed_avg || 0);
+                const demandA = getDemandValue(a.properties?.way_osm_id) || 0;
+                const demandB = getDemandValue(b.properties?.way_osm_id) || 0;
+                return demandA - demandB;
             }),
             {
                 style: (feature: Feature | undefined) => {
                     const wayId = feature?.properties?.way_osm_id;
                     if (!wayId) return {};
-                    return getSpeedStyle(wayId);
+                    return getDemandStyle(wayId);
                 },
                 onEachFeature: (feature, layer) => {
                     const wayId = feature.properties?.way_osm_id;
                     if (wayId) wayLayerMap.set(wayId, layer as L.Path);
                     if (wayId) {
-                        bindWayValueTooltip(layer, formatSpeedLabel(wayId));
+                        bindWayValueTooltip(layer, formatDemandLabel(wayId));
                     }
                     layer.on("click", (e) => {
                         L.DomEvent.stopPropagation(e);
@@ -120,26 +111,23 @@
                         handleWayMouseOver(layer, wayId, selectedWayId);
                     });
                     layer.on("mouseout", () => {
-                        handleWayMouseOut(layer, wayId, selectedWayId, getSpeedStyle);
+                        handleWayMouseOut(layer, wayId, selectedWayId, getDemandStyle);
                     });
                 },
             },
         ).addTo(map);
 
-        // Update parent state
         untrack(() => {
             currentLayer = newLayer;
             onLayerCreate(newLayer);
             onVisibleWayIdsChange(visibleWayIds);
         });
 
-        // Zoom to layer (only if there are features with valid bounds)
         if (filteredFeatures.length > 0) {
             const bounds = newLayer.getBounds();
             if (bounds.isValid()) map.fitBounds(bounds);
         }
 
-        // Cleanup
         return () => {
             if (currentLayer) {
                 map.removeLayer(currentLayer);
@@ -150,7 +138,6 @@
         };
     });
 
-    // Highlight the selected way reactively
     $effect(() => {
         const selected = selectedWayId;
         wayLayerMap.forEach((path, wayId) => {
@@ -158,7 +145,7 @@
                 path.setStyle({ weight: 7, color: "#FFD4B8", opacity: 1 });
                 path.bringToFront();
             } else {
-                path.setStyle(getSpeedStyle(wayId));
+                path.setStyle(getDemandStyle(wayId));
             }
         });
     });

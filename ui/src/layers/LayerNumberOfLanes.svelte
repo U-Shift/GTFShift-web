@@ -4,6 +4,11 @@
     import { COLOR_GRADIENT } from "../data";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
     import type { Feature } from "geojson";
+    import {
+        bindWayValueTooltip,
+        handleWayMouseOut,
+        handleWayMouseOver,
+    } from "../lib/layerInteractions";
 
     let {
         map,
@@ -12,6 +17,7 @@
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
+        onVisibleWayIdsChange = (wayIds) => {},
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
@@ -20,6 +26,7 @@
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
+        onVisibleWayIdsChange: (wayIds: string[]) => void;
         onWaySelect: (wayId: string) => void;
     } = $props();
 
@@ -28,9 +35,14 @@
 
     import { getColorFromGradient } from "../lib/utils";
 
+    function formatLaneLabel(wayId: string): string {
+        const lanes = geoData.wayData[wayId]?.n_lanes_circulation_direction || 0;
+        return `${lanes} lanes`;
+    }
+
     function getLaneStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
-        const n_lanes_direction = props?.n_lanes_direction || 0;
+        const n_lanes_direction = props?.n_lanes_circulation_direction || 0;
         const color = getColorFromGradient(
             n_lanes_direction,
             geoData.metadata.data_census.lanes_length?.p5 || 0,
@@ -60,10 +72,13 @@
                 return true;
             },
         );
+        const visibleWayIds = filteredFeatures
+            .map((feature) => feature?.properties?.way_osm_id)
+            .filter((wayId): wayId is string => !!wayId);
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(
-            // Order by n_lanes_direction asc, to plot higher nr of lanes on top
+            // Order by n_lanes_circulation_direction asc, to plot higher nr of lanes on top
             filteredFeatures.sort((a, b) => {
                 const propsA = a.properties?.way_osm_id
                     ? geoData.wayData[a.properties.way_osm_id]
@@ -72,8 +87,8 @@
                     ? geoData.wayData[b.properties.way_osm_id]
                     : null;
                 return (
-                    (propsA?.n_lanes_direction || 0) -
-                    (propsB?.n_lanes_direction || 0)
+                    (propsA?.n_lanes_circulation_direction || 0) -
+                    (propsB?.n_lanes_circulation_direction || 0)
                 );
             }),
             {
@@ -85,23 +100,18 @@
                 onEachFeature: (feature, layer) => {
                     const wayId = feature.properties?.way_osm_id;
                     if (wayId) wayLayerMap.set(wayId, layer as L.Path);
+                    if (wayId) {
+                        bindWayValueTooltip(layer, formatLaneLabel(wayId));
+                    }
                     layer.on("click", (e) => {
                         L.DomEvent.stopPropagation(e);
                         if (wayId) onWaySelect(wayId);
                     });
                     layer.on("mouseover", () => {
-                        if (wayId && wayId !== selectedWayId) {
-                            (layer as L.Path).setStyle({
-                                color: "#FCF1DD",
-                                weight: 5,
-                            });
-                            (layer as L.Path).bringToFront();
-                        }
+                        handleWayMouseOver(layer, wayId, selectedWayId);
                     });
                     layer.on("mouseout", () => {
-                        if (wayId && wayId !== selectedWayId) {
-                            (layer as L.Path).setStyle(getLaneStyle(wayId));
-                        }
+                        handleWayMouseOut(layer, wayId, selectedWayId, getLaneStyle);
                     });
                 },
             },
@@ -111,6 +121,7 @@
         untrack(() => {
             currentLayer = newLayer;
             onLayerCreate(newLayer);
+            onVisibleWayIdsChange(visibleWayIds);
         });
 
         // Zoom to layer (only if there are features with valid bounds)
@@ -126,6 +137,7 @@
                 currentLayer = null;
             }
             wayLayerMap = new Map();
+            onVisibleWayIdsChange([]);
         };
     });
 

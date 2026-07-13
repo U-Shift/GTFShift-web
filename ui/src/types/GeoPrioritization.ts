@@ -19,9 +19,12 @@ export interface PrioritizationStats {
     speed_avg?: number;
     speed_min?: number;
     speed_max?: number;
-    n_lanes_avg: number;
-    n_lanes_min: number;
-    n_lanes_max: number;
+    n_lanes_circulation_avg: number;
+    n_lanes_circulation_min: number;
+    n_lanes_circulation_max: number;
+    n_lanes_parking_avg: number;
+    n_lanes_parking_min: number;
+    n_lanes_parking_max: number;
 }
 
 interface HourlyFrequency {
@@ -77,6 +80,8 @@ export interface GeoPrioritization {
             frequency_hour: HourlyFrequency;
             speed_avg_length: StatisticsBundle | undefined;
             speed_avg_frequency: StatisticsBundle | undefined;
+            demand_length?: StatisticsBundle | undefined;
+            demand_frequency?: StatisticsBundle | undefined;
             lanes_length: StatisticsBundle | undefined;
             lanes_frequency: StatisticsBundle | undefined;
             prioritization_stats_frequency: PrioritizationStats | undefined;
@@ -85,7 +90,17 @@ export interface GeoPrioritization {
         rt: {
             url: string;
             period: string;
-            stop_buffer_size: number;
+            notes?: string;
+            thresholds: {
+                min_updates_per_road_segment_for_speed: number,
+                max_time_between_updates: number,
+                min_updates_per_trip_margin: number,
+                max_distance_to_geometry: number,
+                edge_distance_discard: number,
+                max_speed: number
+            }
+        } | undefined;
+        demand: {
             notes?: string;
         } | undefined;
         execution: {

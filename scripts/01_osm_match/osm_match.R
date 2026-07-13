@@ -13,77 +13,47 @@ library(osmdata)
 # get_overpass_url()
 
 # Refer to osm_match_parameters.R to define parameters before running this script!
-output_root <- "osm_match"
+source("01_osm_match/osm_match_parameters.R")
 
-# Define regions to analyse
-regions <- data.frame(
-  name = character(),
-  gtfs_url = character(),
-  query = I(list())
-)
-data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
-
-regions <- bind_rows( # Metro Madrid
-  regions,
-  data.frame(
-    name = "metroMadrid",
-    gtfs_url = "https://crtm.maps.arcgis.com/sharing/rest/content/items/5c7f2951962540d69ffe8f640d94c246/data",
-    gtfs_day = gsub("-", "", Sys.Date()),
-    gtfs_manipulate = "manipulate_gtfs_metroMadrid",
-    query = I(list(list(
-      list(key = "route", value = c("subway"), key_exact = TRUE),
-      list(key = "network", value = "Metro de Madrid", key_exact = TRUE)
-    ))),
-    osm_route_type = "subway",
-    geofabrik_region = "europe/spain/madrid"
-  )
-)
-
-manipulate_gtfs_fertagus <- function(gtfs) {
-  # Replace Lisboa by Roma-Areeiro on routes
-  gtfs$routes$route_long_name <- gsub("Lisboa -", "Roma-Areeiro", gtfs$routes$route_long_name)
-  return(gtfs)
-}
-manipulate_gtfs_metroMadrid <- function(gtfs) {
-  # Append "L" suffix to route_short_name
-  gtfs$routes$route_short_name <- paste0("L", gtfs$routes$route_short_name)
-  # Except to Ramal Opera (only "R")
-  gtfs$routes <- gtfs$routes |> mutate(route_short_name = ifelse(route_short_name=="LR", "R", route_short_name))
-  return(gtfs)
-}
+regions <- regions |>
+  filter(name %in% c("lisboa_funiculars"))
+  # filter(name %in% c("lisboa_trams", "lisboa_funiculars", "cp_lisboa", "cp_pt"))
+  filter(name %in% c("barreiro", "cascais", "lisboa", "AML"))
 
 # main()
 for (i in 1:nrow(regions)) {
   region <- regions[i, ]
-  output_region <- sprintf("%s/%s/gtfs_%s", output_root, tolower(region$name), gsub("-", "", region$gtfs_day))
+  gtfs_day_str <- gsub("-", "", region$gtfs_day)
+  run_day = gsub("-", "", Sys.Date())
+  output_region <- sprintf("%s/%s/gtfs_%s", output_root, tolower(region$name), gtfs_day_str)
   output <- sprintf("%s/run_%s", output_region, format(Sys.time(), "%Y%m%d_%H%M%S"))
   if (!dir.exists(output)) {
     dir.create(output, recursive = TRUE)
   }
   message(sprintf("\n\nRunning for %s (%s)...", region$name, region$gtfs_day))
 
-  gtfs_file <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, region$gtfs_day)
-  if (file.exists(gtfs_file)) {
+  gtfs_file <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str)
+  if (file.exists(gtfs_file) & !isTRUE(region$gtfs_download_force)) {
     message("Loading gtfs from file...")
     gtfs <- GTFShift::load_feed(gtfs_file, create_transfers = FALSE)
   } else {
     message("Downloading gtfs...")
-    gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers)) unlist(region$gtfs_url_headers[[1]]) else NULL, create_transfers = FALSE)
+    gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers) & !any(is.na(region$gtfs_url_headers))) unlist(region$gtfs_url_headers[[1]]) else NULL, create_transfers = FALSE)
     tidytransit::write_gtfs(gtfs, gtfs_file)
   }
-  summary(gtfs)
-  # assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
+  # summary(gtfs)
+  # assign(sprintf("gtfs_%s_%s", region$name, gtfs_day_str), gtfs)
 
-  if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate) || !is.na(region$gtfs_day_filter) && !is.null(region$gtfs_day_filter)) {
-    if (!is.na(region$gtfs_day_filter) && !is.null(region$gtfs_day_filter)) {
+  if (!is.na(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate) || !is.na(region$gtfs_day) && !is.na(region$gtfs_day_filter)) {
+    if (!is.na(region$gtfs_day) && !is.na(region$gtfs_day_filter)) {
       message(sprintf("Filter gtfs for %s...", region$gtfs_day))
       gtfs = tidytransit::filter_feed_by_date(gtfs, extract_date = region$gtfs_day)
     } 
-    if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate)) {
+    if (!is.na(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate)) {
       message("Manipulating gtfs...")
       gtfs <- get(region$gtfs_manipulate)(gtfs)
     }
-    gtfs_file_manipulated <- sprintf("%s/gtfs_%s_%s_manipulated.zip", output_region, region$name, region$gtfs_day)
+    gtfs_file_manipulated <- sprintf("%s/gtfs_%s_%s_manipulated.zip", output_region, region$name, gtfs_day_str)
     if (!file.exists(gtfs_file_manipulated)) {
       tidytransit::write_gtfs(gtfs, gtfs_file_manipulated)
     }
@@ -99,14 +69,16 @@ for (i in 1:nrow(regions)) {
       q,
       key = feat$key,
       value = feat$value,
-      key_exact = if (!is.null(feat$key_exact)) feat$key_exact else FALSE
+      key_exact = if (!is.na(feat$key_exact)) feat$key_exact else FALSE
     )
   }
   # assign(sprintf("q_%s_gtfs%s", region$name, region$gtfs_day), q)
 
   # Get OSM extract to avoid API call
+  # Increase timeout 
+  options(timeout=1000)
   # osmextract::oe_download_directory()
-  if (is.null(region$geofabrik_region)) {
+  if (is.na(region$geofabrik_region)) {
     stop("Please define the geofabrik_region for this region in osm_match_parameters.R")
   }
   osm_file <- osmextract::oe_download(
@@ -118,21 +90,22 @@ for (i in 1:nrow(regions)) {
   message("Matching shapes...")
   shapes_match_routes <- GTFShift::osm_shapes_match_routes(
     gtfs, q,
-    gtfs_match = if (!is.null(region$gtfs_match)) region$gtfs_match else "route_short_name",
-    osm_match = if (!is.null(region$osm_match)) region$osm_match else "ref",
-    gtfs_osm_match_exact = if (!is.null(region$gtfs_osm_match_exact)) region$gtfs_osm_match_exact else TRUE,
-    log_file = sprintf("%s/shapes_match_%s_gtfs%s_run%s.r.log", output, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
+    gtfs_match = if (!is.null(region$gtfs_match) & !any(is.na(region$gtfs_match))) region$gtfs_match else "route_short_name",
+    osm_match = if (!is.null(region$osm_match) & !any(is.na(region$osm_match))) region$osm_match else "ref",
+    gtfs_osm_match_exact = if (!is.null(region$gtfs_osm_match_exact) & !any(is.na(region$gtfs_osm_match_exact))) region$gtfs_osm_match_exact else TRUE,
+    log_file = sprintf("%s/shapes_match_%s_gtfs%s_run%s.r.log", output, region$name, gtfs_day_str, run_day),
     osm_file = osm_file,
     num_cores = max(1, floor(parallel::detectCores() / 2)),
-    osm_stop_order_relaxed = if (!is.null(region$osm_stop_order_relaxed)) region$osm_stop_order_relaxed else FALSE,
-    osm_route_type = if (!is.null(region$osm_route_type)) region$osm_route_type else "bus"
+    osm_stop_order_relaxed = if (!is.null(region$osm_stop_order_relaxed) & !any(is.na(region$osm_stop_order_relaxed))) region$osm_stop_order_relaxed else FALSE,
+    osm_route_type = if (!is.null(region$osm_route_type) & !any(is.na(region$osm_route_type))) region$osm_route_type else "bus",
+    metric_crs = if (!is.null(region$metric_crs) & !any(is.na(region$metric_crs))) region$metric_crs else 3857
   )
   # assign(sprintf("shapes_match_routes_%s_gtfs%s", region$name, region$gtfs_day), shapes_match_routes)
 
   write.csv(shapes_match_routes |> sf::st_drop_geometry() |> mutate(
     distance_diff = round(distance_diff),
     points_diff = round(points_diff)
-  ), sprintf("%s/shapes_match_%s_gtfs%s_run%s.csv", output, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), row.names = FALSE)
-  sf::st_write(shapes_match_routes, sprintf("%s/shapes_match_%s_gtfs%s_run%s.gpkg", output, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append = FALSE)
+  ), sprintf("%s/shapes_match_%s_gtfs%s_run%s.csv", output, region$name, gtfs_day_str, run_day), row.names = FALSE)
+  sf::st_write(shapes_match_routes, sprintf("%s/shapes_match_%s_gtfs%s_run%s.gpkg", output, region$name, gtfs_day_str, run_day), append = FALSE)
   message("Done! :)")
 }

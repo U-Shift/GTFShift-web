@@ -1,7 +1,7 @@
 <script lang="ts">
     import { untrack } from "svelte";
     import * as L from "leaflet";
-    import { COLOR_GRADIENT_RED, COLOR_GRAY } from "../data";
+    import { COLOR_GRADIENT } from "../data";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
     import type { Feature } from "geojson";
     import {
@@ -13,7 +13,6 @@
     let {
         map,
         geoData,
-        criteriaHour,
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
@@ -22,7 +21,6 @@
     }: {
         map: L.Map;
         geoData: GeoPrioritization;
-        criteriaHour: number;
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
@@ -35,29 +33,23 @@
 
     import { getColorFromGradient } from "../lib/utils";
 
-    function formatSpeedLabel(wayId: string): string {
-        const speed = geoData.wayData[wayId]?.speed_avg;
-        const speedValue = Number(speed);
-        if (isNaN(speedValue)) return "Speed: n/a";
-        return `${speedValue.toFixed(1)} km/h`;
+    function formatParkingLaneLabel(wayId: string): string {
+        const lanes = geoData.wayData[wayId]?.n_lanes_parking || 0;
+        return `${lanes} parking lanes`;
     }
 
-    function getSpeedStyle(wayId: string): L.PathOptions {
+    function getParkingLaneStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
-        const speed_avg = props?.speed_avg;
-        let color = COLOR_GRAY;
-        if (speed_avg !== undefined && speed_avg !== null && !isNaN(Number(speed_avg))) {
-            color = getColorFromGradient(
-                speed_avg,
-                geoData.metadata.data_census.speed_avg_length?.p5 || 0,
-                geoData.metadata.data_census.speed_avg_length?.p95 || 1,
-                COLOR_GRADIENT_RED.slice().reverse(),
-            );
-        }
-        return {
-            color,
-            weight: 3.5,
-        };
+        const n_lanes_parking = props?.n_lanes_parking || 0;
+        const p5 = (geoData.metadata.data_census as any).parking_lanes_length?.p5 ?? 0;
+        const p95 = (geoData.metadata.data_census as any).parking_lanes_length?.p95 ?? Math.max(n_lanes_parking, 1);
+        const color = getColorFromGradient(
+            n_lanes_parking,
+            p5,
+            p95,
+            COLOR_GRADIENT,
+        );
+        return { color, weight: 3.5 };
     }
 
     $effect(() => {
@@ -65,7 +57,7 @@
 
         wayLayerMap = new Map();
 
-        // Filter out features with no speed data
+        // Filter to segments that have at least 1 parking lane, and optionally by shape
         const filteredFeatures = geoData.features.filter(
             (feature: Feature | undefined) => {
                 const wayId = feature?.properties?.way_osm_id;
@@ -77,20 +69,16 @@
                 ) {
                     return false;
                 }
-                return (
-                    props?.speed_avg !== undefined && 
-                    props?.speed_avg !== null && 
-                    !isNaN(Number(props?.speed_avg))
-                );
+                // Only show segments with parking lanes
+                return props?.n_lanes_parking !== undefined && props.n_lanes_parking > 0;
             },
         );
         const visibleWayIds = filteredFeatures
             .map((feature) => feature?.properties?.way_osm_id)
             .filter((wayId): wayId is string => !!wayId);
 
-        // Create and add new layer to map
+        // Create and add new layer to map, sorted asc so higher counts plot on top
         const newLayer = L.geoJSON(
-            // Order by speed_avg asc, to plot higher speeds on top
             filteredFeatures.sort((a, b) => {
                 const propsA = a.properties?.way_osm_id
                     ? geoData.wayData[a.properties.way_osm_id]
@@ -98,19 +86,19 @@
                 const propsB = b.properties?.way_osm_id
                     ? geoData.wayData[b.properties.way_osm_id]
                     : null;
-                return (propsA?.speed_avg || 0) - (propsB?.speed_avg || 0);
+                return (propsA?.n_lanes_parking || 0) - (propsB?.n_lanes_parking || 0);
             }),
             {
                 style: (feature: Feature | undefined) => {
                     const wayId = feature?.properties?.way_osm_id;
                     if (!wayId) return {};
-                    return getSpeedStyle(wayId);
+                    return getParkingLaneStyle(wayId);
                 },
                 onEachFeature: (feature, layer) => {
                     const wayId = feature.properties?.way_osm_id;
                     if (wayId) wayLayerMap.set(wayId, layer as L.Path);
                     if (wayId) {
-                        bindWayValueTooltip(layer, formatSpeedLabel(wayId));
+                        bindWayValueTooltip(layer, formatParkingLaneLabel(wayId));
                     }
                     layer.on("click", (e) => {
                         L.DomEvent.stopPropagation(e);
@@ -120,7 +108,7 @@
                         handleWayMouseOver(layer, wayId, selectedWayId);
                     });
                     layer.on("mouseout", () => {
-                        handleWayMouseOut(layer, wayId, selectedWayId, getSpeedStyle);
+                        handleWayMouseOut(layer, wayId, selectedWayId, getParkingLaneStyle);
                     });
                 },
             },
@@ -158,7 +146,7 @@
                 path.setStyle({ weight: 7, color: "#FFD4B8", opacity: 1 });
                 path.bringToFront();
             } else {
-                path.setStyle(getSpeedStyle(wayId));
+                path.setStyle(getParkingLaneStyle(wayId));
             }
         });
     });

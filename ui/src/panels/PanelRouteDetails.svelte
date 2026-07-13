@@ -17,6 +17,9 @@
 {#if selected_shape_id && selected_shape_id !== "all" && geoData && !selectedWayId}
     {@const shape = geoData.shapes[selected_shape_id]}
     {@const shapeColor = shape?.route_color ?? "var(--primary)"}
+    {@const routeDemand = shape?.route_id
+        ? Number(geoData.routes?.[shape.route_id]?.demand)
+        : NaN}
     {@const shapeWayIds = Object.entries(geoData.wayData)
         .filter(([, wd]: [string, any]) =>
             wd?.shapes?.includes(selected_shape_id),
@@ -73,6 +76,35 @@
             </Button>
         </div>
 
+        <!-- Route demand -->
+        {#if !Number.isNaN(routeDemand)}
+            <section
+                class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50"
+            >
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p
+                            class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1"
+                        >
+                            Route Demand
+                        </p>
+                        <p class="text-2xl font-bold leading-none">
+                            {Math.round(routeDemand).toLocaleString()}
+                        </p>
+                        <p class="text-xs text-muted-foreground mt-1">
+                            passengers/day
+                        </p>
+                    </div>
+                    <div
+                        class="w-10 h-10 rounded-full flex items-center justify-center text-white/90 shadow-sm shrink-0"
+                        style="background-color: {shapeColor}"
+                    >
+                        <i class="fas fa-users text-sm"></i>
+                    </div>
+                </div>
+            </section>
+        {/if}
+
         <!-- 24h Frequency Chart -->
         {#if scheduleEntries.length > 0}
             <section
@@ -128,10 +160,13 @@
         {#if shapeWays.length > 0}
             <section class="space-y-2">
                 <h5
-                    class="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                    class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-0"
                 >
                     Road Segment Indicators
                 </h5>
+                <p class="col-span-3 text-[10px] text-muted-foreground mb-2">
+                    Average values weighted by segment length.
+                </p>
                 <div class="grid grid-cols-3 gap-2">
                     <!-- Speed indicators -->
                     {#if shape.stats?.speed_min && shape.stats?.speed_max && shape.stats?.speed_avg}
@@ -183,6 +218,9 @@
                                 >
                             </p>
                         </div>
+                        <p class="col-span-3 text-[10px] text-muted-foreground">
+                            Speed metrics considering speed at segment level (which considers all routes that go through it). 
+                        </p>
                     {/if}
 
                     <!-- Lanes indicators -->
@@ -195,7 +233,7 @@
                             Min Lanes/Dir
                         </p>
                         <p class="text-sm font-bold">
-                            {shape.stats.n_lanes_min}
+                            {shape.stats.n_lanes_circulation_min}
                         </p>
                     </div>
                     <div
@@ -207,7 +245,7 @@
                             Avg Lanes/Dir
                         </p>
                         <p class="text-sm font-bold">
-                            {shape.stats.n_lanes_avg}
+                            {shape.stats.n_lanes_circulation_avg}
                         </p>
                     </div>
                     <div
@@ -219,7 +257,7 @@
                             Max Lanes/Dir
                         </p>
                         <p class="text-sm font-bold">
-                            {shape.stats.n_lanes_max}
+                            {shape.stats.n_lanes_circulation_max}
                         </p>
                     </div>
                 </div>

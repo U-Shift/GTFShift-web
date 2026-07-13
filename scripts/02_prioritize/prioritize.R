@@ -10,35 +10,18 @@ library(osmdata)
 library(Hmisc) # For  Weighted Statistical Estimates
 # set_overpass_url("https://overpass-api.de/api/interpreter")
 
+# Run with: $ Rscript 02_prioritize/prioritize.R
+
 # Refer to prioritize_parameters.R to define parameters before running this script!
+source("02_prioritize/prioritize_parameters.R")
+
+regions <- regions |>
+  # filter(name %in% c("lisboa_rt", "aml_rt", "barreiro", "stcp"))
+  filter(name %in% c("lisboa_rt"))
+  # filter(name %in% c("barreiro"))
+  # filter(name %in% c("aml_rt_area_3"))
 
 # main()
-output <- "web_data"
-data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
-
-regions <- data.frame(
-  name = character(),
-  name_long = character(),
-  gtfs = character(),
-  query = I(list())
-)
-regions <- rbind( # Toulouse, FR
-  regions,
-  data.frame(
-    name = "toulouse",
-    name_long = "Toulouse, FR",
-    gtfs_url = "https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
-    gtfs_day = GTFShift::calendar_nextBusinessWednesday(),
-    query = I(list(list(
-      list(key = "route", value = c("bus"), key_exact = TRUE),
-      list(key = "network", value = "Tisséo", key_exact = TRUE)
-    ))),
-    geofabrik_region = "europe/france/midi-pyrenees"
-  )
-)
-
-stop_buffer_size <- 15 # meters
-
 if (!dir.exists(output)) {
   dir.create(output, recursive = TRUE)
 }
@@ -48,18 +31,29 @@ message("\n\nRunning for regions:\n > ", paste(regions$name_long, collapse = "\n
 message("------------------------------------------------------------------------------------------------------------------------\n\n")
 
 for (i in 1:nrow(regions)) {
+  region <- regions[i, ]
+  if(is.null(region$metric_crs) || is.na(region$metric_crs)) {
+    stop(sprintf("Please define the metric_crs for region '%s' in prioritize_parameters.R", region$name))
+  }
+
   # 1. Load data for region
   region <- regions[i, ]
+  gtfs_day_str <- gsub("-", "", region$gtfs_day)
+  run_day <- gsub("-", "", Sys.Date())
   message(sprintf("\n\nRunning for %s (%s)...", region$name, region$gtfs_day))
 
-  output_region <- sprintf("%s/%s/gtfs_%s/run_%s", output, tolower(region$name), gsub("-", "", region$gtfs_day), format(Sys.time(), "%Y%m%d_%H%M%S"))
+  output_region <- sprintf("%s/%s/gtfs_%s/run_%s", output, tolower(region$name), gtfs_day_str, format(Sys.time(), "%Y%m%d_%H%M%S"))
   if (!dir.exists(output_region)) {
     dir.create(output_region, recursive = TRUE)
   }
 
   gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers)) unlist(region$gtfs_url_headers[[1]]) else NULL)
+  gtfs_original <- gtfs
   # assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
-  tidytransit::write_gtfs(gtfs, sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, region$gtfs_day))
+  gtfs_file_location <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str)
+  if (!file.exists(gtfs_file_location)) {
+    tidytransit::write_gtfs(gtfs, gtfs_file_location)
+  }
 
   gtfs_shapes <- tidytransit::shapes_as_sf(gtfs$shapes)
   bbox <- sf::st_bbox(gtfs_shapes)
@@ -68,7 +62,7 @@ for (i in 1:nrow(regions)) {
     message("Manipulating GTFS with function: ", region$gtfs_manipulate)
     message("Manipulating gtfs...")
     gtfs <- get(region$gtfs_manipulate)(gtfs)
-    gtfs_file_manipulated <- sprintf("%s/gtfs_%s_%s_manipulated.zip", output_region, region$name, region$gtfs_day)
+    gtfs_file_manipulated <- sprintf("%s/gtfs_%s_%s_manipulated.zip", output_region, region$name, gtfs_day_str)
     if (!file.exists(gtfs_file_manipulated)) {
       tidytransit::write_gtfs(gtfs, gtfs_file_manipulated)
     }
@@ -76,7 +70,7 @@ for (i in 1:nrow(regions)) {
   }
 
   gtfs <- tidytransit::filter_feed_by_date(gtfs, extract_date = region$gtfs_day)
-  gtfs_file <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, region$gtfs_day)
+  gtfs_file <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str)
   tidytransit::write_gtfs(gtfs, gtfs_file)
 
   # Build OSM query
@@ -94,7 +88,7 @@ for (i in 1:nrow(regions)) {
   # Get OSM extract to avoid API call
   # osmextract::oe_download_directory()
   if (is.null(region$geofabrik_region)) {
-    stop("Please define the geofabrik_region for this region in osm_match_parameters.R")
+    stop("Please define the geofabrik_region for this region in prioritize_parameters.R")
   }
   osm_file <- osmextract::oe_download(
     sprintf("https://download.geofabrik.de/%s-latest.osm.pbf", region$geofabrik_region),
@@ -106,8 +100,156 @@ for (i in 1:nrow(regions)) {
   # assign(sprintf("prioritization_%s_gtfs%s", region$name, region$gtfs_day), prioritization)
 
   prioritization <- prioritization |>
-    select(way_osm_id, hour, frequency, is_bus_lane, n_lanes_parking, n_lanes_circulation, n_lanes, n_directions, n_lanes_circulation_direction, n_lanes_direction, routes, shapes, name, geometry)
+    select(way_osm_id, hour, frequency, is_bus_lane, n_lanes_parking, n_lanes_circulation, n_directions, n_lanes_circulation_direction, routes, shapes, name, geometry)
 
+  prioritization_area_polygon <- prioritization |>
+    st_union() |>
+    st_convex_hull()
+
+  st_write(
+    prioritization_area_polygon,
+    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.gpkg", output_region, region$name, gtfs_day_str, run_day)
+  )
+  st_write(
+    prioritization_area_polygon,
+    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.geojson", output_region, region$name, gtfs_day_str, run_day)
+  )
+
+  # 3. Extend with real-time data if available
+  has_rt_collection <- !is.null(region$rt_collection) &&
+    length(region$rt_collection) > 0 &&
+    !is.null(region$rt_collection[[1]]) &&
+    length(region$rt_collection[[1]]) > 0 &&
+    !all(is.na(region$rt_collection[[1]]))
+
+  if (has_rt_collection) {
+    message("Extending with real-time data...")
+    rt_files <- as.character(region$rt_collection[[1]])
+
+    gtfs_trip_duration = gtfs_original$stop_times |>
+      arrange(trip_id, stop_sequence) |>
+      mutate(
+        # Convert "HH:MM:SS" to ephoch time (seconds since 1970-01-01)
+        departure_time = as.numeric(as.POSIXct(departure_time, format="%H:%M:%S", tz="UTC")),
+        arrival_time = as.numeric(as.POSIXct(arrival_time, format="%H:%M:%S", tz="UTC"))
+      ) |>
+      group_by(trip_id) |>
+      summarise(
+        departure_time = min(departure_time),
+        arrival_time = max(arrival_time),
+        trip_duration = as.numeric(difftime(arrival_time, departure_time, units = "secs")), # Seconds 
+        .groups = "drop"
+      ) |> # Get route_short_name and route_long_name from gtfs$trips and gtfs$routes
+      left_join(gtfs_original$trips |> select(trip_id, route_id), by = "trip_id") |>
+      left_join(gtfs_original$routes |> select(route_id, route_short_name, route_long_name), by = "route_id") |>
+      # Get shape_id from gtfs$trips
+      left_join(gtfs_original$trips |> select(trip_id, shape_id), by = "trip_id")
+
+    rt_collection_manipulate <- if (!is.null(region$rt_collection_manipulate) &&
+      length(region$rt_collection_manipulate) > 0 &&
+      !is.null(region$rt_collection_manipulate[[1]])) {
+      region$rt_collection_manipulate[[1]]
+    } else {
+      NULL
+    }
+
+    if (is.character(rt_collection_manipulate)) {
+      rt_collection_manipulate <- get(rt_collection_manipulate)
+    }
+    if (!is.function(rt_collection_manipulate)) {
+      stop(sprintf("rt_collection_manipulate must be a function for region '%s'", region$name))
+    }
+
+    rt_collection_raw <- dplyr::bind_rows(lapply(rt_files, read.csv))
+    rt_collection <- rt_collection_manipulate(rt_collection_raw, gtfs_trip_duration)
+
+    if (!inherits(rt_collection, c("sf", "sfc"))) {
+      stop(sprintf("rt_collection_manipulate must return an sf object for region '%s'", region$name))
+    }
+
+    # deprecated! 
+    # Filter updates, to remove those close to bus stops
+    # gtfs_stops <- tidytransit::stops_as_sf(gtfs$stops, crs = 4326)
+    # within_distance <- st_is_within_distance(rt_collection |> st_transform(crs = region$metric_crs), gtfs_stops |> st_transform(crs = region$metric_crs), dist = stop_buffer_size)
+    
+    rt_collection_filtered <- rt_collection # [lengths(within_distance) == 0, ]
+
+    # Extend prioritization with real-time data
+    prioritization_speeds <- rt_extend_prioritization(
+      lane_prioritization = prioritization |> select(way_osm_id) |> distinct(),
+      rt_collection = rt_collection_filtered,
+      metric_crs = region$metric_crs
+    ) |> 
+    filter(speed_count >= THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED) |>
+    mutate(
+      # Round all columns that start with speed_ to 2 decimals
+      across(starts_with("speed_"), ~ round(., 2))
+    ) |> st_drop_geometry()
+    prioritization <- prioritization |>
+      left_join(prioritization_speeds, by = "way_osm_id")
+
+    # RT analysis per hour
+    if (isTRUE(region$rt_collection_per_hour) && "hh" %in% colnames(rt_collection_filtered)) {
+      message("Extending prioritization with real-time data per hour...")
+      hours <- unique(rt_collection_filtered$hh)
+      prioritization_hour_aggregated <- data.frame()
+      for (h in hours) {
+        rt_collection_hour <- rt_collection_filtered |> filter(hh == h)
+        prioritization_hour <- prioritization |> filter(hour == h) |> select(way_osm_id, hour) # No need for distinct(), as it already has one row per way_osm_id and hour
+        if (nrow(rt_collection_hour) > 0 && nrow(prioritization_hour) > 0) {
+          prioritization_hour_extended <- rt_extend_prioritization(
+            lane_prioritization = prioritization_hour,
+            rt_collection = rt_collection_hour,
+            metric_crs = region$metric_crs
+          ) |> 
+          filter(speed_count >= THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED) |>
+          mutate(
+            # Round all columns that start with speed_ to 2 decimals
+            across(starts_with("speed_"), ~ round(., 2))
+          ) |> 
+          # Prepend all columns that start with speed_ with hour_
+          rename_with(.cols = starts_with("speed_"), .fn = ~ paste0("hour_", .)) |>
+          st_drop_geometry()
+          # Update prioritization_hour with extended data for this hour
+          prioritization_hour_aggregated <- bind_rows(prioritization_hour_aggregated, prioritization_hour_extended)
+        }
+      }
+      # Left join prioritization with prioritization_hour_aggregated by way_osm_id and hour
+      prioritization <- prioritization |>
+        left_join(prioritization_hour_aggregated, by = c("way_osm_id", "hour"))
+    }
+  }
+
+  # 3.2. Extend with route demand data if available
+  route_demand <- data.frame(route_id = character(), route_short_name = character(), demand = numeric())
+  has_demand <- !is.null(region$demand_for_route) &&
+    length(region$demand_for_route) > 0 &&
+    !is.null(region$demand_for_route[[1]]) &&
+    length(region$demand_for_route[[1]]) > 0 &&
+    !all(is.na(region$demand_for_route[[1]]))
+  if (has_demand) {
+    message("Extending with route demand data...")
+    route_demand_files <- as.character(region$demand_for_route[[1]])
+    route_demand <- read.csv(route_demand_files) |>
+      mutate(route_short_name = as.character(route_short_name)) |>
+      right_join(gtfs$routes |> select(route_id, route_short_name), by = "route_short_name") |>
+      filter(!is.na(demand))
+
+    # For each prioritization row, sum route_demand$demand for all routes with route_id in prioritization$routes list
+    priotitization_demand <- prioritization |>
+      st_drop_geometry() |>
+      select(way_osm_id, hour, routes) |>
+      # Split routes list column in rows
+      tidyr::unnest(routes) |>
+      # Get demand
+      left_join(route_demand |> select(route_id, demand), by = c("routes" = "route_id")) |>
+      # Group back by way_osm_id and hour, summing demand
+      group_by(way_osm_id, hour) |>
+      summarise(demand = sum(demand, na.rm = TRUE), .groups = "drop")      
+      
+    prioritization <- prioritization |>
+      left_join(priotitization_demand, by = c("way_osm_id", "hour"))
+  }
   write.csv(
     prioritization |>
       sf::st_drop_geometry() |>
@@ -116,57 +258,23 @@ for (i in 1:nrow(regions)) {
         routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
         shapes = sapply(shapes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE)
       ),
-    sprintf("%s/prioritization_%s_gtfs%s_run%s.csv", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
+    sprintf("%s/prioritization_%s_gtfs%s_run%s.csv", output_region, region$name, gtfs_day_str, run_day),
     row.names = FALSE
   )
-
-  prioritization_area_polygon <- prioritization |>
-    st_union() |>
-    st_convex_hull()
-
-  st_write(
-    prioritization_area_polygon,
-    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
-  )
-  st_write(
-    prioritization_area_polygon,
-    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.geojson", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
-  )
-
-  # 3. Extend with real-time data if available
-  if (!is.null(region$rt_collection) && !is.na(region$rt_collection)) {
-    message("Extending with real-time data...")
-    rt_collection <- region$rt_collection[[1]]
-    # Filter updates, to remove those close to bus stops
-    gtfs_stops <- tidytransit::stops_as_sf(gtfs$stops, crs = 4326)
-
-    within_distance <- st_is_within_distance(rt_collection |> st_transform(crs = 3857), gtfs_stops |> st_transform(crs = 3857), dist = stop_buffer_size)
-
-    rt_collection_filtered <- rt_collection[lengths(within_distance) == 0, ]
-
-    # Extend prioritization with real-time data
-    prioritization <- rt_extend_prioritization(
-      lane_prioritization = prioritization,
-      rt_collection = rt_collection_filtered
-    ) |> mutate(
-      # Round all columns that start with speed_ to 2 decimals
-      across(starts_with("speed_"), ~ round(., 2))
-    )
-  }
   st_write(prioritization |> mutate(
     routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
     shapes = sapply(shapes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE)
-  ), sprintf("%s/prioritization_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append = FALSE)
+  ), sprintf("%s/prioritization_%s_gtfs%s_run%s.gpkg", output_region, region$name, gtfs_day_str, run_day), append = FALSE)
 
   # 4. Build data for dashboard
   # > 4.1. Store ways geometries
   ways <- prioritization |>
     distinct(way_osm_id, geometry)
-  st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.gpkg", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append = FALSE)
-  st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.geojson", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())), append = FALSE)
+  st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.gpkg", output_region, region$name, gtfs_day_str, run_day), append = FALSE)
+  st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.geojson", output_region, region$name, gtfs_day_str, run_day), append = FALSE)
 
-  ways_length <- ways |> # Convert to 3857 crs
-    st_transform(crs = 3857) |>
+  ways_length <- ways |> # Convert to metric_crs
+    st_transform(crs = region$metric_crs) |>
     # Calculate lenght in meters
     mutate(length_m = st_length(geometry)) |>
     # Drop units
@@ -180,7 +288,9 @@ for (i in 1:nrow(regions)) {
     prioritization$way_osm_id
   ), function(df) {
     # 1. Extract first row and convert to list
-    static_df <- df[1, ] %>% select(-way_osm_id, -hour, -frequency)
+    static_df <- df[1, ] %>% select(-way_osm_id, -hour, -frequency, -starts_with("hour_"))
+    # As demand is daily, get max demand for the way_osm_id across all hours (when most routes go through it)
+    static_df$demand <- if ("demand" %in% colnames(df)) max(df$demand, na.rm = TRUE) else NA 
     static_info <- as.list(static_df)
 
     # 2. Extract values from list-columns and wrap routes/shapes in I()
@@ -204,8 +314,26 @@ for (i in 1:nrow(regions)) {
     # 3. Hourly frequencies (auto_unbox will handle these as single numbers)
     hourly_freqs <- setNames(as.list(df$frequency), df$hour)
 
+    # 4. Hourly speeds (auto_unbox will handle these as single numbers)
+    if ("hour_speed_avg" %in% colnames(df)) {
+      # For avg, meadian, p25, p75 and count
+      hourly_speeds_avg <- setNames(as.list(df$hour_speed_avg), df$hour)
+      hourly_speeds_median <- setNames(as.list(df$hour_speed_median), df$hour)
+      hourly_speeds_p25 <- setNames(as.list(df$hour_speed_p25), df$hour)
+      hourly_speeds_p75 <- setNames(as.list(df$hour_speed_p75), df$hour)
+      hourly_speeds_count <- setNames(as.list(df$hour_speed_count), df$hour)
+      return(c(static_info, list(
+        hour_frequency = hourly_freqs,
+        hour_speed_avg = hourly_speeds_avg,
+        hour_speed_median = hourly_speeds_median,
+        hour_speed_p25 = hourly_speeds_p25,
+        hour_speed_p75 = hourly_speeds_p75,
+        hour_speed_count = hourly_speeds_count
+      )))
+    }
+
     # Combine
-    c(static_info, list(hour_frequency = hourly_freqs))
+    return (c(static_info, list(hour_frequency = hourly_freqs)))
   })
   json_string <- toJSON(
     nested_data,
@@ -215,7 +343,7 @@ for (i in 1:nrow(regions)) {
   )
   write(
     json_string,
-    sprintf("%s/way_data_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date()))
+    sprintf("%s/way_data_%s_gtfs%s_run%s.json", output_region, region$name, gtfs_day_str, run_day)
   )
 
   # > 4.3. Store route data
@@ -253,7 +381,8 @@ for (i in 1:nrow(regions)) {
     }
     shape_metadata$stats <- GTFShift::get_prioritization_stats(
       prioritization_shape |> distinct(way_osm_id, .keep_all = TRUE),
-      weight = "length"
+      weight = "length",
+      metric_crs = region$metric_crs
     )
     # Round all numeric values to 2 decimals
     shape_metadata$stats <- lapply(shape_metadata$stats, function(x) {
@@ -280,13 +409,18 @@ for (i in 1:nrow(regions)) {
 
   write_json(
     nested_shapes,
-    sprintf("%s/shape_data_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
+    sprintf("%s/shape_data_%s_gtfs%s_run%s.json", output_region, region$name, gtfs_day_str, run_day),
     auto_unbox = TRUE,
     digits = NA # To avoid precision loss in coordinates
   )
-  write.csv(nested_shapes_df, sprintf("%s/shape_data_%s_gtfs%s_run%s.csv", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())))
+  write.csv(nested_shapes_df, sprintf("%s/shape_data_%s_gtfs%s_run%s.csv", output_region, region$name, gtfs_day_str, run_day))
 
-  nested_routes <- lapply(split(gtfs$routes |> select(route_id, route_short_name, route_long_name, route_color, route_text_color), gtfs$routes$route_id), function(df) {
+  nested_routes <- lapply(split(
+    gtfs$routes |> 
+      select(route_id, route_short_name, route_long_name, route_color, route_text_color) |>
+      left_join(route_demand |> select(route_id, demand), by = "route_id"), 
+    gtfs$routes$route_id
+  ), function(df) {
     route_metadata <- df[1, ] %>%
       as.list()
 
@@ -294,7 +428,7 @@ for (i in 1:nrow(regions)) {
   })
   write_json(
     nested_routes,
-    sprintf("%s/route_data_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
+    sprintf("%s/route_data_%s_gtfs%s_run%s.json", output_region, region$name, gtfs_day_str, run_day),
     auto_unbox = TRUE,
     digits = NA # To avoid precision loss in coordinates
   )
@@ -388,16 +522,22 @@ for (i in 1:nrow(regions)) {
   }
 
   dataCensus <- function(numberArray, weights) {
-    quantiles <- wtd.quantile(numberArray, weights = weights, probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
+    quantiles <- wtd.quantile(numberArray, weights = weights, probs = c(0.05, 0.15, 0.25, 0.5, 0.75, 0.85, 0.95))
     return(list(
       min = round(min(numberArray, na.rm = TRUE), digits = 2),
       max = round(max(numberArray, na.rm = TRUE), digits = 2),
       p5 = round(as.numeric(quantiles[1]), digits = 2),
-      p25 = round(as.numeric(quantiles[2]), digits = 2),
-      p75 = round(as.numeric(quantiles[4]), digits = 2),
-      p95 = round(as.numeric(quantiles[5]), digits = 2),
+      p15 = round(as.numeric(quantiles[2]), digits = 2),
+      p25 = round(as.numeric(quantiles[3]), digits = 2),
+      p75 = round(as.numeric(quantiles[5]), digits = 2),
+      p85 = round(as.numeric(quantiles[6]), digits = 2),
+      p95 = round(as.numeric(quantiles[7]), digits = 2),
       mean = round(wtd.mean(numberArray, weights = weights, na.rm = TRUE), digits = 2),
-      median = round(as.numeric(quantiles[3]), digits = 2),
+      median = round(as.numeric(quantiles[4]), digits = 2),
+      # Compute median for values below p85
+      median_below_p95 = round(wtd.quantile(numberArray[numberArray <= quantiles[7]], weights = weights[numberArray <= quantiles[7]], probs = 0.5, na.rm = TRUE), digits = 2),
+      median_below_p85 = round(wtd.quantile(numberArray[numberArray <= quantiles[6]], weights = weights[numberArray <= quantiles[6]], probs = 0.5, na.rm = TRUE), digits = 2),
+      median_below_p75 = round(wtd.quantile(numberArray[numberArray <= quantiles[5]], weights = weights[numberArray <= quantiles[5]], probs = 0.5, na.rm = TRUE), digits = 2),
       variance = round(wtd.var(numberArray, weights = weights, na.rm = TRUE), digits = 2),
       sd = round(sqrt(wtd.var(numberArray, weights = weights, na.rm = TRUE)), digits = 2),
       count = length(numberArray)
@@ -405,11 +545,25 @@ for (i in 1:nrow(regions)) {
   }
 
   rt_list <- NA
-  if (!is.null(region$rt_collection) && !is.na(region$rt_collection)) {
+  if (has_rt_collection) {
     rt_list <- list(
       url = "", # To be edited manually
       period = region$rt_interval,
-      stop_buffer_size = stop_buffer_size
+      notes = region$rt_notes,
+      thresholds = list(
+        min_updates_per_road_segment_for_speed = THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED,
+        max_time_between_updates = THRESHOLD_TIME_BETWEEN_UPDATES_MAX,
+        min_updates_per_trip_margin = THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN,
+        max_distance_to_geometry = THRESHOLD_DISTANCE_TO_GEOMETRY_MAX,
+        edge_distance_discard = THRESHOLD_EDGE_DISTANCE_DISCARD,
+        max_speed = THRESHOLD_SPEED_MAX
+      )
+    )
+  }
+  demand_list <- NA
+  if (has_demand) {
+    demand_list <- list(
+      notes = region$demand_notes
     )
   }
   census_frequency_hour <- list()
@@ -453,8 +607,10 @@ for (i in 1:nrow(regions)) {
       frequency_hour = census_frequency_hour,
       speed_avg_length = NA,
       speed_avg_frequency = NA,
-      lanes_length = dataCensus(prioritization_infrastructure$n_lanes_direction, prioritization_infrastructure$length_m),
-      lanes_frequency = dataCensus(prioritization_infrastructure$n_lanes_direction, prioritization_infrastructure$frequency),
+      demand_frequency = NA,
+      demand_length = NA,
+      lanes_length = dataCensus(prioritization_infrastructure$n_lanes_circulation_direction, prioritization_infrastructure$length_m),
+      lanes_frequency = dataCensus(prioritization_infrastructure$n_lanes_circulation_direction, prioritization_infrastructure$frequency),
       prioritization_stats_length = lapply(
         GTFShift::get_prioritization_stats(prioritization_infrastructure, weight = "length"),
         function(x) {
@@ -477,6 +633,7 @@ for (i in 1:nrow(regions)) {
       )
     ),
     rt = rt_list,
+    demand = demand_list,
     execution = list(
       moment = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
       script = "dev/web_version.R",
@@ -484,7 +641,7 @@ for (i in 1:nrow(regions)) {
     ),
     environment = list(
       r = R.version.string,
-      GTFShift = as.character(packageVersion("GTFShift")),
+      GTFShift = GTFShiftVersion,
       os = Sys.info()[["sysname"]],
       os_release = Sys.info()[["release"]]
     )
@@ -493,9 +650,13 @@ for (i in 1:nrow(regions)) {
     metadata$data_census$speed_avg_length <- dataCensus(prioritization_infrastructure$speed_avg, prioritization_infrastructure$length_m)
     metadata$data_census$speed_avg_frequency <- dataCensus(prioritization_infrastructure$speed_avg, prioritization_infrastructure$frequency)
   }
+  if ("demand" %in% colnames(prioritization_infrastructure)) {
+    metadata$data_census$demand_frequency <- dataCensus(prioritization_infrastructure$demand, prioritization_infrastructure$frequency)
+    metadata$data_census$demand_length <- dataCensus(prioritization_infrastructure$demand, prioritization_infrastructure$length_m)
+  }
   write_json(
     metadata,
-    sprintf("%s/metadata_%s_gtfs%s_run%s.json", output_region, region$name, region$gtfs_day, gsub("-", "", Sys.Date())),
+    sprintf("%s/metadata_%s_gtfs%s_run%s.json", output_region, region$name, gtfs_day_str, run_day),
     auto_unbox = TRUE,
     digits = NA
   )

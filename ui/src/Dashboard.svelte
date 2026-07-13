@@ -10,7 +10,9 @@
     import LayerBusLanes from "./layers/LayerBusLanes.svelte";
     import LayerTransitFrequency from "./layers/LayerTransitFrequency.svelte";
     import LayerNumberOfLanes from "./layers/LayerNumberOfLanes.svelte";
+    import LayerParkingLanes from "./layers/LayerParkingLanes.svelte";
     import LayerRTSpeed from "./layers/LayerRTSpeed.svelte";
+    import LayerDemand from "./layers/LayerDemand.svelte";
     import LayerBoundaries from "./layers/LayerBoundaries.svelte";
     import DataCensusTable from "./components/DataCensusTable.svelte";
     import ModalData from "./modals/ModalData.svelte";
@@ -54,7 +56,9 @@
         BUS_LANES,
         FREQUENCY,
         N_LANES,
+        PARKING_LANES,
         RT_SPEED,
+        DEMAND,
     }
 
     let region: DataRegion | undefined = $state(undefined);
@@ -79,14 +83,20 @@
     let selected_shape_id: string = $state("all");
     let route_select_open: boolean = $state(false);
     let display_rt: boolean = $state(false); // true if region has rt-data (optional)
+    let display_demand: boolean = $state(false); // true if region has demand data (optional)
 
     let criteria_hour: number = $state(8);
     let criteria_bus_frequency: number = $state(0);
     let criteria_n_lanes_direction: number = $state(2);
+    let criteria_n_lanes_parking: number = $state(1);
     let criteria_avg_speed: number | undefined = $state(undefined);
+    let criteria_demand: number | undefined = $state(undefined);
     let criteria_bus_frequency_enabled: boolean = $state(true);
     let criteria_n_lanes_direction_enabled: boolean = $state(true);
+    let criteria_n_lanes_parking_enabled: boolean = $state(false);
     let criteria_avg_speed_enabled: boolean = $state(true);
+    let criteria_demand_enabled: boolean = $state(false);
+    let visible_way_ids: string[] = $state([]);
 
     let action_hide_form: boolean = $state(false);
     let action_modal_about_open: boolean = $state(false);
@@ -130,6 +140,9 @@
 
     // Action handlers
     const handleLayerCreate = (layer: L.Layer) => {};
+    const handleVisibleWayIdsChange = (wayIds: string[]) => {
+        visible_way_ids = wayIds;
+    };
 
     const handleLayerChange = async (layerId: string) => {
         if (!region || !layerId) return;
@@ -143,7 +156,10 @@
         active_layer = undefined;
         open_accordion = undefined;
         selected_shape_id = "all";
+        visible_way_ids = [];
         geoData = null;
+        display_rt = false;
+        display_demand = false;
         loading = "data for " + region.name + " (" + selected_layer.name + ")";
 
         try {
@@ -187,18 +203,28 @@
                 (data: any) =>
                     data.speed_avg !== undefined && data.speed_avg !== null,
             );
+            display_demand = Object.values(geoData.wayData).some((data: any) => {
+                const demandValue = Number(data.demand);
+                return data.demand!==null && !Number.isNaN(demandValue);
+            });
 
             // Set criteria base values
             criteria_hour = 8;
             criteria_n_lanes_direction = 2;
+            criteria_n_lanes_parking = 1;
             criteria_bus_frequency =
                 geoData.metadata.data_census.frequency.median;
             criteria_avg_speed = Math.floor(
                 geoData.metadata.data_census.speed_avg_length?.median ?? 0,
             );
+            criteria_demand = Math.floor(
+                geoData.metadata.data_census.demand_length?.median ?? 0,
+            );
             criteria_bus_frequency_enabled = true;
             criteria_n_lanes_direction_enabled = true;
+            criteria_n_lanes_parking_enabled = false;
             criteria_avg_speed_enabled = display_rt;
+            criteria_demand_enabled = display_demand;
             active_layer = DisplayOptions.PRIORITIZATION;
             open_accordion = DisplayOptions.PRIORITIZATION.toString();
 
@@ -246,13 +272,17 @@
             untrack(() => {
                 criteria_bus_frequency_enabled = false;
                 criteria_n_lanes_direction_enabled = false;
+                criteria_n_lanes_parking_enabled = false;
                 if (display_rt) criteria_avg_speed_enabled = false;
+                if (display_demand) criteria_demand_enabled = false;
             });
         } else if (selected_shape_id == "all") {
             untrack(() => {
                 criteria_bus_frequency_enabled = true;
                 criteria_n_lanes_direction_enabled = true;
+                criteria_n_lanes_parking_enabled = false;
                 if (display_rt) criteria_avg_speed_enabled = true;
+                if (display_demand) criteria_demand_enabled = true;
             });
         }
     });
@@ -939,6 +969,28 @@
                                         /> or + lanes/direction</span
                                     >
                                 </li>
+                                <!--
+                                <li class="flex items-center gap-2">
+                                    <Switch
+                                        checked={criteria_n_lanes_parking_enabled}
+                                        onCheckedChange={(v: boolean) =>
+                                            (criteria_n_lanes_parking_enabled =
+                                                v)}
+                                        class="data-[state=checked]:bg-[rgb(59,193,168)]"
+                                    />
+                                    <span
+                                        ><Input
+                                            type="number"
+                                            class="w-16 h-7 inline-block mx-1 px-2 text-center"
+                                            bind:value={
+                                                criteria_n_lanes_parking
+                                            }
+                                            min="1"
+                                            disabled={!criteria_n_lanes_parking_enabled}
+                                        /> or + lanes/parking</span
+                                    >
+                                </li>
+                                -->
                                 {#if display_rt}
                                     <li class="flex items-center gap-2">
                                         <Switch
@@ -959,6 +1011,25 @@
                                         >
                                     </li>
                                 {/if}
+                                {#if display_demand}
+                                    <li class="flex items-center gap-2">
+                                        <Switch
+                                            checked={criteria_demand_enabled}
+                                            onCheckedChange={(v: boolean) =>
+                                                (criteria_demand_enabled = v)}
+                                            class="data-[state=checked]:bg-[rgb(59,193,168)]"
+                                        />
+                                        <span
+                                            ><Input
+                                                type="number"
+                                                class="w-20 h-7 inline-block mx-1 px-2 text-center"
+                                                bind:value={criteria_demand}
+                                                min="0"
+                                                disabled={!criteria_demand_enabled}
+                                            /> or + passengers/day</span
+                                        >
+                                    </li>
+                                {/if}
                             </ul>
                             <div class="flex gap-2">
                                 <Button
@@ -968,8 +1039,11 @@
                                     onclick={() => {
                                         criteria_bus_frequency_enabled = true;
                                         criteria_n_lanes_direction_enabled = true;
+                                        criteria_n_lanes_parking_enabled = true;
                                         if (display_rt)
                                             criteria_avg_speed_enabled = true;
+                                        if (display_demand)
+                                            criteria_demand_enabled = true;
                                     }}>Select All</Button
                                 >
                                 <Button
@@ -979,8 +1053,11 @@
                                     onclick={() => {
                                         criteria_bus_frequency_enabled = false;
                                         criteria_n_lanes_direction_enabled = false;
+                                        criteria_n_lanes_parking_enabled = false;
                                         if (display_rt)
                                             criteria_avg_speed_enabled = false;
+                                        if (display_demand)
+                                            criteria_demand_enabled = false;
                                     }}>Deselect All</Button
                                 >
                             </div>
@@ -991,9 +1068,12 @@
                 <Accordion.Item value={DisplayOptions.BUS_LANES.toString()}>
                     <Accordion.Trigger
                         class="text-sm font-medium hover:no-underline"
-                        >Bus lanes</Accordion.Trigger
+                        >Existing bus lanes</Accordion.Trigger
                     >
                     <Accordion.Content>
+                        <p class="text-xs text-muted-foreground pt-2">
+                            Bus lanes obtained from OSM data, using <a href="https://u-shift.github.io/GTFShift/reference/osm_bus_lanes.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::osm_bus_lanes()</a>.
+                        </p>
                         <p class="text-xs text-muted-foreground pt-2">
                             Road segments with bus lanes are shown in <span
                                 style="color: {COLOR_TEAL}"
@@ -1028,15 +1108,18 @@
                 <Accordion.Item value={DisplayOptions.FREQUENCY.toString()}>
                     <Accordion.Trigger
                         class="text-sm font-medium hover:no-underline"
-                        >Transit frequency</Accordion.Trigger
+                        >Bus frequency</Accordion.Trigger
                     >
                     <Accordion.Content>
                         <div
                             class="text-xs text-muted-foreground space-y-3 pt-2"
                         >
                             <p>
+                                Bus frequency determined associating GTFS static data with OSM road segments using <a href="https://u-shift.github.io/GTFShift/reference/get_way_frequency_hourly.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::get_way_frequency_hourly()</a>.
+                            </p>
+                            <p>
                                 Road segments with bus service are colored by
-                                frequency, from the <span
+                                frequency, for the selected hour, from the <span
                                     style="color: {COLOR_GRADIENT[0]}"
                                     class="bg-black/50 font-bold px-1 rounded"
                                     >P5 ({geoData.metadata.data_census
@@ -1086,6 +1169,9 @@
                             class="text-xs text-muted-foreground space-y-3 pt-2"
                         >
                             <p>
+                                Number of lanes obtained from OSM data, using <a href="https://u-shift.github.io/GTFShift/reference/prioritize_lanes.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::prioritize_lanes()</a>.
+                            </p>
+                            <p>
                                 Road segments with bus service are colored by
                                 number of lanes, from the <span
                                     style="color: {COLOR_GRADIENT[0]}"
@@ -1117,6 +1203,26 @@
                     </Accordion.Content>
                 </Accordion.Item>
 
+                <!--
+                <Accordion.Item value={DisplayOptions.PARKING_LANES.toString()}>
+                    <Accordion.Trigger
+                        class="text-sm font-medium hover:no-underline"
+                        >Parking lanes</Accordion.Trigger
+                    >
+                    <Accordion.Content>
+                        <div
+                            class="text-xs text-muted-foreground space-y-3 pt-2"
+                        >
+                            <p>
+                                Road segments with bus service are colored by
+                                number of parking lanes. Only segments with at
+                                least one parking lane are shown.
+                            </p>
+                        </div>
+                    </Accordion.Content>
+                </Accordion.Item>
+                -->
+
                 {#if display_rt}
                     <Accordion.Item value={DisplayOptions.RT_SPEED.toString()}>
                         <Accordion.Trigger
@@ -1128,8 +1234,14 @@
                                 class="text-xs text-muted-foreground space-y-3 pt-2"
                             >
                                 <p>
+                                    Speed computed based on GTFS-RT updates with <a href="https://u-shift.github.io/GTFShift/reference/rt_average_speed.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::rt_average_speed()</a>, considering 
+                                    the distance traversed along the route geometry and the time between consecutive updates. 
+
+                                </p>
+                                <p>
                                     Road segments with bus service are colored
-                                    by the average speed measured, from the <span
+                                    by the average speed measured (for the full days of the real-time data 
+                                    collection interval), from the <span
                                         style="color: {COLOR_GRADIENT_RED.slice().reverse()[0]}"
                                         class="font-bold"
                                         >P5 ({geoData.metadata.data_census.speed_avg_length?.p5?.toFixed(
@@ -1153,6 +1265,58 @@
                                             .speed_avg_length}
                                         census_2={geoData.metadata.data_census
                                             .speed_avg_frequency}
+                                        census_1_label="Length"
+                                        census_2_label="Frequency"
+                                    />
+                                {/if}
+                            </div>
+                        </Accordion.Content>
+                    </Accordion.Item>
+                {/if}
+
+                {#if display_demand}
+                    <Accordion.Item value={DisplayOptions.DEMAND.toString()}>
+                        <Accordion.Trigger
+                            class="text-sm font-medium hover:no-underline"
+                            >Passenger demand</Accordion.Trigger
+                        >
+                        <Accordion.Content>
+                            <div
+                                class="text-xs text-muted-foreground space-y-3 pt-2"
+                            >
+
+                                {#if geoData.metadata.demand && geoData.metadata.demand.notes}
+                                    <p class="text-xs text-muted-foreground pt-2">
+                                        {geoData.metadata.demand.notes}
+                                    </p>
+                                {/if}
+                                <p>
+                                    Road segments with bus service are colored
+                                    by passenger demand (cumulative for the representative day in study), 
+                                    from the <span
+                                        style="color: {COLOR_GRADIENT[0]}"
+                                        class="bg-black/50 font-bold px-1 rounded"
+                                        >P5 ({geoData.metadata.data_census.demand_length?.p5?.toFixed(
+                                            0,
+                                        )})</span
+                                    >
+                                    to the
+                                    <span
+                                        style="color: {COLOR_GRADIENT[
+                                            COLOR_GRADIENT.length - 1
+                                        ]}"
+                                        class="font-bold"
+                                        >P95 ({geoData.metadata.data_census.demand_length?.p95?.toFixed(
+                                            0,
+                                        )})</span
+                                    > passengers/day.
+                                </p>
+                                {#if geoData.metadata.data_census.demand_length}
+                                    <DataCensusTable
+                                        census_1={geoData.metadata.data_census
+                                            .demand_length}
+                                        census_2={geoData.metadata.data_census
+                                            .demand_frequency}
                                         census_1_label="Length"
                                         census_2_label="Frequency"
                                     />
@@ -1189,7 +1353,7 @@
                 }}
                 class="flex-1"
             >
-                <i class="fa-solid fa-arrow-left mr-2"></i> Source
+                <i class="fa-solid fa-arrow-left mr-2"></i> Regions
             </Button>
             <Button
                 variant="outline"
@@ -1221,6 +1385,7 @@
     bind:selected_shape_id
     {geoData}
     {criteria_hour}
+    {display_rt}
 />
 
 <!-- Route Details Panel (shown when a shape is selected and no way is selected) -->
@@ -1239,9 +1404,13 @@
                     style="background-color: {COLOR_YELLOW}"
                 ></span>
                 <span
-                    ><b class="text-foreground">Bus lane</b> with - {criteria_bus_frequency}
-                    bus/h OR - {criteria_n_lanes_direction} lane/dir {#if display_rt}OR
-                        {criteria_avg_speed} or - km/h avg. speed{/if}</span
+                    ><b class="text-foreground">Bus lane</b>
+                    with{#if criteria_bus_frequency_enabled}{" "}- {criteria_bus_frequency}
+                        bus/h{/if}{#if criteria_n_lanes_direction_enabled}{#if criteria_bus_frequency_enabled}{" "}OR{/if}{" "}-
+                        {criteria_n_lanes_direction} lane/dir{/if}{#if criteria_n_lanes_parking_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled}{" "}OR{/if}{" "}-
+                        {criteria_n_lanes_parking} parking lane{/if}{#if display_rt && criteria_avg_speed_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled || criteria_n_lanes_parking_enabled}{" "}OR{/if}{" "}{criteria_avg_speed}
+                        or - km/h avg. speed{/if}{#if display_demand && criteria_demand_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled || criteria_n_lanes_parking_enabled || (display_rt && criteria_avg_speed_enabled)}{" "}OR{/if}{" "}+{criteria_demand}
+                        passengers/day{/if}</span
                 >
             </p>
             <p class="flex items-start text-muted-foreground leading-tight">
@@ -1250,9 +1419,13 @@
                     style="background-color: {COLOR_TEAL}"
                 ></span>
                 <span
-                    ><b class="text-foreground">Bus lane</b> with + {criteria_bus_frequency -
-                        1} bus/h AND + {criteria_n_lanes_direction - 1} lane/dir
-                    {#if display_rt}AND + {criteria_avg_speed} km/h avg. speed{/if}</span
+                    ><b class="text-foreground">Bus lane</b>
+                    with{#if criteria_bus_frequency_enabled}{" "}+ {criteria_bus_frequency -
+                            1} bus/h{/if}{#if criteria_n_lanes_direction_enabled}{#if criteria_bus_frequency_enabled}{" "}AND{/if}{" "}+
+                        {criteria_n_lanes_direction - 1} lane/dir{/if}{#if criteria_n_lanes_parking_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled}{" "}AND{/if}{" "}+
+                        {criteria_n_lanes_parking - 1} parking lane{/if}{#if display_rt && criteria_avg_speed_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled || criteria_n_lanes_parking_enabled}{" "}AND{/if}{" "}+
+                        {criteria_avg_speed} km/h avg. speed{/if}{#if display_demand && criteria_demand_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled || criteria_n_lanes_parking_enabled || (display_rt && criteria_avg_speed_enabled)}{" "}AND{/if}{" "}+{criteria_demand}
+                        passengers/day{/if}</span
                 >
             </p>
             <p class="flex items-start text-muted-foreground leading-tight">
@@ -1261,10 +1434,13 @@
                     style="background-color: {COLOR_RED}"
                 ></span>
                 <span
-                    ><b class="text-foreground">NO bus lane</b> with + {criteria_bus_frequency -
-                        1} bus/h AND + {criteria_n_lanes_direction - 1} lane/dir
-                    {#if display_rt}AND
-                        {criteria_avg_speed} or - km/h avg. speed{/if}</span
+                    ><b class="text-foreground">NO bus lane</b>
+                    with{#if criteria_bus_frequency_enabled}{" "}+ {criteria_bus_frequency -
+                            1} bus/h{/if}{#if criteria_n_lanes_direction_enabled}{#if criteria_bus_frequency_enabled}{" "}AND{/if}{" "}+
+                        {criteria_n_lanes_direction - 1} lane/dir{/if}{#if criteria_n_lanes_parking_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled}{" "}AND{/if}{" "}+
+                        {criteria_n_lanes_parking - 1} parking lane{/if}{#if display_rt && criteria_avg_speed_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled || criteria_n_lanes_parking_enabled}{" "}AND{/if}{" "}{criteria_avg_speed}
+                        or - km/h avg. speed{/if}{#if display_demand && criteria_demand_enabled}{#if criteria_bus_frequency_enabled || criteria_n_lanes_direction_enabled || criteria_n_lanes_parking_enabled || (display_rt && criteria_avg_speed_enabled)}{" "}AND{/if}{" "}+{criteria_demand}
+                        passengers/day{/if}</span
                 >
             </p>
         {:else if active_layer === DisplayOptions.BUS_LANES}
@@ -1328,6 +1504,33 @@
                     >
                 </div>
             </div>
+        {:else if active_layer === DisplayOptions.PARKING_LANES}
+            <div class="mb-2">
+                <p class="mb-2 text-foreground font-semibold">
+                    Number of parking lanes
+                </p>
+                <div class="flex gap-2 items-center">
+                    <span
+                        class="min-w-[40px] text-right text-xs text-muted-foreground"
+                        >{(geoData?.metadata.data_census as any)
+                            .parking_lanes_length?.p5 ?? 0}</span
+                    >
+                    <div
+                        class="flex-1 h-3 rounded border"
+                        style="background: linear-gradient(to right, {COLOR_GRADIENT.map(
+                            (c) => c,
+                        ).join(', ')});"
+                    ></div>
+                    <span
+                        class="min-w-[40px] text-left text-xs text-muted-foreground"
+                        >{(geoData?.metadata.data_census as any)
+                            .parking_lanes_length?.p95 ?? "—"}</span
+                    >
+                </div>
+                <p class="text-xs text-muted-foreground mt-1">
+                    Only segments with ≥ 1 parking lane shown.
+                </p>
+            </div>
         {:else if active_layer === DisplayOptions.RT_SPEED}
             <div class="mb-2">
                 <p class="mb-2 text-foreground font-semibold">
@@ -1357,6 +1560,36 @@
                             Math.ceil(
                                 geoData.metadata.data_census.speed_avg_length
                                     .p95,
+                            )}</span
+                    >
+                </div>
+            </div>
+        {:else if active_layer === DisplayOptions.DEMAND}
+            <div class="mb-2">
+                <p class="mb-2 text-foreground font-semibold">
+                    Demand <span class="text-muted-foreground font-normal"
+                        >(passengers/day)</span
+                    >
+                </p>
+                <div class="flex gap-2 items-center">
+                    <span
+                        class="min-w-[40px] text-right text-xs text-muted-foreground"
+                        >{geoData?.metadata.data_census.demand_length?.p5 &&
+                            Math.floor(
+                                geoData.metadata.data_census.demand_length.p5,
+                            )}</span
+                    >
+                    <div
+                        class="flex-1 h-3 rounded border"
+                        style="background: linear-gradient(to right, {COLOR_GRADIENT.map(
+                            (c) => c,
+                        ).join(', ')});"
+                    ></div>
+                    <span
+                        class="min-w-[40px] text-left text-xs text-muted-foreground"
+                        >{geoData?.metadata.data_census.demand_length?.p95 &&
+                            Math.ceil(
+                                geoData.metadata.data_census.demand_length.p95,
                             )}</span
                     >
                 </div>
@@ -1409,12 +1642,17 @@
             criteriaBusFrequencyEnabled={criteria_bus_frequency_enabled}
             criteriaNLanesDirection={criteria_n_lanes_direction}
             criteriaNLanesDirectionEnabled={criteria_n_lanes_direction_enabled}
+            criteriaNLanesParking={criteria_n_lanes_parking}
+            criteriaNLanesParkingEnabled={criteria_n_lanes_parking_enabled}
             criteriaAvgSpeed={criteria_avg_speed}
             criteriaAvgSpeedEnabled={criteria_avg_speed_enabled}
+            criteriaDemand={criteria_demand}
+            criteriaDemandEnabled={criteria_demand_enabled}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
         />
     {:else if active_layer === DisplayOptions.BUS_LANES}
         <LayerBusLanes
@@ -1425,6 +1663,7 @@
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
         />
     {:else if active_layer === DisplayOptions.FREQUENCY}
         <LayerTransitFrequency
@@ -1435,6 +1674,7 @@
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
         />
     {:else if active_layer === DisplayOptions.N_LANES}
         <LayerNumberOfLanes
@@ -1445,6 +1685,17 @@
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
+        />
+    {:else if active_layer === DisplayOptions.PARKING_LANES}
+        <LayerParkingLanes
+            {map}
+            {geoData}
+            {selectedWayId}
+            selectedShapeId={selected_shape_id}
+            onWaySelect={(id) => (selectedWayId = id)}
+            onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
         />
     {:else if active_layer === DisplayOptions.RT_SPEED}
         <LayerRTSpeed
@@ -1455,6 +1706,18 @@
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
             onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
+        />
+    {:else if active_layer === DisplayOptions.DEMAND}
+        <LayerDemand
+            {map}
+            {geoData}
+            criteriaHour={criteria_hour}
+            {selectedWayId}
+            selectedShapeId={selected_shape_id}
+            onWaySelect={(id) => (selectedWayId = id)}
+            onLayerCreate={handleLayerCreate}
+            onVisibleWayIdsChange={handleVisibleWayIdsChange}
         />
     {/if}
 {/if}
@@ -1468,6 +1731,8 @@
         {geoData}
         hour={criteria_hour}
         rt_data={display_rt}
+        demand_data={display_demand}
+        visible_way_ids={visible_way_ids}
         onRouteSelect={(shapeId) => {
             selected_shape_id = shapeId;
             selectedWayId = undefined;
