@@ -1691,6 +1691,7 @@
         <LayerParkingLanes
             {map}
             {geoData}
+            criteriaHour={criteria_hour}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}

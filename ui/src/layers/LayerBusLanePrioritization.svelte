@@ -4,6 +4,10 @@
     import { COLOR_YELLOW, COLOR_TEAL, COLOR_RED } from "../data";
     import type { Feature } from "geojson";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import {
+        getFrequencyWeightedLineWidth,
+        getWayHourlyFrequency,
+    } from "../lib/utils";
 
     let {
         map,
@@ -99,6 +103,12 @@
 
     function getWayStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
+        const frequency = getWayHourlyFrequency(props, criteriaHour);
+        const weight = getFrequencyWeightedLineWidth(
+            frequency,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95,
+        );
         if (props?.is_bus_lane) {
             const frequencyOk =
                 !criteriaBusFrequencyEnabled ||
@@ -128,10 +138,10 @@
                     frequencyOk && lanesOk && parkingOk && speedOk && demandOk
                         ? COLOR_TEAL
                         : COLOR_YELLOW,
-                weight: 3.5,
+                weight,
             };
         }
-        return { color: COLOR_RED, weight: 3.5 };
+        return { color: COLOR_RED, weight };
     }
 
     $effect(() => {

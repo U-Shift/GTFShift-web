@@ -4,6 +4,10 @@
     import { COLOR_TEAL } from "../data";
     import type { Feature } from "geojson";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import {
+        getFrequencyWeightedLineWidth,
+        getWayHourlyFrequency,
+    } from "../lib/utils";
 
     let {
         map,
@@ -28,6 +32,17 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
+    function getWayStyle(wayId: string): L.PathOptions {
+        const props = geoData.wayData[wayId];
+        const frequency = getWayHourlyFrequency(props, criteriaHour);
+        const weight = getFrequencyWeightedLineWidth(
+            frequency,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95,
+        );
+        return { color: COLOR_TEAL, weight };
+    }
+
     $effect(() => {
         if (!map || !geoData) return;
 
@@ -50,7 +65,11 @@
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(filteredFeatures, {
-            style: { color: COLOR_TEAL, weight: 3.5 },
+            style: (feature: Feature | undefined) => {
+                const wayId = feature?.properties?.way_osm_id;
+                if (!wayId) return {};
+                return getWayStyle(wayId);
+            },
             onEachFeature: (feature, layer) => {
                 const wayId = feature.properties?.way_osm_id;
                 if (wayId) wayLayerMap.set(wayId, layer as L.Path);
@@ -69,10 +88,7 @@
                 });
                 layer.on("mouseout", () => {
                     if (wayId && wayId !== selectedWayId) {
-                        (layer as L.Path).setStyle({
-                            color: COLOR_TEAL,
-                            weight: 3.5,
-                        });
+                        (layer as L.Path).setStyle(getWayStyle(wayId));
                     }
                 });
             },
@@ -110,7 +126,7 @@
                 path.setStyle({ weight: 7, color: "#FFD4B8", opacity: 1 });
                 path.bringToFront();
             } else {
-                path.setStyle({ color: COLOR_TEAL, weight: 3.5 });
+                path.setStyle(getWayStyle(wayId));
             }
         });
     });

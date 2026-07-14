@@ -33,10 +33,14 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
-    import { getColorFromGradient } from "../lib/utils";
+    import {
+        getColorFromGradient,
+        getFrequencyWeightedLineWidth,
+        getWayHourlyFrequency,
+    } from "../lib/utils";
 
     function getFrequencyValue(wayId: string): number {
-        return geoData.wayData[wayId]?.hour_frequency?.[criteriaHour] || 0;
+        return getWayHourlyFrequency(geoData.wayData[wayId], criteriaHour);
     }
 
     function formatFrequencyLabel(wayId: string): string {
@@ -45,15 +49,19 @@
     }
 
     function getFreqStyle(wayId: string): L.PathOptions {
-        const props = geoData.wayData[wayId];
         const freq = getFrequencyValue(wayId);
         const color = getColorFromGradient(
             freq,
             geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5 || 0,
             geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95 || 1,
-            COLOR_GRADIENT
+            COLOR_GRADIENT,
         );
-        return { color, weight: 3.5 };
+        const weight = getFrequencyWeightedLineWidth(
+            freq,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95,
+        );
+        return { color, weight };
     }
 
     $effect(() => {

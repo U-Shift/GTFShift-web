@@ -33,7 +33,11 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
-    import { getColorFromGradient } from "../lib/utils";
+    import {
+        getColorFromGradient,
+        getFrequencyWeightedLineWidth,
+        getWayHourlyFrequency,
+    } from "../lib/utils";
 
     function getDemandValue(wayId: string | undefined): number | undefined {
         if (!wayId) return undefined;
@@ -49,8 +53,15 @@
     }
 
     function getDemandStyle(wayId: string): L.PathOptions {
+        const props = geoData.wayData[wayId];
         const demandValue = getDemandValue(wayId);
         let color = COLOR_GRAY;
+        const frequency = getWayHourlyFrequency(props, criteriaHour);
+        const weight = getFrequencyWeightedLineWidth(
+            frequency,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95,
+        );
         if (demandValue !== undefined) {
             color = getColorFromGradient(
                 demandValue,
@@ -59,7 +70,7 @@
                 COLOR_GRADIENT,
             );
         }
-        return { color, weight: 3.5 };
+        return { color, weight };
     }
 
     $effect(() => {

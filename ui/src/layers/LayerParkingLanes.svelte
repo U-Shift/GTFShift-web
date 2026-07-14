@@ -13,6 +13,7 @@
     let {
         map,
         geoData,
+        criteriaHour,
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
@@ -21,6 +22,7 @@
     }: {
         map: L.Map;
         geoData: GeoPrioritization;
+        criteriaHour: number;
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
@@ -31,7 +33,11 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
-    import { getColorFromGradient } from "../lib/utils";
+    import {
+        getColorFromGradient,
+        getFrequencyWeightedLineWidth,
+        getWayHourlyFrequency,
+    } from "../lib/utils";
 
     function formatParkingLaneLabel(wayId: string): string {
         const lanes = geoData.wayData[wayId]?.n_lanes_parking || 0;
@@ -43,13 +49,19 @@
         const n_lanes_parking = props?.n_lanes_parking || 0;
         const p5 = (geoData.metadata.data_census as any).parking_lanes_length?.p5 ?? 0;
         const p95 = (geoData.metadata.data_census as any).parking_lanes_length?.p95 ?? Math.max(n_lanes_parking, 1);
+        const frequency = getWayHourlyFrequency(props, criteriaHour);
         const color = getColorFromGradient(
             n_lanes_parking,
             p5,
             p95,
             COLOR_GRADIENT,
         );
-        return { color, weight: 3.5 };
+        const weight = getFrequencyWeightedLineWidth(
+            frequency,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95,
+        );
+        return { color, weight };
     }
 
     $effect(() => {

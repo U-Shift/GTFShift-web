@@ -58,3 +58,37 @@ export function getColorFromGradient(
 
     return rgbToHex(r, g, b);
 }
+
+export function getWayHourlyFrequency(
+    wayProps:
+        | {
+              hour_frequency?: Record<string | number, number | string | undefined>;
+          }
+        | undefined,
+    criteriaHour: number,
+): number {
+    const frequency = Number(wayProps?.hour_frequency?.[criteriaHour]);
+    return Number.isNaN(frequency) ? 0 : frequency;
+}
+
+export function getFrequencyWeightedLineWidth(
+    frequency: number | string | undefined | null,
+    p5: number | string | undefined | null,
+    p95: number | string | undefined | null,
+    minWeight = 2.5,
+    maxWeight = 7,
+    fallbackWeight = 3.5,
+): number {
+    const freq = Number(frequency);
+    const minFreq = Number(p5);
+    const maxFreq = Number(p95);
+
+    if (Number.isNaN(freq) || Number.isNaN(minFreq) || Number.isNaN(maxFreq)) {
+        return fallbackWeight;
+    }
+    if (maxFreq <= minFreq) return (minWeight + maxWeight) / 2;
+
+    const ratio = (freq - minFreq) / (maxFreq - minFreq);
+    const clampedRatio = Math.max(0, Math.min(1, ratio));
+    return minWeight + clampedRatio * (maxWeight - minWeight);
+}
