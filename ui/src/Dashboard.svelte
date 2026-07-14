@@ -1039,7 +1039,7 @@
                                     onclick={() => {
                                         criteria_bus_frequency_enabled = true;
                                         criteria_n_lanes_direction_enabled = true;
-                                        criteria_n_lanes_parking_enabled = true;
+                                        // criteria_n_lanes_parking_enabled = true;
                                         if (display_rt)
                                             criteria_avg_speed_enabled = true;
                                         if (display_demand)
@@ -1053,7 +1053,7 @@
                                     onclick={() => {
                                         criteria_bus_frequency_enabled = false;
                                         criteria_n_lanes_direction_enabled = false;
-                                        criteria_n_lanes_parking_enabled = false;
+                                        // criteria_n_lanes_parking_enabled = false;
                                         if (display_rt)
                                             criteria_avg_speed_enabled = false;
                                         if (display_demand)
