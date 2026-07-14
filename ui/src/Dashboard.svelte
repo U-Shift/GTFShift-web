@@ -92,6 +92,7 @@
     let criteria_n_lanes_parking: number = $state(1);
     let criteria_avg_speed: number | undefined = $state(undefined);
     let criteria_demand: number | undefined = $state(undefined);
+    let criteria_hour_autoplay: boolean = $state(false);
     let criteria_bus_frequency_enabled: boolean = $state(true);
     let criteria_n_lanes_direction_enabled: boolean = $state(true);
     let criteria_n_lanes_parking_enabled: boolean = $state(false);
@@ -130,6 +131,10 @@
     );
 
     let selectedWayId: string | undefined = $state(undefined);
+
+    function formatHour(hour: number): string {
+        return `${hour.toString().padStart(2, "0")}:00`;
+    }
 
     // Clear way selection when a modal is opened
     $effect(() => {
@@ -310,6 +315,16 @@
     $effect(() => {
         if (lineWeightOptions.find((o) => o.value === line_weight_by)) return;
         line_weight_by = "frequency";
+    });
+
+    $effect(() => {
+        if (!criteria_hour_autoplay) return;
+        const timer = setInterval(() => {
+            criteria_hour = (criteria_hour + 1) % 24;
+        }, 2000);
+        return () => {
+            clearInterval(timer);
+        };
     });
 
     const routeOptions = $derived.by(() => {
@@ -902,6 +917,46 @@
                         </Command.Root>
                     </Popover.Content>
                 </Popover.Root>
+            </div>
+
+            <div class="w-full mb-6">
+                <h5
+                    class="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider"
+                >
+                    Considering bus frequency at
+                </h5>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs">
+                            Hour: <b>{formatHour(criteria_hour)}</b>
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            class="h-7 px-2 text-[11px]"
+                            onclick={() => {
+                                criteria_hour_autoplay = !criteria_hour_autoplay;
+                            }}
+                        >
+                            {#if criteria_hour_autoplay}
+                                <i class="fas fa-pause mr-1"></i>
+                                Pause
+                            {:else}
+                                <i class="fas fa-play mr-1"></i>
+                                Play
+                            {/if}
+                        </Button>
+                    </div>
+                    <input
+                        type="range"
+                        min="0"
+                        max="23"
+                        step="1"
+                        bind:value={criteria_hour}
+                        class="hour-slider w-full cursor-pointer"
+                        aria-label="Select global hour"
+                    />
+                </div>
             </div>
 
             <div class="w-full mb-6">
@@ -1819,3 +1874,22 @@
     bind:open={action_modal_download_open}
     zipUrl={selected_layer?.files.zip}
 />
+
+<style>
+    .hour-slider {
+        accent-color: rgb(59, 193, 168);
+    }
+
+    .hour-slider::-webkit-slider-thumb {
+        background: rgb(59, 193, 168);
+    }
+
+    .hour-slider::-moz-range-thumb {
+        background: rgb(59, 193, 168);
+        border-color: rgb(59, 193, 168);
+    }
+
+    .hour-slider::-moz-range-progress {
+        background: rgb(59, 193, 168);
+    }
+</style>
