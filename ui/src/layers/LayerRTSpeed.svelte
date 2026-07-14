@@ -3,6 +3,7 @@
     import * as L from "leaflet";
     import { COLOR_GRADIENT_RED, COLOR_GRAY } from "../data";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { LineWeightMetric } from "../types/LineWeightMetric";
     import type { Feature } from "geojson";
     import {
         bindWayValueTooltip,
@@ -14,6 +15,7 @@
         map,
         geoData,
         criteriaHour,
+        lineWeightBy = "frequency",
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
@@ -23,6 +25,7 @@
         map: L.Map;
         geoData: GeoPrioritization;
         criteriaHour: number;
+        lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
@@ -35,8 +38,7 @@
 
     import {
         getColorFromGradient,
-        getFrequencyWeightedLineWidth,
-        getWayHourlyFrequency,
+        getLineWeight,
     } from "../lib/utils";
 
     function formatSpeedLabel(wayId: string): string {
@@ -50,12 +52,7 @@
         const props = geoData.wayData[wayId];
         const speed_avg = props?.speed_avg;
         let color = COLOR_GRAY;
-        const frequency = getWayHourlyFrequency(props, criteriaHour);
-        const weight = getFrequencyWeightedLineWidth(
-            frequency,
-            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5,
-            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95,
-        );
+        const weight = getLineWeight(geoData, props, criteriaHour, lineWeightBy);
         if (speed_avg !== undefined && speed_avg !== null && !isNaN(Number(speed_avg))) {
             const speedValue = Number(speed_avg);
             color = getColorFromGradient(

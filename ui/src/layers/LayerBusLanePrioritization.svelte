@@ -4,15 +4,16 @@
     import { COLOR_YELLOW, COLOR_TEAL, COLOR_RED } from "../data";
     import type { Feature } from "geojson";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { LineWeightMetric } from "../types/LineWeightMetric";
     import {
-        getFrequencyWeightedLineWidth,
-        getWayHourlyFrequency,
+        getLineWeight,
     } from "../lib/utils";
 
     let {
         map,
         geoData,
         criteriaHour = 8,
+        lineWeightBy = "frequency",
         criteriaBusFrequency = 5,
         criteriaBusFrequencyEnabled = true,
         criteriaNLanesDirection = 2,
@@ -32,6 +33,7 @@
         map: L.Map;
         geoData: GeoPrioritization;
         criteriaHour: number;
+        lineWeightBy: LineWeightMetric;
         criteriaBusFrequency: number;
         criteriaBusFrequencyEnabled: boolean;
         criteriaNLanesDirection: number;
@@ -103,12 +105,7 @@
 
     function getWayStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
-        const frequency = getWayHourlyFrequency(props, criteriaHour);
-        const weight = getFrequencyWeightedLineWidth(
-            frequency,
-            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5,
-            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95,
-        );
+        const weight = getLineWeight(geoData, props, criteriaHour, lineWeightBy);
         if (props?.is_bus_lane) {
             const frequencyOk =
                 !criteriaBusFrequencyEnabled ||

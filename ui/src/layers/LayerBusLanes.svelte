@@ -4,15 +4,16 @@
     import { COLOR_TEAL } from "../data";
     import type { Feature } from "geojson";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { LineWeightMetric } from "../types/LineWeightMetric";
     import {
-        getFrequencyWeightedLineWidth,
-        getWayHourlyFrequency,
+        getLineWeight,
     } from "../lib/utils";
 
     let {
         map,
         geoData,
         criteriaHour,
+        lineWeightBy = "frequency",
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
@@ -22,6 +23,7 @@
         map: L.Map;
         geoData: GeoPrioritization;
         criteriaHour: number;
+        lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
@@ -34,12 +36,7 @@
 
     function getWayStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
-        const frequency = getWayHourlyFrequency(props, criteriaHour);
-        const weight = getFrequencyWeightedLineWidth(
-            frequency,
-            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5,
-            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95,
-        );
+        const weight = getLineWeight(geoData, props, criteriaHour, lineWeightBy);
         return { color: COLOR_TEAL, weight };
     }
 

@@ -4,6 +4,7 @@
     import type { Feature } from "geojson";
     import type { GeoPrioritization } from "./types/GeoPrioritization";
     import type { DataRegion, RegionLayer } from "./types/DataRegion";
+    import type { LineWeightMetric } from "./types/LineWeightMetric";
 
     import ModalAbout from "./modals/ModalAbout.svelte";
     import LayerBusLanePrioritization from "./layers/LayerBusLanePrioritization.svelte";
@@ -97,6 +98,23 @@
     let criteria_avg_speed_enabled: boolean = $state(true);
     let criteria_demand_enabled: boolean = $state(false);
     let visible_way_ids: string[] = $state([]);
+    let line_weight_by: LineWeightMetric = $state("frequency");
+
+    const lineWeightOptions = $derived.by(() => {
+        const options: Array<{ value: LineWeightMetric; label: string }> = [
+            { value: "none", label: "None (uniform width)" },
+            { value: "frequency", label: "Bus frequency" },
+            { value: "lanes", label: "Number of lanes" },
+        ];
+        if (display_rt) {
+            options.push({ value: "speed_min", label: "Speed (slower roads thicker)" });
+            options.push({ value: "speed_max", label: "Speed (faster roads thicker)" });
+        }
+        if (display_demand) {
+            options.push({ value: "demand", label: "Demand" });
+        }
+        return options;
+    });
 
     let action_hide_form: boolean = $state(false);
     let action_modal_about_open: boolean = $state(false);
@@ -225,6 +243,7 @@
             criteria_n_lanes_parking_enabled = false;
             criteria_avg_speed_enabled = display_rt;
             criteria_demand_enabled = display_demand;
+            line_weight_by = "frequency";
             active_layer = DisplayOptions.PRIORITIZATION;
             open_accordion = DisplayOptions.PRIORITIZATION.toString();
 
@@ -285,6 +304,11 @@
                 if (display_demand) criteria_demand_enabled = true;
             });
         }
+    });
+
+    $effect(() => {
+        if (lineWeightOptions.find((o) => o.value === line_weight_by)) return;
+        line_weight_by = "frequency";
     });
 
     const routeOptions = $derived.by(() => {
@@ -877,6 +901,31 @@
                         </Command.Root>
                     </Popover.Content>
                 </Popover.Root>
+            </div>
+
+            <div class="w-full mb-6">
+                <h5
+                    class="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider"
+                >
+                    Line Weight
+                </h5>
+                <Select.Root type="single" bind:value={line_weight_by}>
+                    <Select.Trigger
+                        class="w-full justify-between bg-background/50 hover:bg-accent transition-colors border text-left"
+                    >
+                        <span class="truncate"
+                            >{lineWeightOptions.find((o) => o.value === line_weight_by)
+                                ?.label ?? "Bus frequency"}</span
+                        >
+                    </Select.Trigger>
+                    <Select.Content class="z-[1100]">
+                        {#each lineWeightOptions as option}
+                            <Select.Item value={option.value} label={option.label}
+                                >{option.label}</Select.Item
+                            >
+                        {/each}
+                    </Select.Content>
+                </Select.Root>
             </div>
 
             <p class="text-xs font-medium text-muted-foreground mb-2">
@@ -1638,6 +1687,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             criteriaBusFrequency={criteria_bus_frequency}
             criteriaBusFrequencyEnabled={criteria_bus_frequency_enabled}
             criteriaNLanesDirection={criteria_n_lanes_direction}
@@ -1659,6 +1709,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
@@ -1670,6 +1721,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
@@ -1681,6 +1733,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
@@ -1692,6 +1745,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
@@ -1703,6 +1757,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
@@ -1714,6 +1769,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}

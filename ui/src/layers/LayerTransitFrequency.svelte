@@ -3,6 +3,7 @@
     import * as L from "leaflet";
     import { COLOR_GRADIENT } from "../data";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { LineWeightMetric } from "../types/LineWeightMetric";
     import type { Feature } from "geojson";
     import {
         bindWayValueTooltip,
@@ -14,6 +15,7 @@
         map,
         geoData,
         criteriaHour = 8,
+        lineWeightBy = "frequency",
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
@@ -23,6 +25,7 @@
         map: L.Map;
         geoData: GeoPrioritization;
         criteriaHour: number;
+        lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
@@ -35,7 +38,7 @@
 
     import {
         getColorFromGradient,
-        getFrequencyWeightedLineWidth,
+        getLineWeight,
         getWayHourlyFrequency,
     } from "../lib/utils";
 
@@ -49,6 +52,7 @@
     }
 
     function getFreqStyle(wayId: string): L.PathOptions {
+        const props = geoData.wayData[wayId];
         const freq = getFrequencyValue(wayId);
         const color = getColorFromGradient(
             freq,
@@ -56,11 +60,7 @@
             geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95 || 1,
             COLOR_GRADIENT,
         );
-        const weight = getFrequencyWeightedLineWidth(
-            freq,
-            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5,
-            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95,
-        );
+        const weight = getLineWeight(geoData, props, criteriaHour, lineWeightBy);
         return { color, weight };
     }
 

@@ -3,6 +3,7 @@
     import * as L from "leaflet";
     import { COLOR_GRADIENT } from "../data";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { LineWeightMetric } from "../types/LineWeightMetric";
     import type { Feature } from "geojson";
     import {
         bindWayValueTooltip,
@@ -14,6 +15,7 @@
         map,
         geoData,
         criteriaHour,
+        lineWeightBy = "frequency",
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
@@ -23,6 +25,7 @@
         map: L.Map;
         geoData: GeoPrioritization;
         criteriaHour: number;
+        lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
@@ -35,8 +38,7 @@
 
     import {
         getColorFromGradient,
-        getFrequencyWeightedLineWidth,
-        getWayHourlyFrequency,
+        getLineWeight,
     } from "../lib/utils";
 
     function formatParkingLaneLabel(wayId: string): string {
@@ -49,18 +51,13 @@
         const n_lanes_parking = props?.n_lanes_parking || 0;
         const p5 = (geoData.metadata.data_census as any).parking_lanes_length?.p5 ?? 0;
         const p95 = (geoData.metadata.data_census as any).parking_lanes_length?.p95 ?? Math.max(n_lanes_parking, 1);
-        const frequency = getWayHourlyFrequency(props, criteriaHour);
         const color = getColorFromGradient(
             n_lanes_parking,
             p5,
             p95,
             COLOR_GRADIENT,
         );
-        const weight = getFrequencyWeightedLineWidth(
-            frequency,
-            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5,
-            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95,
-        );
+        const weight = getLineWeight(geoData, props, criteriaHour, lineWeightBy);
         return { color, weight };
     }
 
