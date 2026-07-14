@@ -101,9 +101,10 @@
     let line_weight_by: LineWeightMetric = $state("frequency");
 
     const lineWeightOptions = $derived.by(() => {
+        const hourLabel = `${criteria_hour.toString().padStart(2, "0")}:00`;
         const options: Array<{ value: LineWeightMetric; label: string }> = [
             { value: "none", label: "None (uniform width)" },
-            { value: "frequency", label: "Bus frequency" },
+            { value: "frequency", label: `Bus frequency (at ${hourLabel})` },
             { value: "lanes", label: "Number of lanes" },
         ];
         if (display_rt) {
