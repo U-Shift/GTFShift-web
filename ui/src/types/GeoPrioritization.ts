@@ -9,6 +9,7 @@ export interface StatisticsBundle {
     p95: number;
     mean: number;
     median: number;
+    median_below_p85: number;
     variance: number;
     sd: number;
 }

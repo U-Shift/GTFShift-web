@@ -213,12 +213,12 @@
             criteria_n_lanes_direction = 2;
             criteria_n_lanes_parking = 1;
             criteria_bus_frequency =
-                geoData.metadata.data_census.frequency.median;
+                geoData.metadata.data_census.frequency.median_below_p85;
             criteria_avg_speed = Math.floor(
-                geoData.metadata.data_census.speed_avg_length?.median ?? 0,
+                geoData.metadata.data_census.speed_avg_length?.median_below_p85 ?? 0,
             );
             criteria_demand = Math.floor(
-                geoData.metadata.data_census.demand_length?.median ?? 0,
+                geoData.metadata.data_census.demand_length?.median_below_p85 ?? 0,
             );
             criteria_bus_frequency_enabled = true;
             criteria_n_lanes_direction_enabled = true;
@@ -917,8 +917,8 @@
                                             {/snippet}
                                         </Tooltip.Trigger>
                                         <Tooltip.Content class="z-[1100]"
-                                            >Frequency and speed initially set
-                                            to median values</Tooltip.Content
+                                            >Frequency, speed and demand initially set
+                                            to median values below the 85th percentile</Tooltip.Content
                                         >
                                     </Tooltip.Root>
                                 </Tooltip.Provider>
