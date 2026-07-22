@@ -17,9 +17,9 @@ source("02_prioritize/prioritize_parameters.R")
 
 regions <- regions |>
   # filter(name %in% c("lisboa_rt", "aml_rt", "barreiro", "stcp"))
-  filter(name %in% c("lisboa_rt"))
-  # filter(name %in% c("barreiro"))
-  # filter(name %in% c("aml_rt_area_3"))
+  filter(name %in% c("aml_rt_area_3"))
+# filter(name %in% c("barreiro"))
+# filter(name %in% c("aml_rt_area_3"))
 
 # main()
 if (!dir.exists(output)) {
@@ -32,7 +32,7 @@ message("-----------------------------------------------------------------------
 
 for (i in 1:nrow(regions)) {
   region <- regions[i, ]
-  if(is.null(region$metric_crs) || is.na(region$metric_crs)) {
+  if (is.null(region$metric_crs) || is.na(region$metric_crs)) {
     stop(sprintf("Please define the metric_crs for region '%s' in prioritize_parameters.R", region$name))
   }
 
@@ -48,7 +48,6 @@ for (i in 1:nrow(regions)) {
   }
 
   gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers)) unlist(region$gtfs_url_headers[[1]]) else NULL)
-  gtfs_original <- gtfs
   # assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
   gtfs_file_location <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str)
   if (!file.exists(gtfs_file_location)) {
@@ -57,6 +56,10 @@ for (i in 1:nrow(regions)) {
 
   gtfs_shapes <- tidytransit::shapes_as_sf(gtfs$shapes)
   bbox <- sf::st_bbox(gtfs_shapes)
+
+  gtfs <- tidytransit::filter_feed_by_date(gtfs, extract_date = region$gtfs_day)
+  gtfs_file <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str)
+  tidytransit::write_gtfs(gtfs, gtfs_file)
 
   if (!is.null(region$gtfs_manipulate) && !is.na(region$gtfs_manipulate)) {
     message("Manipulating GTFS with function: ", region$gtfs_manipulate)
@@ -68,10 +71,6 @@ for (i in 1:nrow(regions)) {
     }
     message("GTFS manipulation completed.")
   }
-
-  gtfs <- tidytransit::filter_feed_by_date(gtfs, extract_date = region$gtfs_day)
-  gtfs_file <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str)
-  tidytransit::write_gtfs(gtfs, gtfs_file)
 
   # Build OSM query
   q <- opq(bbox = bbox, timeout = 300) # Timeout to 5 minutes
@@ -126,65 +125,36 @@ for (i in 1:nrow(regions)) {
     message("Extending with real-time data...")
     rt_files <- as.character(region$rt_collection[[1]])
 
-    gtfs_trip_duration = gtfs_original$stop_times |>
-      arrange(trip_id, stop_sequence) |>
-      mutate(
-        # Convert "HH:MM:SS" to ephoch time (seconds since 1970-01-01)
-        departure_time = as.numeric(as.POSIXct(departure_time, format="%H:%M:%S", tz="UTC")),
-        arrival_time = as.numeric(as.POSIXct(arrival_time, format="%H:%M:%S", tz="UTC"))
-      ) |>
-      group_by(trip_id) |>
-      summarise(
-        departure_time = min(departure_time),
-        arrival_time = max(arrival_time),
-        trip_duration = as.numeric(difftime(arrival_time, departure_time, units = "secs")), # Seconds 
-        .groups = "drop"
-      ) |> # Get route_short_name and route_long_name from gtfs$trips and gtfs$routes
-      left_join(gtfs_original$trips |> select(trip_id, route_id), by = "trip_id") |>
-      left_join(gtfs_original$routes |> select(route_id, route_short_name, route_long_name), by = "route_id") |>
-      # Get shape_id from gtfs$trips
-      left_join(gtfs_original$trips |> select(trip_id, shape_id), by = "trip_id")
-
-    rt_collection_manipulate <- if (!is.null(region$rt_collection_manipulate) &&
-      length(region$rt_collection_manipulate) > 0 &&
-      !is.null(region$rt_collection_manipulate[[1]])) {
-      region$rt_collection_manipulate[[1]]
-    } else {
-      NULL
-    }
-
-    if (is.character(rt_collection_manipulate)) {
-      rt_collection_manipulate <- get(rt_collection_manipulate)
-    }
-    if (!is.function(rt_collection_manipulate)) {
-      stop(sprintf("rt_collection_manipulate must be a function for region '%s'", region$name))
-    }
 
     rt_collection_raw <- dplyr::bind_rows(lapply(rt_files, read.csv))
-    rt_collection <- rt_collection_manipulate(rt_collection_raw, gtfs_trip_duration)
+    message(sprintf("Loaded %d real-time updates from %d files", nrow(rt_collection_raw), length(rt_files)))
+    if (!is.null(region$rt_collection_manipulate) && !is.na(region$rt_collection_manipulate)) {
+      message("Manipulating RT collection with function: ", region$rt_collection_manipulate)
+      rt_collection_manipulate <- get(region$rt_collection_manipulate)
+      extra_params <- if (!is.null(region$rt_collection_manipulate_extra_params) && length(region$rt_collection_manipulate_extra_params) > 0) {
+        region$rt_collection_manipulate_extra_params[[1]]
+      } else {
+        list()
+      }
 
-    if (!inherits(rt_collection, c("sf", "sfc"))) {
-      stop(sprintf("rt_collection_manipulate must return an sf object for region '%s'", region$name))
+      rt_collection_filtered <- do.call(rt_collection_manipulate, c(list(rt_collection_raw, gtfs), extra_params))
+      message(sprintf("Filtered to %d real-time updates after manipulation", nrow(rt_collection_filtered)))
+    } else {
+      rt_collection_filtered <- rt_collection_raw
     }
-
-    # deprecated! 
-    # Filter updates, to remove those close to bus stops
-    # gtfs_stops <- tidytransit::stops_as_sf(gtfs$stops, crs = 4326)
-    # within_distance <- st_is_within_distance(rt_collection |> st_transform(crs = region$metric_crs), gtfs_stops |> st_transform(crs = region$metric_crs), dist = stop_buffer_size)
-    
-    rt_collection_filtered <- rt_collection # [lengths(within_distance) == 0, ]
 
     # Extend prioritization with real-time data
     prioritization_speeds <- rt_extend_prioritization(
       lane_prioritization = prioritization |> select(way_osm_id) |> distinct(),
       rt_collection = rt_collection_filtered,
       metric_crs = region$metric_crs
-    ) |> 
-    filter(speed_count >= THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED) |>
-    mutate(
-      # Round all columns that start with speed_ to 2 decimals
-      across(starts_with("speed_"), ~ round(., 2))
-    ) |> st_drop_geometry()
+    ) |>
+      filter(speed_count >= THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED) |>
+      mutate(
+        # Round all columns that start with speed_ to 2 decimals
+        across(starts_with("speed_"), ~ round(., 2))
+      ) |>
+      st_drop_geometry()
     prioritization <- prioritization |>
       left_join(prioritization_speeds, by = "way_osm_id")
 
@@ -195,21 +165,23 @@ for (i in 1:nrow(regions)) {
       prioritization_hour_aggregated <- data.frame()
       for (h in hours) {
         rt_collection_hour <- rt_collection_filtered |> filter(hh == h)
-        prioritization_hour <- prioritization |> filter(hour == h) |> select(way_osm_id, hour) # No need for distinct(), as it already has one row per way_osm_id and hour
+        prioritization_hour <- prioritization |>
+          filter(hour == h) |>
+          select(way_osm_id, hour) # No need for distinct(), as it already has one row per way_osm_id and hour
         if (nrow(rt_collection_hour) > 0 && nrow(prioritization_hour) > 0) {
           prioritization_hour_extended <- rt_extend_prioritization(
             lane_prioritization = prioritization_hour,
             rt_collection = rt_collection_hour,
             metric_crs = region$metric_crs
-          ) |> 
-          filter(speed_count >= THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED) |>
-          mutate(
-            # Round all columns that start with speed_ to 2 decimals
-            across(starts_with("speed_"), ~ round(., 2))
-          ) |> 
-          # Prepend all columns that start with speed_ with hour_
-          rename_with(.cols = starts_with("speed_"), .fn = ~ paste0("hour_", .)) |>
-          st_drop_geometry()
+          ) |>
+            filter(speed_count >= THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED) |>
+            mutate(
+              # Round all columns that start with speed_ to 2 decimals
+              across(starts_with("speed_"), ~ round(., 2))
+            ) |>
+            # Prepend all columns that start with speed_ with hour_
+            rename_with(.cols = starts_with("speed_"), .fn = ~ paste0("hour_", .)) |>
+            st_drop_geometry()
           # Update prioritization_hour with extended data for this hour
           prioritization_hour_aggregated <- bind_rows(prioritization_hour_aggregated, prioritization_hour_extended)
         }
@@ -245,8 +217,8 @@ for (i in 1:nrow(regions)) {
       left_join(route_demand |> select(route_id, demand), by = c("routes" = "route_id")) |>
       # Group back by way_osm_id and hour, summing demand
       group_by(way_osm_id, hour) |>
-      summarise(demand = sum(demand, na.rm = TRUE), .groups = "drop")      
-      
+      summarise(demand = sum(demand, na.rm = TRUE), .groups = "drop")
+
     prioritization <- prioritization |>
       left_join(priotitization_demand, by = c("way_osm_id", "hour"))
   }
@@ -290,7 +262,7 @@ for (i in 1:nrow(regions)) {
     # 1. Extract first row and convert to list
     static_df <- df[1, ] %>% select(-way_osm_id, -hour, -frequency, -starts_with("hour_"))
     # As demand is daily, get max demand for the way_osm_id across all hours (when most routes go through it)
-    static_df$demand <- if ("demand" %in% colnames(df)) max(df$demand, na.rm = TRUE) else NA 
+    static_df$demand <- if ("demand" %in% colnames(df)) max(df$demand, na.rm = TRUE) else NA
     static_info <- as.list(static_df)
 
     # 2. Extract values from list-columns and wrap routes/shapes in I()
@@ -333,7 +305,7 @@ for (i in 1:nrow(regions)) {
     }
 
     # Combine
-    return (c(static_info, list(hour_frequency = hourly_freqs)))
+    return(c(static_info, list(hour_frequency = hourly_freqs)))
   })
   json_string <- toJSON(
     nested_data,
@@ -416,9 +388,9 @@ for (i in 1:nrow(regions)) {
   write.csv(nested_shapes_df, sprintf("%s/shape_data_%s_gtfs%s_run%s.csv", output_region, region$name, gtfs_day_str, run_day))
 
   nested_routes <- lapply(split(
-    gtfs$routes |> 
+    gtfs$routes |>
       select(route_id, route_short_name, route_long_name, route_color, route_text_color) |>
-      left_join(route_demand |> select(route_id, demand), by = "route_id"), 
+      left_join(route_demand |> select(route_id, demand), by = "route_id"),
     gtfs$routes$route_id
   ), function(df) {
     route_metadata <- df[1, ] %>%
@@ -661,3 +633,4 @@ for (i in 1:nrow(regions)) {
     digits = NA
   )
 }
+
