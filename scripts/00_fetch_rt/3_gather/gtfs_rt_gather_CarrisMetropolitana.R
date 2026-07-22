@@ -1,4 +1,4 @@
-# GTFS RT aggregation
+# GTFS RT aggregation for Carris Metropolitana
 # Run with: $ Rscript 00_fetch_rt/3_gather/gtfs_rt_gather_CarrisMetropolitana.R
 
 library(jsonlite)
@@ -8,12 +8,12 @@ library(dplyr)
 library(readr)
 library(sf)
 
-## Parameters
-METRIC_CRS <- 3763 # Portugal
+source("00_fetch_rt/3_gather/gtfs_rt_gather.R")
 
+## Parameters
 FOLDER_PATH <- "data/cmet_20260413_220260430_business/updates"
-OUTPUT_FOLDER <- "data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance"
-AGENCY_ID = "43" # None 
+OUTPUT_FOLDER <- "data/cmet_20260413_220260430_business_a4/processing_speed_shape_distance_2"
+AGENCY_ID = "44" # None 
 
 ## Methods
 process_json <- function(data, filename, RECORDS_LIST, agency_id = NULL) {
@@ -66,5 +66,4 @@ process_json <- function(data, filename, RECORDS_LIST, agency_id = NULL) {
 
 
 ## main()
-source("00_fetch_rt/3_gather/gtfs_rt_gather.R")
-gtfs_rt_gather(FOLDER_PATH, OUTPUT_FOLDER, process_json)
+gtfs_rt_gather(FOLDER_PATH, OUTPUT_FOLDER, process_json, AGENCY_ID)
