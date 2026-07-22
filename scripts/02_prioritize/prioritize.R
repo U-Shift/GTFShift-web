@@ -435,14 +435,23 @@ for (i in 1:nrow(regions)) {
 
   # For i in range 0, 23
   prioritization_hour <- list()
+  stop_times_fix <- gtfs$stop_times |>
+    mutate(
+      across(c(departure_time, arrival_time), ~ {
+        sec <- lubridate::period_to_seconds(lubridate::hms(.x)) %% 86400
+        hms::as_hms(sec)
+      })
+    )
+  gtfs_hour_fix = gtfs
+  gtfs_hour_fix$stop_times <- stop_times_fix
   for (i in 0:23) {
     gtfs_hour <- NULL
     tryCatch(
       {
-        gtfs_hour <- tidytransit::filter_feed_by_date(gtfs, extract_date = region$gtfs_day, min_departure_time = sprintf("%02d:00:00", i), max_arrival_time = sprintf("%02d:00:00", (i + 1)))
+        gtfs_hour <- tidytransit::filter_feed_by_date(gtfs_hour_fix, extract_date = region$gtfs_day, min_departure_time = sprintf("%02d:00:00", i), max_arrival_time = sprintf("%02d:00:00", (i + 1)))
       },
       error = function(e) {
-        message(sprintf("No GTFS data for hour %02d, skipping it...", i))
+        message(sprintf("No GTFS data for hour %02d...", i))
       }
     )
     if (is.null(gtfs_hour)) {
