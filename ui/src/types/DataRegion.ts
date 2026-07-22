@@ -2,7 +2,8 @@ export type RegionLayer = {
     id: string;
     name: string;
     date: string;
-    rt_data: boolean;
+    rt_data?: boolean;
+    demand_data?: boolean;
     notes?: string;
     matched_frequencies_peak?: number;
     files: {
@@ -21,7 +22,8 @@ export type DataRegion = {
     name: string;
     region: string;
     logo?: string;
-    rt_data: boolean;
+    rt_data?: boolean;
+    demand_data?: boolean;
     date: string;
     color: string;
     layers: RegionLayer[];

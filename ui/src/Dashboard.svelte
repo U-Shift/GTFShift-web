@@ -108,8 +108,14 @@
             { value: "lanes", label: "Number of lanes" },
         ];
         if (display_rt) {
-            options.push({ value: "speed_min", label: "Speed (slower roads thicker)" });
-            options.push({ value: "speed_max", label: "Speed (faster roads thicker)" });
+            options.push({
+                value: "speed_min",
+                label: "Speed (slower roads thicker)",
+            });
+            options.push({
+                value: "speed_max",
+                label: "Speed (faster roads thicker)",
+            });
         }
         if (display_demand) {
             options.push({ value: "demand", label: "Demand" });
@@ -222,10 +228,12 @@
                 (data: any) =>
                     data.speed_avg !== undefined && data.speed_avg !== null,
             );
-            display_demand = Object.values(geoData.wayData).some((data: any) => {
-                const demandValue = Number(data.demand);
-                return data.demand!==null && !Number.isNaN(demandValue);
-            });
+            display_demand = Object.values(geoData.wayData).some(
+                (data: any) => {
+                    const demandValue = Number(data.demand);
+                    return data.demand !== null && !Number.isNaN(demandValue);
+                },
+            );
 
             // Set criteria base values
             criteria_hour = 8;
@@ -234,10 +242,12 @@
             criteria_bus_frequency =
                 geoData.metadata.data_census.frequency.median_below_p85;
             criteria_avg_speed = Math.floor(
-                geoData.metadata.data_census.speed_avg_length?.median_below_p85 ?? 0,
+                geoData.metadata.data_census.speed_avg_length
+                    ?.median_below_p85 ?? 0,
             );
             criteria_demand = Math.floor(
-                geoData.metadata.data_census.demand_length?.median_below_p85 ?? 0,
+                geoData.metadata.data_census.demand_length?.median_below_p85 ??
+                    0,
             );
             criteria_bus_frequency_enabled = true;
             criteria_n_lanes_direction_enabled = true;
@@ -495,6 +505,16 @@
                                         <i class="fas fa-road mr-1"></i> Static analysis
                                     </p>
                                 {/if}
+
+                                {#if r.demand_data}
+                                    <p
+                                        class="text-xs text-muted-foreground mt-0.5"
+                                    >
+                                        <i class="fas fa-people-group mr-1"></i>
+                                        With passenger demand data
+                                    </p>
+                                {/if}
+
                                 {#if peak !== undefined}
                                     <p
                                         class="text-xs text-muted-foreground mt-0.5"
@@ -609,6 +629,14 @@
                                         class="text-xs text-muted-foreground mt-0.5"
                                     >
                                         <i class="fas fa-road mr-1"></i> Static analysis
+                                    </p>
+                                {/if}
+                                {#if layer.demand_data}
+                                    <p
+                                        class="text-xs text-muted-foreground mt-0.5"
+                                    >
+                                        <i class="fas fa-people-group mr-1"></i>
+                                        With passenger demand data
                                     </p>
                                 {/if}
                                 {#if layer.matched_frequencies_peak}
@@ -915,14 +943,16 @@
                         class="w-full justify-between bg-background/50 hover:bg-accent transition-colors border text-left"
                     >
                         <span class="truncate"
-                            >{lineWeightOptions.find((o) => o.value === line_weight_by)
-                                ?.label ?? "Bus frequency"}</span
+                            >{lineWeightOptions.find(
+                                (o) => o.value === line_weight_by,
+                            )?.label ?? "Bus frequency"}</span
                         >
                     </Select.Trigger>
                     <Select.Content class="z-[1100]">
                         {#each lineWeightOptions as option}
-                            <Select.Item value={option.value} label={option.label}
-                                >{option.label}</Select.Item
+                            <Select.Item
+                                value={option.value}
+                                label={option.label}>{option.label}</Select.Item
                             >
                         {/each}
                     </Select.Content>
@@ -967,8 +997,9 @@
                                             {/snippet}
                                         </Tooltip.Trigger>
                                         <Tooltip.Content class="z-[1100]"
-                                            >Frequency, speed and demand initially set
-                                            to median values below the 85th percentile</Tooltip.Content
+                                            >Frequency, speed and demand
+                                            initially set to median values below
+                                            the 85th percentile</Tooltip.Content
                                         >
                                     </Tooltip.Root>
                                 </Tooltip.Provider>
@@ -1122,7 +1153,12 @@
                     >
                     <Accordion.Content>
                         <p class="text-xs text-muted-foreground pt-2">
-                            Bus lanes obtained from OSM data, using <a href="https://u-shift.github.io/GTFShift/reference/osm_bus_lanes.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::osm_bus_lanes()</a>.
+                            Bus lanes obtained from OSM data, using <a
+                                href="https://u-shift.github.io/GTFShift/reference/osm_bus_lanes.html"
+                                target="_blank"
+                                class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline"
+                                >GTFShift::osm_bus_lanes()</a
+                            >.
                         </p>
                         <p class="text-xs text-muted-foreground pt-2">
                             Road segments with bus lanes are shown in <span
@@ -1165,7 +1201,13 @@
                             class="text-xs text-muted-foreground space-y-3 pt-2"
                         >
                             <p>
-                                Bus frequency determined associating GTFS static data with OSM road segments using <a href="https://u-shift.github.io/GTFShift/reference/get_way_frequency_hourly.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::get_way_frequency_hourly()</a>.
+                                Bus frequency determined associating GTFS static
+                                data with OSM road segments using <a
+                                    href="https://u-shift.github.io/GTFShift/reference/get_way_frequency_hourly.html"
+                                    target="_blank"
+                                    class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline"
+                                    >GTFShift::get_way_frequency_hourly()</a
+                                >.
                             </p>
                             <p>
                                 Road segments with bus service are colored by
@@ -1219,7 +1261,12 @@
                             class="text-xs text-muted-foreground space-y-3 pt-2"
                         >
                             <p>
-                                Number of lanes obtained from OSM data, using <a href="https://u-shift.github.io/GTFShift/reference/prioritize_lanes.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::prioritize_lanes()</a>.
+                                Number of lanes obtained from OSM data, using <a
+                                    href="https://u-shift.github.io/GTFShift/reference/prioritize_lanes.html"
+                                    target="_blank"
+                                    class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline"
+                                    >GTFShift::prioritize_lanes()</a
+                                >.
                             </p>
                             <p>
                                 Road segments with bus service are colored by
@@ -1284,14 +1331,20 @@
                                 class="text-xs text-muted-foreground space-y-3 pt-2"
                             >
                                 <p>
-                                    Speed computed based on GTFS-RT updates with <a href="https://u-shift.github.io/GTFShift/reference/rt_average_speed.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::rt_average_speed()</a>, considering 
-                                    the distance traversed along the route geometry and the time between consecutive updates. 
-
+                                    Speed computed based on GTFS-RT updates with <a
+                                        href="https://u-shift.github.io/GTFShift/reference/rt_average_speed.html"
+                                        target="_blank"
+                                        class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline"
+                                        >GTFShift::rt_average_speed()</a
+                                    >, considering the distance traversed along
+                                    the route geometry and the time between
+                                    consecutive updates.
                                 </p>
                                 <p>
                                     Road segments with bus service are colored
-                                    by the average speed measured (for the full days of the real-time data 
-                                    collection interval), from the <span
+                                    by the average speed measured (for the full
+                                    days of the real-time data collection
+                                    interval), from the <span
                                         style="color: {COLOR_GRADIENT_RED.slice().reverse()[0]}"
                                         class="font-bold"
                                         >P5 ({geoData.metadata.data_census.speed_avg_length?.p5?.toFixed(
@@ -1334,16 +1387,17 @@
                             <div
                                 class="text-xs text-muted-foreground space-y-3 pt-2"
                             >
-
                                 {#if geoData.metadata.demand && geoData.metadata.demand.notes}
-                                    <p class="text-xs text-muted-foreground pt-2">
+                                    <p
+                                        class="text-xs text-muted-foreground pt-2"
+                                    >
                                         {geoData.metadata.demand.notes}
                                     </p>
                                 {/if}
                                 <p>
                                     Road segments with bus service are colored
-                                    by passenger demand (cumulative for the representative day in study), 
-                                    from the <span
+                                    by passenger demand (cumulative for the
+                                    representative day in study), from the <span
                                         style="color: {COLOR_GRADIENT[0]}"
                                         class="bg-black/50 font-bold px-1 rounded"
                                         >P5 ({geoData.metadata.data_census.demand_length?.p5?.toFixed(
@@ -1790,7 +1844,7 @@
         hour={criteria_hour}
         rt_data={display_rt}
         demand_data={display_demand}
-        visible_way_ids={visible_way_ids}
+        {visible_way_ids}
         onRouteSelect={(shapeId) => {
             selected_shape_id = shapeId;
             selectedWayId = undefined;
