@@ -3,6 +3,7 @@
     import * as L from "leaflet";
     import { COLOR_GRADIENT } from "../data";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { LineWeightMetric } from "../types/LineWeightMetric";
     import type { Feature } from "geojson";
     import {
         bindWayValueTooltip,
@@ -14,6 +15,7 @@
         map,
         geoData,
         criteriaHour,
+        lineWeightBy = "frequency",
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
@@ -23,6 +25,7 @@
         map: L.Map;
         geoData: GeoPrioritization;
         criteriaHour: number;
+        lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
@@ -33,7 +36,10 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
-    import { getColorFromGradient } from "../lib/utils";
+    import {
+        getColorFromGradient,
+        getLineWeight,
+    } from "../lib/utils";
 
     function formatLaneLabel(wayId: string): string {
         const lanes = geoData.wayData[wayId]?.n_lanes_circulation_direction || 0;
@@ -49,7 +55,8 @@
             geoData.metadata.data_census.lanes_length?.p95 || 1,
             COLOR_GRADIENT,
         );
-        return { color, weight: 3.5 };
+        const weight = getLineWeight(geoData, props, criteriaHour, lineWeightBy);
+        return { color, weight };
     }
 
     $effect(() => {

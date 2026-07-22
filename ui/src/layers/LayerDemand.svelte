@@ -3,6 +3,7 @@
     import * as L from "leaflet";
     import { COLOR_GRADIENT, COLOR_GRAY } from "../data";
     import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { LineWeightMetric } from "../types/LineWeightMetric";
     import type { Feature } from "geojson";
     import {
         bindWayValueTooltip,
@@ -14,6 +15,7 @@
         map,
         geoData,
         criteriaHour,
+        lineWeightBy = "frequency",
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
@@ -23,6 +25,7 @@
         map: L.Map;
         geoData: GeoPrioritization;
         criteriaHour: number;
+        lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
@@ -33,7 +36,10 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
-    import { getColorFromGradient } from "../lib/utils";
+    import {
+        getColorFromGradient,
+        getLineWeight,
+    } from "../lib/utils";
 
     function getDemandValue(wayId: string | undefined): number | undefined {
         if (!wayId) return undefined;
@@ -49,8 +55,10 @@
     }
 
     function getDemandStyle(wayId: string): L.PathOptions {
+        const props = geoData.wayData[wayId];
         const demandValue = getDemandValue(wayId);
         let color = COLOR_GRAY;
+        const weight = getLineWeight(geoData, props, criteriaHour, lineWeightBy);
         if (demandValue !== undefined) {
             color = getColorFromGradient(
                 demandValue,
@@ -59,7 +67,7 @@
                 COLOR_GRADIENT,
             );
         }
-        return { color, weight: 3.5 };
+        return { color, weight };
     }
 
     $effect(() => {

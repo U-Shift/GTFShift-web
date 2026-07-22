@@ -1,5 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { GeoPrioritization } from "../types/GeoPrioritization";
+import type { LineWeightMetric } from "../types/LineWeightMetric";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -57,4 +59,123 @@ export function getColorFromGradient(
     const b = Math.round(color1[2] + (color2[2] - color1[2]) * fraction);
 
     return rgbToHex(r, g, b);
+}
+
+export function getWayHourlyFrequency(
+    wayProps:
+        | {
+              hour_frequency?: Record<string | number, number | string | undefined>;
+          }
+        | undefined,
+    criteriaHour: number,
+): number {
+    const frequency = Number(wayProps?.hour_frequency?.[criteriaHour]);
+    return Number.isNaN(frequency) ? 0 : frequency;
+}
+
+export function getFrequencyWeightedLineWidth(
+    frequency: number | string | undefined | null,
+    p5: number | string | undefined | null,
+    p95: number | string | undefined | null,
+    minWeight = 2.5,
+    maxWeight = 7,
+    fallbackWeight = 3.5,
+    invert = false,
+): number {
+    const freq = Number(frequency);
+    const minFreq = Number(p5);
+    const maxFreq = Number(p95);
+
+    if (Number.isNaN(freq) || Number.isNaN(minFreq) || Number.isNaN(maxFreq)) {
+        return fallbackWeight;
+    }
+    if (maxFreq <= minFreq) return (minWeight + maxWeight) / 2;
+
+    const ratio = (freq - minFreq) / (maxFreq - minFreq);
+    const normalizedRatio = invert ? 1 - ratio : ratio;
+    const clampedRatio = Math.max(0, Math.min(1, normalizedRatio));
+    return minWeight + clampedRatio * (maxWeight - minWeight);
+}
+
+function toNumberOrUndefined(value: unknown): number | undefined {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? undefined : parsed;
+}
+
+export function getWayMetricValue(
+    wayProps: Record<string, any> | undefined,
+    criteriaHour: number,
+    lineWeightBy: LineWeightMetric,
+): number | undefined {
+    if (lineWeightBy === "none") return undefined;
+    if (lineWeightBy === "frequency") {
+        return getWayHourlyFrequency(wayProps, criteriaHour);
+    }
+    if (lineWeightBy === "lanes") {
+        return toNumberOrUndefined(wayProps?.n_lanes_circulation_direction);
+    }
+    if (lineWeightBy === "speed_min") {
+        return toNumberOrUndefined(wayProps?.speed_avg);
+    }
+    if (lineWeightBy === "speed_max") {
+        return toNumberOrUndefined(wayProps?.speed_avg);
+    }
+    if (lineWeightBy === "demand") {
+        return toNumberOrUndefined(wayProps?.demand);
+    }
+    return undefined;
+}
+
+export function getLineWeight(
+    geoData: GeoPrioritization,
+    wayProps: Record<string, any> | undefined,
+    criteriaHour: number,
+    lineWeightBy: LineWeightMetric,
+): number {
+    if (lineWeightBy === "none") return 3.5;
+
+    const value = getWayMetricValue(wayProps, criteriaHour, lineWeightBy);
+    if (value === undefined) return 3.5;
+
+    if (lineWeightBy === "frequency") {
+        return getFrequencyWeightedLineWidth(
+            value,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5,
+            geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95,
+        );
+    }
+    if (lineWeightBy === "lanes") {
+        return getFrequencyWeightedLineWidth(
+            value,
+            geoData.metadata.data_census.lanes_length?.p5,
+            geoData.metadata.data_census.lanes_length?.p95,
+        );
+    }
+    if (lineWeightBy === "speed_min") {
+        return getFrequencyWeightedLineWidth(
+            value,
+            geoData.metadata.data_census.speed_avg_length?.p5,
+            geoData.metadata.data_census.speed_avg_length?.p95,
+            2.5,
+            7,
+            3.5,
+            true,
+        );
+    }
+    if (lineWeightBy === "speed_max") {
+        return getFrequencyWeightedLineWidth(
+            value,
+            geoData.metadata.data_census.speed_avg_length?.p5,
+            geoData.metadata.data_census.speed_avg_length?.p95,
+        );
+    }
+    if (lineWeightBy === "demand") {
+        return getFrequencyWeightedLineWidth(
+            value,
+            geoData.metadata.data_census.demand_length?.p5,
+            geoData.metadata.data_census.demand_length?.p95,
+        );
+    }
+
+    return 3.5;
 }
