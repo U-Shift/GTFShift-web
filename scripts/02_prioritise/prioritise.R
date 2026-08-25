@@ -10,16 +10,16 @@ library(osmdata)
 library(Hmisc) # For  Weighted Statistical Estimates
 # set_overpass_url("https://overpass-api.de/api/interpreter")
 
-# Run with: $ Rscript 02_prioritize/prioritize.R
+# Run with: $ Rscript 02_prioritise/prioritise.R
 
-# Refer to prioritize_parameters.R to define parameters before running this script!
-source("02_prioritize/prioritize_parameters.R")
+# Refer to prioritise_parameters.R to define parameters before running this script!
+source("02_prioritise/prioritise_parameters.R")
 
 regions <- regions |>
   # filter(name %in% c("lisboa_rt", "aml_rt", "barreiro", "stcp"))
-  filter(name %in% c("aml_rt_area_3"))
+  # filter(name %in% c("stcp"))
 # filter(name %in% c("barreiro"))
-# filter(name %in% c("aml_rt_area_3"))
+  filter(name %in% c("lisboa_rt", "aml_rt_area_1", "aml_rt_area_2", "aml_rt_area_3", "aml_rt_area_4", "stcp"))
 
 # main()
 if (!dir.exists(output)) {
@@ -30,10 +30,10 @@ message("-----------------------------------------------------------------------
 message("\n\nRunning for regions:\n > ", paste(regions$name_long, collapse = "\n > "))
 message("------------------------------------------------------------------------------------------------------------------------\n\n")
 
-for (i in 1:nrow(regions)) {
+for (i in 1:nrow(regions)) { # i =1
   region <- regions[i, ]
   if (is.null(region$metric_crs) || is.na(region$metric_crs)) {
-    stop(sprintf("Please define the metric_crs for region '%s' in prioritize_parameters.R", region$name))
+    stop(sprintf("Please define the metric_crs for region '%s' in prioritise_parameters.R", region$name))
   }
 
   # 1. Load data for region
@@ -48,6 +48,7 @@ for (i in 1:nrow(regions)) {
   }
 
   gtfs <- GTFShift::load_feed(region$gtfs_url, headers = if (!is.null(region$gtfs_url_headers)) unlist(region$gtfs_url_headers[[1]]) else NULL)
+  # gtfs <- tidytransit::read_gtfs(region$gtfs_url)
   # assign(sprintf("gtfs_%s_%s", region$name, region$gtfs_day), gtfs)
   gtfs_file_location <- sprintf("%s/gtfs_%s_%s.zip", output_region, region$name, gtfs_day_str)
   if (!file.exists(gtfs_file_location)) {
@@ -87,31 +88,31 @@ for (i in 1:nrow(regions)) {
   # Get OSM extract to avoid API call
   # osmextract::oe_download_directory()
   if (is.null(region$geofabrik_region)) {
-    stop("Please define the geofabrik_region for this region in prioritize_parameters.R")
+    stop("Please define the geofabrik_region for this region in prioritise_parameters.R")
   }
   osm_file <- osmextract::oe_download(
     sprintf("https://download.geofabrik.de/%s-latest.osm.pbf", region$geofabrik_region),
     file_basename = sprintf("%s_%s.osm.pbf", str_replace_all(region$geofabrik_region, "/", "_"), format(Sys.Date(), "%Y%m%d"))
   )
 
-  # 2. Prioritize based on planned operation and infrastructure characteristics
-  prioritization <- GTFShift::prioritize_lanes(gtfs, q, date = region$gtfs_day, keep_osm_attributes = TRUE, osm_file = osm_file)
-  # assign(sprintf("prioritization_%s_gtfs%s", region$name, region$gtfs_day), prioritization)
+  # 2. Prioritise based on planned operation and infrastructure characteristics
+  prioritisation <- GTFShift::prioritise_lanes(gtfs, q, date = region$gtfs_day, keep_osm_attributes = TRUE, osm_file = osm_file)
+  # assign(sprintf("prioritisation_%s_gtfs%s", region$name, region$gtfs_day), prioritisation)
 
-  prioritization <- prioritization |>
+  prioritisation <- prioritisation |>
     select(way_osm_id, hour, frequency, is_bus_lane, n_lanes_parking, n_lanes_circulation, n_directions, n_lanes_circulation_direction, routes, shapes, name, geometry)
 
-  prioritization_area_polygon <- prioritization |>
+  prioritisation_area_polygon <- prioritisation |>
     st_union() |>
     st_convex_hull()
 
   st_write(
-    prioritization_area_polygon,
-    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.gpkg", output_region, region$name, gtfs_day_str, run_day)
+    prioritisation_area_polygon,
+    sprintf("%s/prioritisation_area_polygon_%s_gtfs%s_run%s.gpkg", output_region, region$name, gtfs_day_str, run_day)
   )
   st_write(
-    prioritization_area_polygon,
-    sprintf("%s/prioritization_area_polygon_%s_gtfs%s_run%s.geojson", output_region, region$name, gtfs_day_str, run_day)
+    prioritisation_area_polygon,
+    sprintf("%s/prioritisation_area_polygon_%s_gtfs%s_run%s.geojson", output_region, region$name, gtfs_day_str, run_day)
   )
 
   # 3. Extend with real-time data if available
@@ -137,15 +138,15 @@ for (i in 1:nrow(regions)) {
         list()
       }
 
-      rt_collection_filtered <- do.call(rt_collection_manipulate, c(list(rt_collection_raw, gtfs), extra_params))
+      rt_collection_filtered <- do.call(rt_collection_manipulate, c(list(rt_collection_raw), extra_params))
       message(sprintf("Filtered to %d real-time updates after manipulation", nrow(rt_collection_filtered)))
     } else {
       rt_collection_filtered <- rt_collection_raw
     }
 
-    # Extend prioritization with real-time data
-    prioritization_speeds <- rt_extend_prioritization(
-      lane_prioritization = prioritization |> select(way_osm_id) |> distinct(),
+    # Extend prioritisation with real-time data
+    prioritisation_speeds <- rt_extend_prioritisation(
+      lane_prioritisation = prioritisation |> select(way_osm_id) |> distinct(),
       rt_collection = rt_collection_filtered,
       metric_crs = region$metric_crs
     ) |>
@@ -155,22 +156,22 @@ for (i in 1:nrow(regions)) {
         across(starts_with("speed_"), ~ round(., 2))
       ) |>
       st_drop_geometry()
-    prioritization <- prioritization |>
-      left_join(prioritization_speeds, by = "way_osm_id")
+    prioritisation <- prioritisation |>
+      left_join(prioritisation_speeds, by = "way_osm_id")
 
     # RT analysis per hour
     if (isTRUE(region$rt_collection_per_hour) && "hh" %in% colnames(rt_collection_filtered)) {
-      message("Extending prioritization with real-time data per hour...")
+      message("Extending prioritisation with real-time data per hour...")
       hours <- unique(rt_collection_filtered$hh)
-      prioritization_hour_aggregated <- data.frame()
+      prioritisation_hour_aggregated <- data.frame()
       for (h in hours) {
         rt_collection_hour <- rt_collection_filtered |> filter(hh == h)
-        prioritization_hour <- prioritization |>
+        prioritisation_hour <- prioritisation |>
           filter(hour == h) |>
           select(way_osm_id, hour) # No need for distinct(), as it already has one row per way_osm_id and hour
-        if (nrow(rt_collection_hour) > 0 && nrow(prioritization_hour) > 0) {
-          prioritization_hour_extended <- rt_extend_prioritization(
-            lane_prioritization = prioritization_hour,
+        if (nrow(rt_collection_hour) > 0 && nrow(prioritisation_hour) > 0) {
+          prioritisation_hour_extended <- rt_extend_prioritisation(
+            lane_prioritisation = prioritisation_hour,
             rt_collection = rt_collection_hour,
             metric_crs = region$metric_crs
           ) |>
@@ -182,13 +183,13 @@ for (i in 1:nrow(regions)) {
             # Prepend all columns that start with speed_ with hour_
             rename_with(.cols = starts_with("speed_"), .fn = ~ paste0("hour_", .)) |>
             st_drop_geometry()
-          # Update prioritization_hour with extended data for this hour
-          prioritization_hour_aggregated <- bind_rows(prioritization_hour_aggregated, prioritization_hour_extended)
+          # Update prioritisation_hour with extended data for this hour
+          prioritisation_hour_aggregated <- bind_rows(prioritisation_hour_aggregated, prioritisation_hour_extended)
         }
       }
-      # Left join prioritization with prioritization_hour_aggregated by way_osm_id and hour
-      prioritization <- prioritization |>
-        left_join(prioritization_hour_aggregated, by = c("way_osm_id", "hour"))
+      # Left join prioritisation with prioritisation_hour_aggregated by way_osm_id and hour
+      prioritisation <- prioritisation |>
+        left_join(prioritisation_hour_aggregated, by = c("way_osm_id", "hour"))
     }
   }
 
@@ -207,8 +208,8 @@ for (i in 1:nrow(regions)) {
       right_join(gtfs$routes |> select(route_id, route_short_name), by = "route_short_name") |>
       filter(!is.na(demand))
 
-    # For each prioritization row, sum route_demand$demand for all routes with route_id in prioritization$routes list
-    priotitization_demand <- prioritization |>
+    # For each prioritisation row, sum route_demand$demand for all routes with route_id in prioritisation$routes list
+    priotitization_demand <- prioritisation |>
       st_drop_geometry() |>
       select(way_osm_id, hour, routes) |>
       # Split routes list column in rows
@@ -219,28 +220,28 @@ for (i in 1:nrow(regions)) {
       group_by(way_osm_id, hour) |>
       summarise(demand = sum(demand, na.rm = TRUE), .groups = "drop")
 
-    prioritization <- prioritization |>
+    prioritisation <- prioritisation |>
       left_join(priotitization_demand, by = c("way_osm_id", "hour"))
   }
   write.csv(
-    prioritization |>
+    prioritisation |>
       sf::st_drop_geometry() |>
       mutate(
         # Convert vector of strings to single string with ";" separator
         routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
         shapes = sapply(shapes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE)
       ),
-    sprintf("%s/prioritization_%s_gtfs%s_run%s.csv", output_region, region$name, gtfs_day_str, run_day),
+    sprintf("%s/prioritisation_%s_gtfs%s_run%s.csv", output_region, region$name, gtfs_day_str, run_day),
     row.names = FALSE
   )
-  st_write(prioritization |> mutate(
+  st_write(prioritisation |> mutate(
     routes = sapply(routes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE),
     shapes = sapply(shapes, function(x) paste(x, collapse = ";"), USE.NAMES = FALSE)
-  ), sprintf("%s/prioritization_%s_gtfs%s_run%s.gpkg", output_region, region$name, gtfs_day_str, run_day), append = FALSE)
+  ), sprintf("%s/prioritisation_%s_gtfs%s_run%s.gpkg", output_region, region$name, gtfs_day_str, run_day), append = FALSE)
 
   # 4. Build data for dashboard
   # > 4.1. Store ways geometries
-  ways <- prioritization |>
+  ways <- prioritisation |>
     distinct(way_osm_id, geometry)
   st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.gpkg", output_region, region$name, gtfs_day_str, run_day), append = FALSE)
   st_write(ways, sprintf("%s/ways_%s_gtfs%s_run%s.geojson", output_region, region$name, gtfs_day_str, run_day), append = FALSE)
@@ -252,12 +253,12 @@ for (i in 1:nrow(regions)) {
     # Drop units
     mutate(length_m = round(as.numeric(length_m), digits = 2))
 
-  # > 4.2. Store prioritization as json, grouping by way_osm_id, each grouped by hour
+  # > 4.2. Store prioritisation as json, grouping by way_osm_id, each grouped by hour
   nested_data <- lapply(split(
-    prioritization |>
+    prioritisation |>
       st_drop_geometry() |>
       left_join(ways_length |> select(way_osm_id, length_m) |> st_drop_geometry()),
-    prioritization$way_osm_id
+    prioritisation$way_osm_id
   ), function(df) {
     # 1. Extract first row and convert to list
     static_df <- df[1, ] %>% select(-way_osm_id, -hour, -frequency, -starts_with("hour_"))
@@ -343,16 +344,16 @@ for (i in 1:nrow(regions)) {
     hourly_frequencies <- setNames(as.list(df_hourly$frequency), df_hourly$hour)
 
     # Get stats for shape
-    prioritization_shape <- prioritization |>
+    prioritisation_shape <- prioritisation |>
       rowwise() |>
       filter(shape_metadata$shape_id %in% shapes) |>
       ungroup()
     # > If no stats, ignore shape
-    if (nrow(prioritization_shape) == 0) {
+    if (nrow(prioritisation_shape) == 0) {
       return(NULL)
     }
-    shape_metadata$stats <- GTFShift::get_prioritization_stats(
-      prioritization_shape |> distinct(way_osm_id, .keep_all = TRUE),
+    shape_metadata$stats <- GTFShift::get_prioritisation_stats(
+      prioritisation_shape |> distinct(way_osm_id, .keep_all = TRUE),
       weight = "length",
       metric_crs = region$metric_crs
     )
@@ -406,12 +407,12 @@ for (i in 1:nrow(regions)) {
   )
 
   # > 4.4. Store metadata about execution details
-  prioritization <- prioritization |>
+  prioritisation <- prioritisation |>
     left_join(ways_length |> select(way_osm_id, length_m) |> st_drop_geometry(), by = "way_osm_id")
-  prioritization_infrastructure <- prioritization |>
+  prioritisation_infrastructure <- prioritisation |>
     distinct(way_osm_id, .keep_all = TRUE)
 
-  shapes_found <- unique(unlist(prioritization$shapes))
+  shapes_found <- unique(unlist(prioritisation$shapes))
   shapes_missing <- unique(gtfs$shapes$shape_id) %>% setdiff(shapes_found)
   shapes_found_frequency <- sum((routes |> filter(shape_id %in% shapes_found))$frequency)
   shapes_missing_frequency <- sum((routes |> filter(shape_id %in% shapes_missing))$frequency)
@@ -434,7 +435,7 @@ for (i in 1:nrow(regions)) {
   })
 
   # For i in range 0, 23
-  prioritization_hour <- list()
+  prioritisation_hour <- list()
   stop_times_fix <- gtfs$stop_times |>
     mutate(
       across(c(departure_time, arrival_time), ~ {
@@ -457,7 +458,7 @@ for (i in 1:nrow(regions)) {
     if (is.null(gtfs_hour)) {
       next
     }
-    shapes_found_list <- unique(unlist(prioritization$shapes))
+    shapes_found_list <- unique(unlist(prioritisation$shapes))
     # Filter to make sure they are at gtfs_hour$shapes$shape_id
     shapes_found_list <- shapes_found_list[shapes_found_list %in% gtfs_hour$shapes$shape_id]
     shapes_missing_list <- setdiff(unique(gtfs_hour$shapes$shape_id), shapes_found_list)
@@ -465,7 +466,7 @@ for (i in 1:nrow(regions)) {
     shapes_missing_frequency_hour <- sum((routes |> filter(shape_id %in% shapes_missing_list & hour == i))$frequency)
 
     # Now for routes
-    routes_found_list <- unique(unlist(prioritization$routes))
+    routes_found_list <- unique(unlist(prioritisation$routes))
     # Filter to make sure they are at gtfs_hour$routes$route_id
     routes_found_list <- routes_found_list[routes_found_list %in% gtfs_hour$routes$route_id]
 
@@ -487,7 +488,7 @@ for (i in 1:nrow(regions)) {
         as.list()
     })
 
-    prioritization_hour[[as.character(i)]] <- list(
+    prioritisation_hour[[as.character(i)]] <- list(
       shapes_missing = shapes_missing_list,
       routes_missing = routes_missing_hour_nested,
       shapes_total = length(unique(gtfs_hour$shapes$shape_id)),
@@ -549,8 +550,8 @@ for (i in 1:nrow(regions)) {
   }
   census_frequency_hour <- list()
   for (h in 0:23) {
-    prioritization_h <- prioritization |> filter(hour == h)
-    census <- dataCensus(prioritization_h$frequency, prioritization_h$length_m)
+    prioritisation_h <- prioritisation |> filter(hour == h)
+    census <- dataCensus(prioritisation_h$frequency, prioritisation_h$length_m)
     if (!is.na(census$mean)) {
       census_frequency_hour[[as.character(h)]] <- census
     }
@@ -569,7 +570,7 @@ for (i in 1:nrow(regions)) {
         key_exact = if (!is.null(feat$key_exact)) feat$key_exact else FALSE
       )
     }),
-    prioritization = list(
+    prioritisation = list(
       shapes_missing = shapes_missing,
       routes_missing = routes_missing_nested,
       shapes_total = length(unique(gtfs$shapes$shape_id)),
@@ -582,18 +583,18 @@ for (i in 1:nrow(regions)) {
       routes_missing_n = nrow(routes_missing),
       routes_found_n = nrow(routes) - nrow(routes_missing)
     ),
-    prioritization_hour = prioritization_hour,
+    prioritisation_hour = prioritisation_hour,
     data_census = list(
-      frequency = dataCensus(prioritization$frequency, prioritization$length_m),
+      frequency = dataCensus(prioritisation$frequency, prioritisation$length_m),
       frequency_hour = census_frequency_hour,
       speed_avg_length = NA,
       speed_avg_frequency = NA,
       demand_frequency = NA,
       demand_length = NA,
-      lanes_length = dataCensus(prioritization_infrastructure$n_lanes_circulation_direction, prioritization_infrastructure$length_m),
-      lanes_frequency = dataCensus(prioritization_infrastructure$n_lanes_circulation_direction, prioritization_infrastructure$frequency),
-      prioritization_stats_length = lapply(
-        GTFShift::get_prioritization_stats(prioritization_infrastructure, weight = "length"),
+      lanes_length = dataCensus(prioritisation_infrastructure$n_lanes_circulation_direction, prioritisation_infrastructure$length_m),
+      lanes_frequency = dataCensus(prioritisation_infrastructure$n_lanes_circulation_direction, prioritisation_infrastructure$frequency),
+      prioritisation_stats_length = lapply(
+        GTFShift::get_prioritisation_stats(prioritisation_infrastructure, weight = "length"),
         function(x) {
           if (is.numeric(x)) {
             round(x, 2)
@@ -602,8 +603,8 @@ for (i in 1:nrow(regions)) {
           }
         }
       ),
-      prioritization_stats_frequency = lapply(
-        GTFShift::get_prioritization_stats(prioritization_infrastructure, weight = "frequency"),
+      prioritisation_stats_frequency = lapply(
+        GTFShift::get_prioritisation_stats(prioritisation_infrastructure, weight = "frequency"),
         function(x) {
           if (is.numeric(x)) {
             round(x, 2)
@@ -627,13 +628,13 @@ for (i in 1:nrow(regions)) {
       os_release = Sys.info()[["release"]]
     )
   )
-  if ("speed_avg" %in% colnames(prioritization_infrastructure)) {
-    metadata$data_census$speed_avg_length <- dataCensus(prioritization_infrastructure$speed_avg, prioritization_infrastructure$length_m)
-    metadata$data_census$speed_avg_frequency <- dataCensus(prioritization_infrastructure$speed_avg, prioritization_infrastructure$frequency)
+  if ("speed_avg" %in% colnames(prioritisation_infrastructure)) {
+    metadata$data_census$speed_avg_length <- dataCensus(prioritisation_infrastructure$speed_avg, prioritisation_infrastructure$length_m)
+    metadata$data_census$speed_avg_frequency <- dataCensus(prioritisation_infrastructure$speed_avg, prioritisation_infrastructure$frequency)
   }
-  if ("demand" %in% colnames(prioritization_infrastructure)) {
-    metadata$data_census$demand_frequency <- dataCensus(prioritization_infrastructure$demand, prioritization_infrastructure$frequency)
-    metadata$data_census$demand_length <- dataCensus(prioritization_infrastructure$demand, prioritization_infrastructure$length_m)
+  if ("demand" %in% colnames(prioritisation_infrastructure)) {
+    metadata$data_census$demand_frequency <- dataCensus(prioritisation_infrastructure$demand, prioritisation_infrastructure$frequency)
+    metadata$data_census$demand_length <- dataCensus(prioritisation_infrastructure$demand, prioritisation_infrastructure$length_m)
   }
   write_json(
     metadata,
