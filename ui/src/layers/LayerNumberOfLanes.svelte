@@ -2,7 +2,7 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT } from "../data";
-    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { GeoPrioritisation } from "../types/GeoPrioritisation";
     import type { LineWeightMetric } from "../types/LineWeightMetric";
     import type { Feature } from "geojson";
     import {
@@ -23,7 +23,7 @@
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
-        geoData: GeoPrioritization;
+        geoData: GeoPrioritisation;
         criteriaHour: number;
         lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
@@ -36,13 +36,11 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
-    import {
-        getColorFromGradient,
-        getLineWeight,
-    } from "../lib/utils";
+    import { getColorFromGradient, getLineWeight } from "../lib/utils";
 
     function formatLaneLabel(wayId: string): string {
-        const lanes = geoData.wayData[wayId]?.n_lanes_circulation_direction || 0;
+        const lanes =
+            geoData.wayData[wayId]?.n_lanes_circulation_direction || 0;
         return `${lanes} lanes`;
     }
 
@@ -55,7 +53,12 @@
             geoData.metadata.data_census.lanes_length?.p95 || 1,
             COLOR_GRADIENT,
         );
-        const weight = getLineWeight(geoData, props, criteriaHour, lineWeightBy);
+        const weight = getLineWeight(
+            geoData,
+            props,
+            criteriaHour,
+            lineWeightBy,
+        );
         return { color, weight };
     }
 
@@ -118,7 +121,12 @@
                         handleWayMouseOver(layer, wayId, selectedWayId);
                     });
                     layer.on("mouseout", () => {
-                        handleWayMouseOut(layer, wayId, selectedWayId, getLaneStyle);
+                        handleWayMouseOut(
+                            layer,
+                            wayId,
+                            selectedWayId,
+                            getLaneStyle,
+                        );
                     });
                 },
             },

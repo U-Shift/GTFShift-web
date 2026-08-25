@@ -28,7 +28,7 @@
                     About GTFShift
                 </h2>
                 <p class="text-sm text-muted-foreground mt-0.5">
-                    Bus lane prioritization tool
+                    Bus lane prioritisation tool
                 </p>
             </div>
             <Button
@@ -46,28 +46,35 @@
             class="flex-1 overflow-y-auto px-5 py-4 space-y-4 text-sm leading-relaxed"
         >
             <p>
-                <u><strong class="text-primary">GTFShift</strong> Bus lane prioritization tool</u>
-                is an interactive dashboard that provides a comprehensive bundle of 
-                indicators to support the identification and prioritization of road segments 
-                where bus lanes should be implemented for some case studies. 
+                <u
+                    ><strong class="text-primary">GTFShift</strong> Bus lane prioritisation
+                    tool</u
+                >
+                is an interactive dashboard that provides a comprehensive bundle
+                of indicators to support the identification and prioritisation of
+                road segments where bus lanes should be implemented for some case
+                studies.
             </p>
             <p>
-                It covers several dimensions of this problem, namely bus frequency, 
-                infrastructure availability, traffic conditions, passenger demand and network continuity.
-                Together, these can be used to identify road segments where bus
-                lanes should be implemented, enabling for a transparent and
-                data-driven decision-making process, suitable to different
-                contexts and criteria.
+                It covers several dimensions of this problem, namely bus
+                frequency, infrastructure availability, traffic conditions,
+                passenger demand and network continuity. Together, these can be
+                used to identify road segments where bus lanes should be
+                implemented, enabling for a transparent and data-driven
+                decision-making process, suitable to different contexts and
+                criteria.
             </p>
             <p>
                 The results are based on the application of the
-                <u><strong class="text-primary">GTFShift</strong> R package</u>, an open-source 
-                software tool that implements the methodology behind this dashboard, allowing 
-                for the replication and application of the methodology to other case studies.
+                <u><strong class="text-primary">GTFShift</strong> R package</u>,
+                an open-source software tool that implements the methodology
+                behind this dashboard, allowing for the replication and
+                application of the methodology to other case studies.
             </p>
             <p>
-                For details on the methodology, code and data, refer to the methodological
-                slides and the R package documentation and repository in the buttons below.
+                For details on the methodology, code and data, refer to the
+                methodological slides and the R package documentation and
+                repository in the buttons below.
             </p>
 
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2">

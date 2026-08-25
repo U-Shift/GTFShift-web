@@ -3,7 +3,7 @@
     import type { Feature } from "geojson";
     import { TableHandler, Datatable, ThSort } from "@vincjo/datatables";
     import * as Tooltip from "$lib/components/ui/tooltip/index.js";
-    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { GeoPrioritisation } from "../types/GeoPrioritisation";
     import { Button } from "$lib/components/ui/button/index.js";
 
     let {
@@ -17,7 +17,7 @@
         onRouteSelect = (shapeId) => {},
     }: {
         open: boolean;
-        geoData: GeoPrioritization;
+        geoData: GeoPrioritisation;
         hour: number;
         rt_data: boolean;
         demand_data: boolean;
@@ -82,7 +82,10 @@
                 <i class="fas fa-table text-primary"></i>
                 Attribute table
                 <span class="text-muted-foreground font-normal text-sm"
-                    >at {hour}:00 (Showing {data_filtered.length} rows displayed in current layer, out of {geoData ? Object.keys(geoData.wayData).length : 0})</span
+                    >at {hour}:00 (Showing {data_filtered.length} rows displayed
+                    in current layer, out of {geoData
+                        ? Object.keys(geoData.wayData).length
+                        : 0})</span
                 >
             </h2>
             <Button
@@ -130,16 +133,16 @@
                                     >
                                     <ThSort
                                         {table}
-                                        field={(r) => r.properties.n_lanes_circulation}
-                                        >Nr<br/>lanes <small
-                                            >(circulation)</small
-                                        ></ThSort
+                                        field={(r) =>
+                                            r.properties.n_lanes_circulation}
+                                        >Nr<br />lanes
+                                        <small>(circulation)</small></ThSort
                                     >
                                     <ThSort
                                         {table}
-                                        field={(r) => r.properties.n_lanes_parking}
-                                        >Nr lanes <small
-                                            >(parking)</small
+                                        field={(r) =>
+                                            r.properties.n_lanes_parking}
+                                        >Nr lanes <small>(parking)</small
                                         ></ThSort
                                     >
                                     <ThSort
@@ -150,7 +153,8 @@
                                     <ThSort
                                         {table}
                                         field={(r) =>
-                                            r.properties.n_lanes_circulation_direction}
+                                            r.properties
+                                                .n_lanes_circulation_direction}
                                         >Nr lanes/dir</ThSort
                                     >
                                     {#if rt_data}
@@ -173,9 +177,9 @@
                                     {#if demand_data}
                                         <ThSort
                                             {table}
-                                            field={(r) =>
-                                                r.properties.demand}
-                                            >Demand <small>(passengers/day)</small
+                                            field={(r) => r.properties.demand}
+                                            >Demand <small
+                                                >(passengers/day)</small
                                             ></ThSort
                                         >
                                     {/if}
@@ -245,17 +249,11 @@
                                                 ? "Yes"
                                                 : "No"}</td
                                         >
-                                        <td
-                                            class="px-4 py-2"
-                                        >
-                                                {row.properties
-                                                    .n_lanes_circulation}
+                                        <td class="px-4 py-2">
+                                            {row.properties.n_lanes_circulation}
                                         </td>
-                                        <td
-                                            class="px-4 py-2"
-                                        >
-                                                {row.properties
-                                                    .n_lanes_parking}
+                                        <td class="px-4 py-2">
+                                            {row.properties.n_lanes_parking}
                                         </td>
                                         <td class="px-4 py-2"
                                             >{row.properties.n_directions}</td
@@ -277,7 +275,8 @@
                                         {/if}
                                         {#if demand_data}
                                             <td class="px-4 py-2"
-                                                >{row.properties.demand?.toLocaleString() || "-"}</td
+                                                >{row.properties.demand?.toLocaleString() ||
+                                                    "-"}</td
                                             >
                                         {/if}
                                         <td class="px-4 py-2"

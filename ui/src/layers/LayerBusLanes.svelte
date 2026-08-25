@@ -3,11 +3,9 @@
     import * as L from "leaflet";
     import { COLOR_TEAL } from "../data";
     import type { Feature } from "geojson";
-    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { GeoPrioritisation } from "../types/GeoPrioritisation";
     import type { LineWeightMetric } from "../types/LineWeightMetric";
-    import {
-        getLineWeight,
-    } from "../lib/utils";
+    import { getLineWeight } from "../lib/utils";
 
     let {
         map,
@@ -21,7 +19,7 @@
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
-        geoData: GeoPrioritization;
+        geoData: GeoPrioritisation;
         criteriaHour: number;
         lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
@@ -36,7 +34,12 @@
 
     function getWayStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
-        const weight = getLineWeight(geoData, props, criteriaHour, lineWeightBy);
+        const weight = getLineWeight(
+            geoData,
+            props,
+            criteriaHour,
+            lineWeightBy,
+        );
         return { color: COLOR_TEAL, weight };
     }
 
@@ -50,7 +53,11 @@
             (feature: Feature | undefined) => {
                 const wayId = feature?.properties?.way_osm_id;
                 const props = wayId ? geoData.wayData[wayId] : undefined;
-                if (selectedShapeId && selectedShapeId !== "all" && !props?.shapes?.includes(selectedShapeId)) {
+                if (
+                    selectedShapeId &&
+                    selectedShapeId !== "all" &&
+                    !props?.shapes?.includes(selectedShapeId)
+                ) {
                     return false;
                 }
                 return props?.is_bus_lane;

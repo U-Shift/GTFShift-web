@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Button } from "$lib/components/ui/button/index.js";
     import { untrack } from "svelte";
-    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { GeoPrioritisation } from "../types/GeoPrioritisation";
 
     let {
         selected_shape_id = $bindable(),
@@ -9,7 +9,7 @@
         selectedWayId,
     }: {
         selected_shape_id: string;
-        geoData: GeoPrioritization | null;
+        geoData: GeoPrioritisation | null;
         selectedWayId: string | undefined;
     } = $props();
 </script>
@@ -219,7 +219,8 @@
                             </p>
                         </div>
                         <p class="col-span-3 text-[10px] text-muted-foreground">
-                            Speed metrics considering speed at segment level (which considers all routes that go through it). 
+                            Speed metrics considering speed at segment level
+                            (which considers all routes that go through it).
                         </p>
                     {/if}
 

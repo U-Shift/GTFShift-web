@@ -2,7 +2,7 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT } from "../data";
-    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { GeoPrioritisation } from "../types/GeoPrioritisation";
     import type { LineWeightMetric } from "../types/LineWeightMetric";
     import type { Feature } from "geojson";
     import {
@@ -23,7 +23,7 @@
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
-        geoData: GeoPrioritization;
+        geoData: GeoPrioritisation;
         criteriaHour: number;
         lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
@@ -36,10 +36,7 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
-    import {
-        getColorFromGradient,
-        getLineWeight,
-    } from "../lib/utils";
+    import { getColorFromGradient, getLineWeight } from "../lib/utils";
 
     function formatParkingLaneLabel(wayId: string): string {
         const lanes = geoData.wayData[wayId]?.n_lanes_parking || 0;
@@ -49,15 +46,23 @@
     function getParkingLaneStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
         const n_lanes_parking = props?.n_lanes_parking || 0;
-        const p5 = (geoData.metadata.data_census as any).parking_lanes_length?.p5 ?? 0;
-        const p95 = (geoData.metadata.data_census as any).parking_lanes_length?.p95 ?? Math.max(n_lanes_parking, 1);
+        const p5 =
+            (geoData.metadata.data_census as any).parking_lanes_length?.p5 ?? 0;
+        const p95 =
+            (geoData.metadata.data_census as any).parking_lanes_length?.p95 ??
+            Math.max(n_lanes_parking, 1);
         const color = getColorFromGradient(
             n_lanes_parking,
             p5,
             p95,
             COLOR_GRADIENT,
         );
-        const weight = getLineWeight(geoData, props, criteriaHour, lineWeightBy);
+        const weight = getLineWeight(
+            geoData,
+            props,
+            criteriaHour,
+            lineWeightBy,
+        );
         return { color, weight };
     }
 
@@ -79,7 +84,10 @@
                     return false;
                 }
                 // Only show segments with parking lanes
-                return props?.n_lanes_parking !== undefined && props.n_lanes_parking > 0;
+                return (
+                    props?.n_lanes_parking !== undefined &&
+                    props.n_lanes_parking > 0
+                );
             },
         );
         const visibleWayIds = filteredFeatures
@@ -95,7 +103,10 @@
                 const propsB = b.properties?.way_osm_id
                     ? geoData.wayData[b.properties.way_osm_id]
                     : null;
-                return (propsA?.n_lanes_parking || 0) - (propsB?.n_lanes_parking || 0);
+                return (
+                    (propsA?.n_lanes_parking || 0) -
+                    (propsB?.n_lanes_parking || 0)
+                );
             }),
             {
                 style: (feature: Feature | undefined) => {
@@ -107,7 +118,10 @@
                     const wayId = feature.properties?.way_osm_id;
                     if (wayId) wayLayerMap.set(wayId, layer as L.Path);
                     if (wayId) {
-                        bindWayValueTooltip(layer, formatParkingLaneLabel(wayId));
+                        bindWayValueTooltip(
+                            layer,
+                            formatParkingLaneLabel(wayId),
+                        );
                     }
                     layer.on("click", (e) => {
                         L.DomEvent.stopPropagation(e);
@@ -117,7 +131,12 @@
                         handleWayMouseOver(layer, wayId, selectedWayId);
                     });
                     layer.on("mouseout", () => {
-                        handleWayMouseOut(layer, wayId, selectedWayId, getParkingLaneStyle);
+                        handleWayMouseOut(
+                            layer,
+                            wayId,
+                            selectedWayId,
+                            getParkingLaneStyle,
+                        );
                     });
                 },
             },

@@ -14,7 +14,7 @@ export interface StatisticsBundle {
     sd: number;
 }
 
-export interface PrioritizationStats {
+export interface PrioritisationStats {
     extension: number;
     extension_bus_lane: number;
     speed_avg?: number;
@@ -32,7 +32,7 @@ interface HourlyFrequency {
     [hour: string]: StatisticsBundle;
 }
 
-export interface GeoPrioritization {
+export interface GeoPrioritisation {
     features: Feature[];
     wayData: Record<string, any>;
     routes: Record<string, any>;
@@ -47,7 +47,7 @@ export interface GeoPrioritization {
             schedule: {
                 [hour: string]: number;
             };
-            stats: PrioritizationStats;
+            stats: PrioritisationStats;
         };
     };
     metadata: {
@@ -61,7 +61,7 @@ export interface GeoPrioritization {
             value: string | string[];
             key_exact: boolean;
         }>;
-        prioritization: {
+        prioritisation: {
             shapes_missing: string[];
             routes_missing: { [key: string]: { n_shapes: number, n_shapes_missing: number } };
 
@@ -85,8 +85,8 @@ export interface GeoPrioritization {
             demand_frequency?: StatisticsBundle | undefined;
             lanes_length: StatisticsBundle | undefined;
             lanes_frequency: StatisticsBundle | undefined;
-            prioritization_stats_frequency: PrioritizationStats | undefined;
-            prioritization_stats_length: PrioritizationStats | undefined;
+            prioritisation_stats_frequency: PrioritisationStats | undefined;
+            prioritisation_stats_length: PrioritisationStats | undefined;
         };
         rt: {
             url: string;

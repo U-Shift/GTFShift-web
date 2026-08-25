@@ -2,7 +2,7 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT_RED, COLOR_GRAY } from "../data";
-    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { GeoPrioritisation } from "../types/GeoPrioritisation";
     import type { LineWeightMetric } from "../types/LineWeightMetric";
     import type { Feature } from "geojson";
     import {
@@ -23,7 +23,7 @@
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
-        geoData: GeoPrioritization;
+        geoData: GeoPrioritisation;
         criteriaHour: number;
         lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
@@ -36,10 +36,7 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
-    import {
-        getColorFromGradient,
-        getLineWeight,
-    } from "../lib/utils";
+    import { getColorFromGradient, getLineWeight } from "../lib/utils";
 
     function formatSpeedLabel(wayId: string): string {
         const speed = geoData.wayData[wayId]?.speed_avg;
@@ -52,8 +49,17 @@
         const props = geoData.wayData[wayId];
         const speed_avg = props?.speed_avg;
         let color = COLOR_GRAY;
-        const weight = getLineWeight(geoData, props, criteriaHour, lineWeightBy);
-        if (speed_avg !== undefined && speed_avg !== null && !isNaN(Number(speed_avg))) {
+        const weight = getLineWeight(
+            geoData,
+            props,
+            criteriaHour,
+            lineWeightBy,
+        );
+        if (
+            speed_avg !== undefined &&
+            speed_avg !== null &&
+            !isNaN(Number(speed_avg))
+        ) {
             const speedValue = Number(speed_avg);
             color = getColorFromGradient(
                 speedValue,
@@ -128,7 +134,12 @@
                         handleWayMouseOver(layer, wayId, selectedWayId);
                     });
                     layer.on("mouseout", () => {
-                        handleWayMouseOut(layer, wayId, selectedWayId, getSpeedStyle);
+                        handleWayMouseOut(
+                            layer,
+                            wayId,
+                            selectedWayId,
+                            getSpeedStyle,
+                        );
                     });
                 },
             },

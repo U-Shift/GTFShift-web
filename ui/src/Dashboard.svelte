@@ -2,12 +2,12 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import type { Feature } from "geojson";
-    import type { GeoPrioritization } from "./types/GeoPrioritization";
+    import type { GeoPrioritisation } from "./types/GeoPrioritisation";
     import type { DataRegion, RegionLayer } from "./types/DataRegion";
     import type { LineWeightMetric } from "./types/LineWeightMetric";
 
     import ModalAbout from "./modals/ModalAbout.svelte";
-    import LayerBusLanePrioritization from "./layers/LayerBusLanePrioritization.svelte";
+    import LayerBusLanePrioritisation from "./layers/LayerBusLanePrioritisation.svelte";
     import LayerBusLanes from "./layers/LayerBusLanes.svelte";
     import LayerTransitFrequency from "./layers/LayerTransitFrequency.svelte";
     import LayerNumberOfLanes from "./layers/LayerNumberOfLanes.svelte";
@@ -46,14 +46,14 @@
     // Map
     let { map, light_mode = $bindable() }: { map: L.Map; light_mode: boolean } =
         $props();
-    let geoData: GeoPrioritization | null = $state(null);
+    let geoData: GeoPrioritisation | null = $state(null);
 
     // User feedback
     let loading: string | undefined = $state(undefined);
 
     // Dashboard state
     enum DisplayOptions {
-        PRIORITIZATION,
+        PRIORITISATION,
         BUS_LANES,
         FREQUENCY,
         N_LANES,
@@ -221,7 +221,7 @@
                 metadata: metadata,
                 routes: routeData,
                 shapes: shapeData,
-            } as GeoPrioritization;
+            } as GeoPrioritisation;
             console.log("geoData", geoData);
 
             display_rt = Object.values(geoData.wayData).some(
@@ -255,8 +255,8 @@
             criteria_avg_speed_enabled = display_rt;
             criteria_demand_enabled = display_demand;
             line_weight_by = "frequency";
-            active_layer = DisplayOptions.PRIORITIZATION;
-            open_accordion = DisplayOptions.PRIORITIZATION.toString();
+            active_layer = DisplayOptions.PRIORITISATION;
+            open_accordion = DisplayOptions.PRIORITISATION.toString();
 
             console.log("Loaded GeoJSON for layer:", selected_layer.id);
         } catch (error) {
@@ -297,7 +297,7 @@
 
         console.log("Filtering by shape:", selected_shape_id);
 
-        // Deselect prioritization filters when a specific route is selected
+        // Deselect prioritisation filters when a specific route is selected
         if (selected_shape_id && selected_shape_id !== "all") {
             untrack(() => {
                 criteria_bus_frequency_enabled = false;
@@ -382,7 +382,7 @@
             </Tooltip.Provider>
         </div>
         <p class="text-sm text-muted-foreground">
-            Bus lane prioritization tool
+            Bus lane prioritisation tool
         </p>
         {#if loading}
             <p
@@ -973,11 +973,11 @@
                 class="w-full"
             >
                 <Accordion.Item
-                    value={DisplayOptions.PRIORITIZATION.toString()}
+                    value={DisplayOptions.PRIORITISATION.toString()}
                 >
                     <Accordion.Trigger
                         class="text-sm font-medium hover:no-underline"
-                        >Bus lane prioritization</Accordion.Trigger
+                        >Bus lane prioritisation</Accordion.Trigger
                     >
                     <Accordion.Content>
                         <div
@@ -985,7 +985,7 @@
                         >
                             <p>
                                 Display road segments coloured by bus lane
-                                prioritization criteria:
+                                prioritisation criteria:
                                 <Tooltip.Provider delayDuration={0}>
                                     <Tooltip.Root>
                                         <Tooltip.Trigger>
@@ -1166,24 +1166,24 @@
                                 class="font-bold">green</span
                             >
                         </p>
-                        {#if geoData.metadata.data_census.prioritization_stats_length}
+                        {#if geoData.metadata.data_census.prioritisation_stats_length}
                             <p class="text-xs text-muted-foreground pt-2">
                                 There are {(
                                     geoData.metadata.data_census
-                                        .prioritization_stats_length
+                                        .prioritisation_stats_length
                                         .extension_bus_lane / 1000
                                 ).toFixed(2)} km of bus lanes, accounting for
                                 {(
                                     (geoData.metadata.data_census
-                                        .prioritization_stats_length
+                                        .prioritisation_stats_length
                                         .extension_bus_lane /
                                         geoData.metadata.data_census
-                                            .prioritization_stats_length
+                                            .prioritisation_stats_length
                                             .extension) *
                                     100
                                 ).toFixed(2)}% of the {(
                                     geoData.metadata.data_census
-                                        .prioritization_stats_length.extension /
+                                        .prioritisation_stats_length.extension /
                                     1000
                                 ).toFixed(2)} km bus network
                             </p>
@@ -1262,10 +1262,10 @@
                         >
                             <p>
                                 Number of lanes obtained from OSM data, using <a
-                                    href="https://u-shift.github.io/GTFShift/reference/prioritize_lanes.html"
+                                    href="https://u-shift.github.io/GTFShift/reference/prioritise_lanes.html"
                                     target="_blank"
                                     class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline"
-                                    >GTFShift::prioritize_lanes()</a
+                                    >GTFShift::prioritise_lanes()</a
                                 >.
                             </p>
                             <p>
@@ -1501,7 +1501,7 @@
         id="caption"
         class="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 z-[1000] flex flex-col gap-3 p-4 bg-background/95 backdrop-blur shadow-lg border rounded-xl text-sm w-[calc(100vw-2rem)] sm:w-[350px] max-h-[30vh] sm:max-h-[40vh] overflow-y-auto"
     >
-        {#if active_layer === DisplayOptions.PRIORITIZATION}
+        {#if active_layer === DisplayOptions.PRIORITISATION}
             <p class="flex items-start text-muted-foreground leading-tight">
                 <span
                     class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
@@ -1737,8 +1737,8 @@
         <LayerBoundaries {map} {boundaryGeoJSON} color={region.color} />
     {/if}
 
-    {#if active_layer === DisplayOptions.PRIORITIZATION}
-        <LayerBusLanePrioritization
+    {#if active_layer === DisplayOptions.PRIORITISATION}
+        <LayerBusLanePrioritisation
             {map}
             {geoData}
             criteriaHour={criteria_hour}

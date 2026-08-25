@@ -2,7 +2,7 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT } from "../data";
-    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { GeoPrioritisation } from "../types/GeoPrioritisation";
     import type { LineWeightMetric } from "../types/LineWeightMetric";
     import type { Feature } from "geojson";
     import {
@@ -23,7 +23,7 @@
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
-        geoData: GeoPrioritization;
+        geoData: GeoPrioritisation;
         criteriaHour: number;
         lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
@@ -60,7 +60,12 @@
             geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95 || 1,
             COLOR_GRADIENT,
         );
-        const weight = getLineWeight(geoData, props, criteriaHour, lineWeightBy);
+        const weight = getLineWeight(
+            geoData,
+            props,
+            criteriaHour,
+            lineWeightBy,
+        );
         return { color, weight };
     }
 
@@ -74,7 +79,11 @@
             (feature: Feature | undefined) => {
                 const wayId = feature?.properties?.way_osm_id;
                 const props = wayId ? geoData.wayData[wayId] : undefined;
-                if (selectedShapeId && selectedShapeId !== "all" && !props?.shapes?.includes(selectedShapeId)) {
+                if (
+                    selectedShapeId &&
+                    selectedShapeId !== "all" &&
+                    !props?.shapes?.includes(selectedShapeId)
+                ) {
                     return false;
                 }
                 return props?.hour_frequency?.[criteriaHour];
@@ -119,7 +128,12 @@
                         handleWayMouseOver(layer, wayId, selectedWayId);
                     });
                     layer.on("mouseout", () => {
-                        handleWayMouseOut(layer, wayId, selectedWayId, getFreqStyle);
+                        handleWayMouseOut(
+                            layer,
+                            wayId,
+                            selectedWayId,
+                            getFreqStyle,
+                        );
                     });
                 },
             },
