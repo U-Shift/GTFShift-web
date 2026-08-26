@@ -1,0 +1,83 @@
+---
+format: 
+  revealjs:
+    theme: [default, slides.scss]
+---
+
+# {#cover .center style="text-align: center"}
+
+![](static/logos/logo_acknowledgement_rectangle.png){style="width: 30%; height: auto;"}
+
+<h1>Extending <span class="highlight" style="background-color: #FFD005FF;">deployEMDS</span> with <span class="highlight" style="background-color: #15af97;">GTFShift</span> </h1>
+
+By Gonçalo F. Matos, Rosa Félix
+
+## What <span class="highlight" style="background-color: #15af97;">GTFShift</span> has to offer  {#benefits .center auto-animate="true" .smaller}
+
+:::{.fragment}
+- <b>Geometrical match</b> between GTFS shapes and OSM route relations 
+:::
+
+:::{style="opacity: 0"}
+- Enables analysis at the <b>road segment level</b>
+
+- Unlocks a <b>thinner monitoring</b> of the operational performance
+:::
+
+## What <span class="highlight" style="background-color: #15af97;">GTFShift</span> has to offer  {#benefits-2 .center auto-animate="true" background-image="static/backgrounds/osm_route.png" .smaller}
+
+- <b>Geometrical match</b> between GTFS shapes and OSM route relations 
+
+- Enables analysis at the <b>road segment level</b>
+
+:::{style="opacity: 0"}
+- Unlocks a <b>thinner monitoring</b> of the operational performance
+:::
+
+## What <span class="highlight" style="background-color: #15af97;">GTFShift</span> has to offer  {#benefits-3 .center auto-animate="true" .smaller}
+
+- <b>Geometrical match</b> between GTFS shapes and OSM route relations 
+
+- Enables analysis at the <b>road segment level</b>
+
+- Unlocks a <b>thinner monitoring</b> of the operational performance
+
+
+## How can we do it?  {#how .center}
+
+:::{.fragment}
+GTFShift bus lane prioritization tool provides <b>aggregated metrics</b> for <b>speed</b> at <b>road segment level</b> per <b>hour</b>
+:::
+
+## {#how-image background-image="static/backgrounds/gtfshift_dashboard.png"}
+
+## How can we do it?  {#how-2 .center .smaller}
+
+We can use those metrics to determine a <b>Disturbance Index</b> adjusted to the speed, comparing the <b>median</b> travel of each segment, with the <b>Percentile 75</b> (or 85), assumed to be the <b>freeflow</b> speed:
+
+:::{.fragment}
+$$DI_{speed} = \frac{speed_{median} - speed_{P75}}{speed_{P75}}$$
+
+> Its value, can be interpreted as: <br/>
+> <= -0.2 Much slower (than freeflow) 
+> \[-0.2; -0.05[ Slower (than freeflow)  <br/>
+> [-0.05; 0.05] Regular speed <br/>
+> \]0.05; 0.2\[ Faster (than freeflow) 
+>  \>= 0.2 much faster (than freeflow) 
+:::
+
+## Network analysis {#map-network-6 background-iframe="static/maps/network_6.html" background-interactive="true"}
+
+## Network analysis {#map-network-17 background-iframe="static/maps/network_17.html" background-interactive="true"}
+
+## Trip analysis {#map-network-17 background-iframe="static/maps/route_3013.html" background-interactive="true"}
+
+## Trip analysis {#map-network-17 background-iframe="static/maps/route_3508.html" background-interactive="true"}
+
+## What else? {#future .center .smaller}
+
+- Analysis at <b>route level</b>
+
+- Aggregated analysis might enable evaluation of <b>time taken to cross</b> each segment
+
+- Produce <b/>aggregated operational metrics</b>
