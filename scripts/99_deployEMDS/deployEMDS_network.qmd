@@ -1,0 +1,128 @@
+---
+title: "DeployEMDS at road segment level with GTFShift"
+subtitle: "For whole network"
+date: today
+date-format: "MMMM YYYY"
+author:
+ - name: Gonçalo F. Matos
+   email: goncaloafmatos@tecnico.ulisboa.pt
+   orcid: 0009-0001-3489-1732
+   affiliations: 
+       - id: ist
+         name: CERIS
+         department: Instituto Superior Técnico - University of Lisbon
+         address: Av Rovisco Pais 1
+         postal-code: 1049-001, Lisboa, Portugal
+   attributes:
+       corresponding: true      
+ - name: Rosa Félix
+   email: rosamfelix@tecnico.ulisboa.pt
+   orcid: 0000-0002-5642-6006
+   affiliations: 
+       - ref: ist
+---
+
+::: {.callout-note}
+TODO! Replace local links by ushift.pt/apps/gtfshift and GitHub releases
+:::
+
+```{r load_packages, message = FALSE}
+library(dplyr)
+library(tidyverse)
+library(jsonlite)
+library(sf)
+library(mapview)
+library(GTFShift)
+```
+
+
+```{r way_data_params}
+HOUR <- 17
+WAYS <- "/home/goncalo/Documents/ushift/GTFShift-web/ui/data/aml_3/run_20260806_102830/ways_aml_rt_area_3_gtfs20260520_run20260806.geojson"
+WAYS_DATA <- "/home/goncalo/Documents/ushift/GTFShift-web/ui/data/aml_3/run_20260806_102830/way_data_aml_rt_area_3_gtfs20260520_run20260806.json"
+```
+
+```{r way_data_load}
+ways <- st_read(WAYS, quiet = TRUE)
+ways_list <- fromJSON(WAYS_DATA, simplifyVector = FALSE)
+
+parse_way <- function(item, way_id) {
+    if (is.null(item) || !is.list(item)) item <- list()
+
+    df_base <- tibble(
+        way_id       = as.character(way_id),
+        speed_avg    = item$speed_avg %||% NA_real_,
+        speed_median = item$speed_median %||% NA_real_,
+        speed_p25    = item$speed_p25 %||% NA_real_,
+        speed_p75    = item$speed_p75 %||% NA_real_,
+        speed_count  = item$speed_count %||% NA_integer_
+    )
+
+    target_hours <- as.character(0:24)
+    hour_medians <- item$hour_speed_median
+
+    hourly_vals <- setNames(
+        lapply(target_hours, function(h) {
+            val <- hour_medians[[h]]
+            if (is.null(val)) NA_real_ else as.numeric(val)
+        }),
+        paste0("hour_speed_median_", target_hours)
+    )
+
+    bind_cols(df_base, as_tibble(hourly_vals))
+}
+
+way_data <- map2_dfr(ways_list, names(ways_list), parse_way)
+```
+
+```{r disturbance_index_calculation}
+target_col <- paste0("hour_speed_median_", HOUR)
+
+index <- way_data |>
+    mutate(di = (.data[[target_col]] - speed_p75) / speed_p75) |>
+    mutate(
+        di = round(di, 2),
+        di_cat = case_when(
+            di >= 0.2 ~ "Muito mais rápido",
+            di > 0.05 & di < 0.2 ~ "Mais rápido",
+            di >= -0.05 & di <= 0.05 ~ "Velocidade regular",
+            di >= -0.2 & di < -0.05 ~ "Mais lento",
+            di < -0.2 ~ "Muito mais lento",
+            TRUE ~ NA_character_
+        ),
+        di_cat = factor(di_cat, levels = c(
+            "Muito mais rápido",
+            "Mais rápido",
+            "Velocidade regular",
+            "Mais lento",
+            "Muito mais lento"
+        ))
+    )
+
+# View(index |> select(way_id, speed_p75, hour_speed_median_21, di))
+
+ways_index <- ways |>
+    left_join(index, by = c("way_osm_id" = "way_id"))
+```
+
+```{r disturbance_index_display, message = FALSE, warning = FALSE}
+summary(ways_index$di)
+
+di_colors <- c(
+    "Muito mais rápido" = "#0B3C5D",
+    "Mais rápido" = "#328CC1",
+    "Velocidade regular" = "#2ECC71",
+    "Mais lento" = "#E67E22",
+    "Muito mais lento" = "#E74C3C"
+)
+
+ways_index |>
+    filter(!is.na(di_cat)) |>
+    select(way_osm_id, starts_with("speed_"), c(target_col), starts_with("di")) |>
+    mapview(
+        zcol = "di_cat",
+        color = unname(di_colors),
+        col.regions = unname(di_colors),
+        layer.name = sprintf("Disturbance Index (%02d:00-%02d:00)", HOUR, HOUR + 1)
+    )
+```

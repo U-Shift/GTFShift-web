@@ -1,0 +1,213 @@
+---
+title: "DeployEMDS at road segment level with GTFShift"
+subtitle: "At trip level"
+date: today
+date-format: "MMMM YYYY"
+author:
+ - name: Gonçalo F. Matos
+   email: goncaloafmatos@tecnico.ulisboa.pt
+   orcid: 0009-0001-3489-1732
+   affiliations: 
+       - id: ist
+         name: CERIS
+         department: Instituto Superior Técnico - University of Lisbon
+         address: Av Rovisco Pais 1
+         postal-code: 1049-001, Lisboa, Portugal
+   attributes:
+       corresponding: true      
+ - name: Rosa Félix
+   email: rosamfelix@tecnico.ulisboa.pt
+   orcid: 0000-0002-5642-6006
+   affiliations: 
+       - ref: ist
+---
+
+::: {.callout-note}
+TODO! Replace local links by ushift.pt/apps/gtfshift and GitHub releases
+:::
+
+```{r load_packages, message = FALSE}
+library(dplyr)
+library(tidyverse)
+library(jsonlite)
+library(sf)
+library(mapview)
+library(GTFShift)
+```
+
+## Getting trip data 
+
+```{r trip_data_params}
+TRIP_ID <- "3508_0_1_1900_1929_0_ESC_DU"
+TRIP_GTFS_RT <- "/home/goncalo/Documents/ushift/GTFShift-web/scripts/data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance_2/updates_with_speed_20260417.csv"
+
+st_read(TRIP_GTFS_RT, quiet = TRUE) |>
+    group_by(trip_id) |>
+    summarise(count = n()) |>
+    arrange(desc(count)) |>
+    filter(grepl("3013", trip_id)) |>
+    head(10)
+```
+
+
+```{r trip_data_load}
+trip_updates <- st_read(TRIP_GTFS_RT, quiet = TRUE) |>
+    filter(trip_id == TRIP_ID) |>
+    st_as_sf(coords = c("longitude", "latitude"), crs = 4326) |>
+    arrange(timestamp) |>
+    mutate(order = row_number())
+
+route_id <- trip_updates$route_id[1]
+osm_id <- trip_updates$osm_id[1]
+```
+
+
+```{r trip_data_show, eval = FALSE, include = FALSE}
+nrow(trip_updates)
+
+mapview(trip_updates, zcol = "order")
+```
+
+
+## Getting way data
+
+```{r way_data_params}
+WAYS <- "/home/goncalo/Documents/ushift/GTFShift-web/ui/data/aml_3/run_20260806_102830/ways_aml_rt_area_3_gtfs20260520_run20260806.geojson"
+WAYS_DATA <- "/home/goncalo/Documents/ushift/GTFShift-web/ui/data/aml_3/run_20260806_102830/way_data_aml_rt_area_3_gtfs20260520_run20260806.json"
+ROUTES_LINESTRING <- "/home/goncalo/Documents/ushift/GTFShift-web/scripts/data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance_2/osm_shapes_linestring.gpkg"
+```
+
+
+```{r way_data_load}
+ways <- st_read(WAYS, quiet = TRUE)
+ways_list <- fromJSON(WAYS_DATA, simplifyVector = FALSE)
+
+parse_way <- function(item, way_id) {
+    if (is.null(item) || !is.list(item)) item <- list()
+
+    routes_vec <- unlist(item$routes)
+    routes_str <- if (is.null(routes_vec) || length(routes_vec) == 0) NA_character_ else paste(routes_vec, collapse = ", ")
+
+    df_base <- tibble(
+        way_id = as.character(way_id),
+        routes = routes_str,
+        speed_avg = item$speed_avg %||% NA_real_,
+        speed_median = item$speed_median %||% NA_real_,
+        speed_p25 = item$speed_p25 %||% NA_real_,
+        speed_p75 = item$speed_p75 %||% NA_real_,
+        speed_count = item$speed_count %||% NA_integer_
+    )
+}
+
+way_data <- map2_dfr(ways_list, names(ways_list), parse_way)
+```
+
+```{r route_data_load}
+route <- st_read(ROUTES_LINESTRING, quiet = TRUE) |> filter(osm_id == .env$osm_id)
+```
+
+
+```{r way_data_show}
+ways_route <- ways |>
+    left_join(way_data, by = c("way_osm_id" = "way_id")) |>
+    filter(grepl(route_id, routes)) |>
+    select(-routes)
+
+mapview(ways_route, color = "gray", lwd = 5, layer.name = "Route geometry") +
+    mapview(trip_updates, zcol = "order")
+```
+
+## Project updates on route geometry
+
+```{r project_points}
+projected <- project_points_along_geometry(
+    geometry = route,
+    points = trip_updates
+)
+
+projected
+
+mapview(route, color = "gray", lwd = 5, layer.name = "Route geometry") +
+    mapview(projected)
+
+# Using projected$closest_on_geometry, get corresponding nearest way in ways_route
+closest_way_idx <- st_nearest_feature(
+    st_transform(projected$closest_on_geometry, 3763),
+    st_transform(ways_route, 3763)
+)
+
+route_ways <- ways_route[closest_way_idx, ]
+
+trip_updates$closest_way_id = route_ways$way_osm_id
+trip_updates = trip_updates |>
+  left_join(
+    ways_route |> 
+      st_drop_geometry() |> 
+      select(way_osm_id, speed_p75) |> 
+      rename(way_speed_p75 = speed_p75), 
+    by = c("closest_way_id" = "way_osm_id")
+  )
+```
+
+```{r project_points_debug, eval = FALSE, include = FALSE}
+mapview(ways_route, color = "gray", lwd = 5, layer.name = "Route geometry") +
+    mapview(trip_updates, zcol = "order")
+```
+
+## Compute index
+
+```{r disturbance_index_calculation, warning = FALSE}
+trip_updates <- trip_updates |>
+    mutate(speed_kmh = as.numeric(speed_kmh)) |>
+    mutate(di = (speed_kmh - way_speed_p75) / way_speed_p75) |>
+    mutate(
+        di = round(di, 2),
+        di_cat = case_when(
+            di >= 0.2 ~ "Muito mais rápido",
+            di > 0.05 & di < 0.2 ~ "Mais rápido",
+            di >= -0.05 & di <= 0.05 ~ "Velocidade regular",
+            di >= -0.2 & di < -0.05 ~ "Mais lento",
+            di < -0.2 ~ "Muito mais lento",
+            TRUE ~ NA_character_
+        ),
+        di_cat = factor(di_cat, levels = c(
+            "Muito mais rápido",
+            "Mais rápido",
+            "Velocidade regular",
+            "Mais lento",
+            "Muito mais lento"
+        ))
+    )
+
+route_ways_di = route_ways |> left_join(
+  trip_updates |> st_drop_geometry() |> select(speed_kmh, closest_way_id, di, di_cat) |> rename(speed_update = speed_kmh), 
+  by = c("way_osm_id" = "closest_way_id")
+)
+```
+
+```{r disturbance_index_display, message = FALSE, warning = FALSE}
+summary(trip_updates$di)
+
+di_colors <- c(
+    "Muito mais rápido" = "#0B3C5D",
+    "Mais rápido" = "#328CC1",
+    "Velocidade regular" = "#2ECC71",
+    "Mais lento" = "#E67E22",
+    "Muito mais lento" = "#E74C3C"
+)
+
+
+mapview(route, color = "gray", lwd = 3, layer.name = "Route geometry") + 
+route_ways_di |>
+    filter(!is.na(di_cat)) |>
+    # select(way_osm_id, starts_with("speed_"), c(target_col), starts_with("di")) |>
+    mapview(
+        zcol = "di_cat",
+        color = unname(di_colors),
+        col.regions = unname(di_colors),
+        layer.name = "Disturbance Index",
+        lwd = 5
+    ) + 
+  mapview(trip_updates, zcol = "speed_kmh", hide = TRUE) 
+```
+
