@@ -5,8 +5,8 @@ export const BASE_URL: string = '.'; // 'https://ushift.tecnico.ulisboa.pt/apps/
 
 export const ABOUT_METHODOLOGICAL_SLIDES: string = 'https://ushift.tecnico.ulisboa.pt/~ushift.daemon/apps/gtfshift/slides_gmu_20260512';
 
-export const MAP_DARK: string = 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png';
-export const MAP_LIGHT: string = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
+export const MAP_DARK: string = 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png';
+export const MAP_LIGHT: string = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
 export const MAP_INIT_ZOOM: number = 3; // 3
 export const MAP_INIT_CENTER: [number, number] = [38.7169, -9.1399];
 

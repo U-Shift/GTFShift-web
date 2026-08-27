@@ -46,7 +46,11 @@
     untrack(() => {
       if (map && tileLayer) {
         map.removeLayer(tileLayer);
-        tileLayer = L.tileLayer(tileUrl).addTo(map);
+        tileLayer = L.tileLayer(tileUrl, {
+          attribution: tileUrl.includes("arcgisonline") ? 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
+           : tileUrl.includes("stadiamaps") ? '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+           : undefined
+        }).addTo(map);
       }
     });
   });
