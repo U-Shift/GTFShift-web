@@ -19,7 +19,7 @@ By Gonçalo F. Matos, Rosa Félix
 :::
 
 :::{style="opacity: 0"}
-- Enables analysis at the <b>road segment level</b>
+- Enables analysis at the <b>road segment level</b>, representing <b>multiple</b> trips and routes
 
 - Unlocks a <b>thinner monitoring</b> of the operational performance
 :::
@@ -28,7 +28,7 @@ By Gonçalo F. Matos, Rosa Félix
 
 - <b>Geometrical match</b> between GTFS shapes and OSM route relations 
 
-- Enables analysis at the <b>road segment level</b>
+- Enables analysis at the <b>road segment level</b>, representing <b>multiple</b> trips and routes
 
 :::{style="opacity: 0"}
 - Unlocks a <b>thinner monitoring</b> of the operational performance
@@ -38,7 +38,7 @@ By Gonçalo F. Matos, Rosa Félix
 
 - <b>Geometrical match</b> between GTFS shapes and OSM route relations 
 
-- Enables analysis at the <b>road segment level</b>
+- Enables analysis at the <b>road segment level</b>, representing <b>multiple</b> trips and routes
 
 - Unlocks a <b>thinner monitoring</b> of the operational performance
 
@@ -53,14 +53,14 @@ GTFShift bus lane prioritization tool provides <b>aggregated metrics</b> for <b>
 
 ## How can we do it?  {#how-2 .center .smaller}
 
-We can use those metrics to determine a <b>Disturbance Index</b> adjusted to the speed, comparing the <b>median</b> travel of each segment, with the <b>Percentile 75</b> (or 85), assumed to be the <b>freeflow</b> speed:
+We can use those metrics to determine a <b>Disturbance Index</b> adjusted to the speed, comparing the <b>median</b> travel of each segment ($i$), with the <b>Percentile 75</b> (or 85), assumed to be the <b>freeflow</b> speed:
 
 :::{.fragment}
-$$DI_{speed} = \frac{speed_{median} - speed_{P75}}{speed_{P75}}$$
+$$DI_{speed_i} = \frac{speed_{median_i} - speed_{P75_i}}{speed_{P75_i}}$$
 
 > Its value, can be interpreted as: <br/>
 > <= -0.2 Much slower (than freeflow) 
-> \[-0.2; -0.05[ Slower (than freeflow)  <br/>
+> \]-0.2; -0.05[ Slower (than freeflow)  <br/>
 > [-0.05; 0.05] Regular speed <br/>
 > \]0.05; 0.2\[ Faster (than freeflow) 
 >  \>= 0.2 much faster (than freeflow) 
@@ -70,9 +70,9 @@ $$DI_{speed} = \frac{speed_{median} - speed_{P75}}{speed_{P75}}$$
 
 ## Network analysis {#map-network-17 background-iframe="static/maps/network_17.html" background-interactive="true"}
 
-## Trip analysis {#map-network-17 background-iframe="static/maps/route_3013.html" background-interactive="true"}
+## Trip analysis {#map-trip-3013 background-iframe="static/maps/route_3013.html" background-interactive="true"}
 
-## Trip analysis {#map-network-17 background-iframe="static/maps/route_3508.html" background-interactive="true"}
+## Trip analysis {#map-trip-3508 background-iframe="static/maps/route_3508.html" background-interactive="true"}
 
 ## What else? {#future .center .smaller}
 
