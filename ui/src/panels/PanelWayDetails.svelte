@@ -175,7 +175,9 @@
                                 Avg Speed
                             </p>
                             <p class="text-lg font-bold">
-                                {speed.toFixed(1)}
+                                {typeof speed === "number"
+                                    ? speed.toFixed(1)
+                                    : Number(speed).toFixed(1)}
                                 <span class="text-[10px] font-normal">km/h</span
                                 >
                             </p>
@@ -277,7 +279,11 @@
                         Extension
                     </p>
                     <p class="text-xs font-medium text-foreground">
-                        {way.length_m.toFixed(1)}
+                        {typeof way.length_m === "number"
+                            ? way.length_m.toFixed(1)
+                            : way.length_m != null
+                              ? Number(way.length_m).toFixed(1)
+                              : "-"}
                         <span class="text-[9px] text-muted-foreground"
                             >meters</span
                         >
@@ -490,8 +496,8 @@
                                             class="text-[10px] font-medium text-center px-1 py-1 rounded bg-background/70 border border-border/30"
                                             title="{i}:00 hour_speed_avg"
                                         >
-                                            {avgSpeed == null
-                                                ? "-"
+                                            {avgSpeed == null || typeof avgSpeed !== "number"
+                                                ? (avgSpeed != null && !isNaN(Number(avgSpeed)) ? Number(avgSpeed).toFixed(1) : "-")
                                                 : avgSpeed.toFixed(1)}
                                         </td>
                                     {/each}
@@ -509,8 +515,8 @@
                                             class="text-[10px] font-medium text-center px-1 py-1 rounded bg-background/70 border border-border/30"
                                             title="{i}:00 hour_speed_median"
                                         >
-                                            {medianSpeed == null
-                                                ? "-"
+                                            {medianSpeed == null || typeof medianSpeed !== "number"
+                                                ? (medianSpeed != null && !isNaN(Number(medianSpeed)) ? Number(medianSpeed).toFixed(1) : "-")
                                                 : medianSpeed.toFixed(1)}
                                         </td>
                                     {/each}
