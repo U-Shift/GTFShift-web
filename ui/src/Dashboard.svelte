@@ -1391,7 +1391,7 @@
                                     <p
                                         class="text-xs text-muted-foreground pt-2"
                                     >
-                                        {geoData.metadata.demand.notes}
+                                        {@html geoData.metadata.demand.notes}
                                     </p>
                                 {/if}
                                 <p>
