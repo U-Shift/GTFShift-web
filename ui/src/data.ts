@@ -7,6 +7,8 @@ export const ABOUT_METHODOLOGICAL_SLIDES: string = 'https://ushift.tecnico.ulisb
 
 export const MAP_DARK: string = 'https://tiles.openfreemap.org/styles/dark';
 export const MAP_LIGHT: string = 'https://tiles.openfreemap.org/styles/positron';
+export const MAP_LIGHT_OPACITY: number = 0.5;
+export const MAP_DARK_OPACITY: number = 0.9;
 export const MAP_INIT_ZOOM: number = 3; // 3
 export const MAP_INIT_CENTER: [number, number] = [38.7169, -9.1399];
 
