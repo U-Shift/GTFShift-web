@@ -41,10 +41,12 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
+    "@maplibre/maplibre-gl-leaflet": "^0.1.4",
     "@types/geojson": "^7946.0.16",
     "highlight.js": "^11.11.1",
     "leaflet": "^1.9.4",
     "leaflet-ajax": "^2.1.0",
+    "maplibre-gl": "^6.6.0",
     "mermaid": "^11.15.0"
   }
 }
