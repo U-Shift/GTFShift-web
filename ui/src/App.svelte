@@ -13,7 +13,14 @@
 
   import Dashboard from "./Dashboard.svelte";
 
-  import { MAP_DARK, MAP_LIGHT, MAP_INIT_ZOOM, MAP_INIT_CENTER } from "./data";
+  import {
+    MAP_DARK,
+    MAP_LIGHT,
+    MAP_LIGHT_OPACITY,
+    MAP_DARK_OPACITY,
+    MAP_INIT_ZOOM,
+    MAP_INIT_CENTER,
+  } from "./data";
 
   let map: L.Map | null = $state(null);
   let tileLayer: any = $state(null);
@@ -24,9 +31,14 @@
       zoomControl: false,
     }).setView(MAP_INIT_CENTER, MAP_INIT_ZOOM);
 
-    tileLayer = (L as any).maplibreGL({
-      style: MAP_LIGHT,
-    }).addTo(m);
+    tileLayer = (L as any)
+      .maplibreGL({
+        style: MAP_LIGHT,
+      })
+      .addTo(m);
+    if (tileLayer.getContainer()) {
+      tileLayer.getContainer().style.opacity = MAP_LIGHT_OPACITY.toString();
+    }
 
     L.control
       .zoom({
@@ -49,12 +61,18 @@
   // Subscribe to theme changes and swap tile layer
   $effect(() => {
     const tileUrl = light_mode ? MAP_LIGHT : MAP_DARK;
+    const opacity = light_mode ? MAP_LIGHT_OPACITY : MAP_DARK_OPACITY;
     untrack(() => {
       if (map && tileLayer) {
         map.removeLayer(tileLayer);
-        tileLayer = (L as any).maplibreGL({
-          style: tileUrl,
-        }).addTo(map);
+        tileLayer = (L as any)
+          .maplibreGL({
+            style: tileUrl,
+          })
+          .addTo(map);
+        if (tileLayer.getContainer()) {
+          tileLayer.getContainer().style.opacity = opacity.toString();
+        }
       }
     });
   });
