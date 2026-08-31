@@ -3,12 +3,20 @@
   import * as L from "leaflet";
   import "leaflet/dist/leaflet.css";
 
+  import * as maplibregl from "maplibre-gl";
+  import "maplibre-gl/dist/maplibre-gl.css";
+  import "@maplibre/maplibre-gl-leaflet";
+
+  if (typeof window !== "undefined" && !(window as any).maplibregl) {
+    (window as any).maplibregl = maplibregl;
+  }
+
   import Dashboard from "./Dashboard.svelte";
 
   import { MAP_DARK, MAP_LIGHT, MAP_INIT_ZOOM, MAP_INIT_CENTER } from "./data";
 
   let map: L.Map | null = $state(null);
-  let tileLayer: L.TileLayer | null = $state(null);
+  let tileLayer: any = $state(null);
   let light_mode = $state(true);
 
   const createMap = (container: HTMLElement) => {
@@ -16,10 +24,8 @@
       zoomControl: false,
     }).setView(MAP_INIT_CENTER, MAP_INIT_ZOOM);
 
-    tileLayer = L.tileLayer(MAP_LIGHT, {
-      attribution: `&copy;<a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>,
-          &copy;<a href="https://carto.com/attributions" target="_blank">CARTO</a>`,
-      maxZoom: 14,
+    tileLayer = (L as any).maplibreGL({
+      style: MAP_LIGHT,
     }).addTo(m);
 
     L.control
@@ -46,10 +52,8 @@
     untrack(() => {
       if (map && tileLayer) {
         map.removeLayer(tileLayer);
-        tileLayer = L.tileLayer(tileUrl, {
-          attribution: tileUrl.includes("arcgisonline") ? 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
-           : tileUrl.includes("stadiamaps") ? '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-           : undefined
+        tileLayer = (L as any).maplibreGL({
+          style: tileUrl,
         }).addTo(map);
       }
     });
