@@ -4,8 +4,13 @@
   import "leaflet/dist/leaflet.css";
 
   import * as maplibregl from "maplibre-gl";
+  import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
   import "maplibre-gl/dist/maplibre-gl.css";
   import "@maplibre/maplibre-gl-leaflet";
+
+  if (maplibregl.setWorkerUrl) {
+    maplibregl.setWorkerUrl(maplibreWorkerUrl);
+  }
 
   if (typeof window !== "undefined" && !(window as any).maplibregl) {
     (window as any).maplibregl = maplibregl;
