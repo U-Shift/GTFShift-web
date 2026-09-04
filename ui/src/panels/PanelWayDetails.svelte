@@ -3,18 +3,18 @@
     import * as Tooltip from "$lib/components/ui/tooltip/index.js";
     import { getColorFromGradient } from "$lib/utils.js";
     import { COLOR_GRADIENT, COLOR_GRADIENT_RED, COLOR_TEAL } from "../data.js";
-    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { GeoPrioritisation } from "../types/GeoPrioritisation";
 
     let {
         selectedWayId = $bindable(),
         selected_shape_id = $bindable(),
         geoData,
         criteria_hour,
-        display_rt
+        display_rt,
     }: {
         selectedWayId: string | undefined;
         selected_shape_id: string | undefined;
-        geoData: GeoPrioritization | null;
+        geoData: GeoPrioritisation | null;
         criteria_hour: number;
         display_rt: boolean;
     } = $props();
@@ -123,7 +123,8 @@
                     class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
                 >
                     {#if true}
-                        {@const lanesDir = way.n_lanes_circulation_direction ?? 0}
+                        {@const lanesDir =
+                            way.n_lanes_circulation_direction ?? 0}
                         {@const lanesCensus =
                             geoData.metadata.data_census.lanes_length}
                         {@const lanesColor = lanesCensus
@@ -174,7 +175,9 @@
                                 Avg Speed
                             </p>
                             <p class="text-lg font-bold">
-                                {speed.toFixed(1)}
+                                {typeof speed === "number"
+                                    ? speed.toFixed(1)
+                                    : Number(speed).toFixed(1)}
                                 <span class="text-[10px] font-normal">km/h</span
                                 >
                             </p>
@@ -192,7 +195,7 @@
                 {/if}
 
                 <!-- Demand Card -->
-                {#if way.demand!=null}
+                {#if way.demand != null}
                     <div
                         class="p-3 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50 flex flex-col justify-between shadow-sm overflow-hidden relative"
                     >
@@ -240,8 +243,14 @@
                     </p>
                     <p class="text-xs font-medium text-muted-foreground">
                         <span class="text-foreground">
-                            {way.n_lanes_circulation ?? 0} <span class="text-[9px] text-muted-foreground">circulation</span> + {way.n_lanes_parking ??
-                                0} <span class="text-[9px] text-muted-foreground">parking</span>
+                            {way.n_lanes_circulation ?? 0}
+                            <span class="text-[9px] text-muted-foreground"
+                                >circulation</span
+                            >
+                            + {way.n_lanes_parking ?? 0}
+                            <span class="text-[9px] text-muted-foreground"
+                                >parking</span
+                            >
                         </span>
                     </p>
                 </div>
@@ -270,7 +279,11 @@
                         Extension
                     </p>
                     <p class="text-xs font-medium text-foreground">
-                        {way.length_m.toFixed(1)}
+                        {typeof way.length_m === "number"
+                            ? way.length_m.toFixed(1)
+                            : way.length_m != null
+                              ? Number(way.length_m).toFixed(1)
+                              : "-"}
                         <span class="text-[9px] text-muted-foreground"
                             >meters</span
                         >
@@ -394,7 +407,7 @@
                     <span>23h</span>
                 </div>
             </section>
-            
+
             {#if display_rt && way.hour_speed_avg && Object.values(way.hour_speed_avg)?.some((v) => v != null)}
                 <section
                     class="space-y-3 p-4 bg-zinc-50/80 dark:bg-zinc-900/40 rounded-xl border border-border/50"
@@ -414,7 +427,10 @@
                                         way.hour_speed_avg || { 0: 1 },
                                     ) as number[]),
                                 ) || 1}
-                            {@const height = Math.max((avg_speed / maxSpeed) * 100, 2)}
+                            {@const height = Math.max(
+                                (avg_speed / maxSpeed) * 100,
+                                2,
+                            )}
                             {@const hourFreqCensus =
                                 geoData.metadata.data_census.frequency_hour[i]}
                             {@const barColor = hourFreqCensus
@@ -449,7 +465,9 @@
                     </div>
 
                     <div class="overflow-x-auto pt-1">
-                        <table class="w-full min-w-[860px] border-separate border-spacing-x-[2px] border-spacing-y-1">
+                        <table
+                            class="w-full min-w-[860px] border-separate border-spacing-x-[2px] border-spacing-y-1"
+                        >
                             <tbody>
                                 <tr>
                                     <th
@@ -472,12 +490,15 @@
                                         Average speed (km/h)
                                     </th>
                                     {#each Array(24) as _, i}
-                                        {@const avgSpeed = way.hour_speed_avg?.[i]}
+                                        {@const avgSpeed =
+                                            way.hour_speed_avg?.[i]}
                                         <td
                                             class="text-[10px] font-medium text-center px-1 py-1 rounded bg-background/70 border border-border/30"
                                             title="{i}:00 hour_speed_avg"
                                         >
-                                            {avgSpeed == null ? "-" : avgSpeed.toFixed(1)}
+                                            {avgSpeed == null || typeof avgSpeed !== "number"
+                                                ? (avgSpeed != null && !isNaN(Number(avgSpeed)) ? Number(avgSpeed).toFixed(1) : "-")
+                                                : avgSpeed.toFixed(1)}
                                         </td>
                                     {/each}
                                 </tr>
@@ -494,8 +515,8 @@
                                             class="text-[10px] font-medium text-center px-1 py-1 rounded bg-background/70 border border-border/30"
                                             title="{i}:00 hour_speed_median"
                                         >
-                                            {medianSpeed == null
-                                                ? "-"
+                                            {medianSpeed == null || typeof medianSpeed !== "number"
+                                                ? (medianSpeed != null && !isNaN(Number(medianSpeed)) ? Number(medianSpeed).toFixed(1) : "-")
                                                 : medianSpeed.toFixed(1)}
                                         </td>
                                     {/each}
@@ -513,7 +534,9 @@
                                             class="text-[10px] font-medium text-center px-1 py-1 rounded bg-background/70 border border-border/30"
                                             title="{i}:00 hour_speed_count"
                                         >
-                                            {speedCount == null ? "-" : speedCount}
+                                            {speedCount == null
+                                                ? "-"
+                                                : speedCount}
                                         </td>
                                     {/each}
                                 </tr>

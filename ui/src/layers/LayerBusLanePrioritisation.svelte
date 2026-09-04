@@ -3,12 +3,15 @@
     import * as L from "leaflet";
     import { COLOR_YELLOW, COLOR_TEAL, COLOR_RED } from "../data";
     import type { Feature } from "geojson";
-    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { GeoPrioritisation } from "../types/GeoPrioritisation";
+    import type { LineWeightMetric } from "../types/LineWeightMetric";
+    import { getLineWeight } from "../lib/utils";
 
     let {
         map,
         geoData,
         criteriaHour = 8,
+        lineWeightBy = "frequency",
         criteriaBusFrequency = 5,
         criteriaBusFrequencyEnabled = true,
         criteriaNLanesDirection = 2,
@@ -26,8 +29,9 @@
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
-        geoData: GeoPrioritization;
+        geoData: GeoPrioritisation;
         criteriaHour: number;
+        lineWeightBy: LineWeightMetric;
         criteriaBusFrequency: number;
         criteriaBusFrequencyEnabled: boolean;
         criteriaNLanesDirection: number;
@@ -49,7 +53,7 @@
     // Map from wayId -> leaflet path layer for highlight control
     let wayLayerMap: Map<string, L.Path> = new Map();
 
-    console.log("LayerBusLanePrioritization component executing script block");
+    console.log("LayerBusLanePrioritisation component executing script block");
 
     let filteredFeatures = $derived.by(() => {
         if (!geoData) return [];
@@ -59,7 +63,11 @@
             if (!props) return false;
 
             // Filter by shape if selected
-            if (selectedShapeId && selectedShapeId !== "all" && !props.shapes?.includes(selectedShapeId)) {
+            if (
+                selectedShapeId &&
+                selectedShapeId !== "all" &&
+                !props.shapes?.includes(selectedShapeId)
+            ) {
                 return false;
             }
 
@@ -74,7 +82,8 @@
                 !criteriaNLanesDirectionEnabled ||
                 (props.n_lanes_circulation !== undefined &&
                     props.n_lanes_circulation_direction !== undefined &&
-                    props.n_lanes_circulation_direction >= criteriaNLanesDirection);
+                    props.n_lanes_circulation_direction >=
+                        criteriaNLanesDirection);
 
             const parkingOk =
                 !criteriaNLanesParkingEnabled ||
@@ -99,6 +108,12 @@
 
     function getWayStyle(wayId: string): L.PathOptions {
         const props = geoData.wayData[wayId];
+        const weight = getLineWeight(
+            geoData,
+            props,
+            criteriaHour,
+            lineWeightBy,
+        );
         if (props?.is_bus_lane) {
             const frequencyOk =
                 !criteriaBusFrequencyEnabled ||
@@ -108,7 +123,8 @@
                 !criteriaNLanesDirectionEnabled ||
                 (props.n_lanes_circulation !== undefined &&
                     props.n_lanes_circulation_direction !== undefined &&
-                    props.n_lanes_circulation_direction >= criteriaNLanesDirection);
+                    props.n_lanes_circulation_direction >=
+                        criteriaNLanesDirection);
             const parkingOk =
                 !criteriaNLanesParkingEnabled ||
                 (props.n_lanes_parking !== undefined &&
@@ -128,17 +144,17 @@
                     frequencyOk && lanesOk && parkingOk && speedOk && demandOk
                         ? COLOR_TEAL
                         : COLOR_YELLOW,
-                weight: 3.5,
+                weight,
             };
         }
-        return { color: COLOR_RED, weight: 3.5 };
+        return { color: COLOR_RED, weight };
     }
 
     $effect(() => {
         if (!map || !geoData) return;
 
         console.log(
-            "LayerBusLanePrioritization effect running. filteredFeatures length:",
+            "LayerBusLanePrioritisation effect running. filteredFeatures length:",
             filteredFeatures.length,
         );
         const visibleWayIds = filteredFeatures
@@ -200,10 +216,11 @@
             onVisibleWayIdsChange(visibleWayIds);
         });
 
-        // Zoom to layer (only if there are features with valid bounds)
-        if (filteredFeatures.length > 0) {
-            const bounds = newLayer.getBounds();
-            if (bounds.isValid()) map.fitBounds(bounds);
+        // Zoom to operations layer (only if there are features with valid bounds)
+        if (geoData.features.length > 0) {
+            const opsLayer = L.geoJSON(geoData.features);
+            const bounds = opsLayer.getBounds();
+            if (bounds.isValid()) map.fitBounds(bounds, { padding: [10, 10] });
         }
 
         // Cleanup

@@ -2,7 +2,8 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import { COLOR_GRADIENT } from "../data";
-    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { GeoPrioritisation } from "../types/GeoPrioritisation";
+    import type { LineWeightMetric } from "../types/LineWeightMetric";
     import type { Feature } from "geojson";
     import {
         bindWayValueTooltip,
@@ -14,6 +15,7 @@
         map,
         geoData,
         criteriaHour = 8,
+        lineWeightBy = "frequency",
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
@@ -21,8 +23,9 @@
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
-        geoData: GeoPrioritization;
+        geoData: GeoPrioritisation;
         criteriaHour: number;
+        lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
@@ -33,10 +36,14 @@
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
 
-    import { getColorFromGradient } from "../lib/utils";
+    import {
+        getColorFromGradient,
+        getLineWeight,
+        getWayHourlyFrequency,
+    } from "../lib/utils";
 
     function getFrequencyValue(wayId: string): number {
-        return geoData.wayData[wayId]?.hour_frequency?.[criteriaHour] || 0;
+        return getWayHourlyFrequency(geoData.wayData[wayId], criteriaHour);
     }
 
     function formatFrequencyLabel(wayId: string): string {
@@ -51,9 +58,15 @@
             freq,
             geoData.metadata.data_census.frequency_hour[criteriaHour]?.p5 || 0,
             geoData.metadata.data_census.frequency_hour[criteriaHour]?.p95 || 1,
-            COLOR_GRADIENT
+            COLOR_GRADIENT,
         );
-        return { color, weight: 3.5 };
+        const weight = getLineWeight(
+            geoData,
+            props,
+            criteriaHour,
+            lineWeightBy,
+        );
+        return { color, weight };
     }
 
     $effect(() => {
@@ -66,7 +79,11 @@
             (feature: Feature | undefined) => {
                 const wayId = feature?.properties?.way_osm_id;
                 const props = wayId ? geoData.wayData[wayId] : undefined;
-                if (selectedShapeId && selectedShapeId !== "all" && !props?.shapes?.includes(selectedShapeId)) {
+                if (
+                    selectedShapeId &&
+                    selectedShapeId !== "all" &&
+                    !props?.shapes?.includes(selectedShapeId)
+                ) {
                     return false;
                 }
                 return props?.hour_frequency?.[criteriaHour];
@@ -111,7 +128,12 @@
                         handleWayMouseOver(layer, wayId, selectedWayId);
                     });
                     layer.on("mouseout", () => {
-                        handleWayMouseOut(layer, wayId, selectedWayId, getFreqStyle);
+                        handleWayMouseOut(
+                            layer,
+                            wayId,
+                            selectedWayId,
+                            getFreqStyle,
+                        );
                     });
                 },
             },
@@ -124,10 +146,11 @@
             onVisibleWayIdsChange(visibleWayIds);
         });
 
-        // Zoom to layer (only if there are features with valid bounds)
-        if (filteredFeatures.length > 0) {
-            const bounds = newLayer.getBounds();
-            if (bounds.isValid()) map.fitBounds(bounds);
+        // Zoom to operations layer (only if there are features with valid bounds)
+        if (geoData.features.length > 0) {
+            const opsLayer = L.geoJSON(geoData.features);
+            const bounds = opsLayer.getBounds();
+            if (bounds.isValid()) map.fitBounds(bounds, { padding: [10, 10] });
         }
 
         // Cleanup

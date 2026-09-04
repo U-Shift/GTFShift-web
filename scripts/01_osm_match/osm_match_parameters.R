@@ -162,6 +162,7 @@ regions <- bind_rows( # Metro Lisboa
     gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
     gtfs_day_filter = TRUE,
     gtfs_match = "route_long_name",
+    gtfs_manipulate = "manipulate_gtfs_metroLisboa",
     query = I(list(list(
       list(key = "route", value = c("subway"), key_exact = TRUE),
       list(key = "network", value = "Metropolitano de Lisboa", key_exact = TRUE)
@@ -177,7 +178,8 @@ regions <- bind_rows( # Fertagus
   data.frame(
     name = "fertagus",
     gtfs_url = data$URL[data$ID == "fertagus"],
-    gtfs_day = as.character(Sys.Date()),
+    gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_day_filter = TRUE,
     gtfs_match = "route_long_name",
     osm_match = "name",
     gtfs_manipulate = "manipulate_gtfs_fertagus",
@@ -243,12 +245,15 @@ regions <- bind_rows( # STCP
   regions,
   data.frame(
     name = "stcp",
-    gtfs_url = "https://api.stcp.pt:8443/v1/ficheiros/estatico/ficheirozip",
-    gtfs_url_headers = I(list(list(
-      "X-App-Id" = Sys.getenv("GTFS_STCP_KEY"),
-      "X-Api-Key" = Sys.getenv("GTFS_STCP_SECRET")
-    ))),
-    gtfs_day = as.character(Sys.Date()),
+    # gtfs_url = "https://api.stcp.pt:8443/v1/ficheiros/estatico/ficheirozip",
+    gtfs_url = "https://github.com/U-Shift/GTFShift/releases/download/v0.9/gtfs_stcp_2026-05-07.zip",
+    # gtfs_url_headers = I(list(list(
+    #   "X-App-Id" = Sys.getenv("GTFS_STCP_KEY"),
+    #   "X-Api-Key" = Sys.getenv("GTFS_STCP_SECRET")
+    # ))),
+    # gtfs_day = as.character(Sys.Date()),
+    gtfs_day = "2026-05-20",
+    gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "STCP", key_exact = TRUE)
@@ -286,14 +291,18 @@ regions <- bind_rows( # Madrid
   regions,
   data.frame(
     name = "madrid",
-    gtfs_url = "https://servicios.emtmadrid.es:8443/gtfs/transitemt.zip",
-    gtfs_day = as.character(Sys.Date()),
+    # gtfs_url = "https://servicios.emtmadrid.es:8443/gtfs/transitemt.zip",
+    gtfs_url = "https://github.com/U-Shift/GTFShift/releases/download/v0.9/gtfs_madrid_20260518.zip",
+    # gtfs_day = as.character(Sys.Date()),
+    gtfs_day = "2026-05-20",
+    gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "operator", value = "Empresa Municipal de Transportes de Madrid", key_exact = TRUE)
     ))),
     geofabrik_region = "europe/spain/madrid",
-    osm_stop_order_relaxed = TRUE
+    osm_stop_order_relaxed = TRUE,
+    metric_crs = 2062
   )
 )
 
@@ -302,14 +311,18 @@ regions <- bind_rows(
   regions,
   data.frame(
     name = "toulouse",
-    gtfs_url = "https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
-    gtfs_day = as.character(Sys.Date()),
+    # gtfs_url = "https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
+    gtfs_url = "https://github.com/U-Shift/GTFShift/releases/download/v0.9/gtfs_toulouse_20260519.zip",
+    # gtfs_day = as.character(Sys.Date()),
+    gtfs_day = "2026-05-20",
+    gtfs_day_filter = TRUE,
     query = I(list(list(
       list(key = "route", value = c("bus"), key_exact = TRUE),
       list(key = "network", value = "Tisséo", key_exact = TRUE)
     ))),
     geofabrik_region = "europe/france/midi-pyrenees",
-    osm_stop_order_relaxed = TRUE
+    osm_stop_order_relaxed = TRUE,
+    metric_crs = 27563
   )
 )
 
@@ -610,5 +623,19 @@ manipulate_carris_funiculars <- function(gtfs) {
     filter(route_id %in% routes_filter$route_id)
   gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_filter$trip_id)
 
+  return(gtfs)
+}
+
+manipulate_gtfs_metroLisboa <- function(gtfs) {
+  # Filter by shapes that have at least +10 trips (to avoid shortenings for initial services)
+  trips_per_shape <- gtfs$trips |>
+    group_by(shape_id) |>
+    summarise(n_trips = n(), .groups = "drop")
+  shapes_to_keep <- trips_per_shape |>
+    filter(n_trips >= 10) |>
+    pull(shape_id)
+  trips_to_keep <- gtfs$trips |>
+    filter(shape_id %in% shapes_to_keep)
+  gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_to_keep$trip_id)
   return(gtfs)
 }

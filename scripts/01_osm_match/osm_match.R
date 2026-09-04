@@ -16,9 +16,8 @@ library(osmdata)
 source("01_osm_match/osm_match_parameters.R")
 
 regions <- regions |>
-  filter(name %in% c("lisboa_funiculars"))
   # filter(name %in% c("lisboa_trams", "lisboa_funiculars", "cp_lisboa", "cp_pt"))
-  filter(name %in% c("barreiro", "cascais", "lisboa", "AML"))
+  filter(name %in% c("metroLisboa"))
 
 # main()
 for (i in 1:nrow(regions)) {

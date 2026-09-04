@@ -23,6 +23,7 @@
     MAP_LIGHT,
     MAP_LIGHT_OPACITY,
     MAP_DARK_OPACITY,
+    MAP_ATTRIBUTION,
     MAP_INIT_ZOOM,
     MAP_INIT_CENTER,
   } from "./data";
@@ -34,22 +35,19 @@
   const createMap = (container: HTMLElement) => {
     let m = L.map(container, {
       zoomControl: false,
+      zoomSnap: 0.1,
+      zoomDelta: 0.1,
     }).setView(MAP_INIT_CENTER, MAP_INIT_ZOOM);
 
     tileLayer = (L as any)
       .maplibreGL({
         style: MAP_LIGHT,
+        attribution: MAP_ATTRIBUTION,
       })
       .addTo(m);
     if (tileLayer.getContainer()) {
       tileLayer.getContainer().style.opacity = MAP_LIGHT_OPACITY.toString();
     }
-
-    L.control
-      .zoom({
-        position: "topright",
-      })
-      .addTo(m);
 
     return m;
   };
@@ -73,6 +71,7 @@
         tileLayer = (L as any)
           .maplibreGL({
             style: tileUrl,
+            attribution: MAP_ATTRIBUTION,
           })
           .addTo(map);
         if (tileLayer.getContainer()) {

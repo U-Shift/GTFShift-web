@@ -3,12 +3,15 @@
     import * as L from "leaflet";
     import { COLOR_TEAL } from "../data";
     import type { Feature } from "geojson";
-    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { GeoPrioritisation } from "../types/GeoPrioritisation";
+    import type { LineWeightMetric } from "../types/LineWeightMetric";
+    import { getLineWeight } from "../lib/utils";
 
     let {
         map,
         geoData,
         criteriaHour,
+        lineWeightBy = "frequency",
         selectedWayId = undefined,
         selectedShapeId = undefined,
         onLayerCreate = (layer) => {},
@@ -16,8 +19,9 @@
         onWaySelect = (wayId) => {},
     }: {
         map: L.Map;
-        geoData: GeoPrioritization;
+        geoData: GeoPrioritisation;
         criteriaHour: number;
+        lineWeightBy: LineWeightMetric;
         selectedWayId: string | undefined;
         selectedShapeId: string | undefined;
         onLayerCreate: (layer: L.Layer) => void;
@@ -27,6 +31,17 @@
 
     let currentLayer: L.Layer | null = $state(null);
     let wayLayerMap: Map<string, L.Path> = new Map();
+
+    function getWayStyle(wayId: string): L.PathOptions {
+        const props = geoData.wayData[wayId];
+        const weight = getLineWeight(
+            geoData,
+            props,
+            criteriaHour,
+            lineWeightBy,
+        );
+        return { color: COLOR_TEAL, weight };
+    }
 
     $effect(() => {
         if (!map || !geoData) return;
@@ -38,7 +53,11 @@
             (feature: Feature | undefined) => {
                 const wayId = feature?.properties?.way_osm_id;
                 const props = wayId ? geoData.wayData[wayId] : undefined;
-                if (selectedShapeId && selectedShapeId !== "all" && !props?.shapes?.includes(selectedShapeId)) {
+                if (
+                    selectedShapeId &&
+                    selectedShapeId !== "all" &&
+                    !props?.shapes?.includes(selectedShapeId)
+                ) {
                     return false;
                 }
                 return props?.is_bus_lane;
@@ -50,7 +69,11 @@
 
         // Create and add new layer to map
         const newLayer = L.geoJSON(filteredFeatures, {
-            style: { color: COLOR_TEAL, weight: 3.5 },
+            style: (feature: Feature | undefined) => {
+                const wayId = feature?.properties?.way_osm_id;
+                if (!wayId) return {};
+                return getWayStyle(wayId);
+            },
             onEachFeature: (feature, layer) => {
                 const wayId = feature.properties?.way_osm_id;
                 if (wayId) wayLayerMap.set(wayId, layer as L.Path);
@@ -69,10 +92,7 @@
                 });
                 layer.on("mouseout", () => {
                     if (wayId && wayId !== selectedWayId) {
-                        (layer as L.Path).setStyle({
-                            color: COLOR_TEAL,
-                            weight: 3.5,
-                        });
+                        (layer as L.Path).setStyle(getWayStyle(wayId));
                     }
                 });
             },
@@ -85,10 +105,11 @@
             onVisibleWayIdsChange(visibleWayIds);
         });
 
-        // Zoom to layer (only if there are features with valid bounds)
-        if (filteredFeatures.length > 0) {
-            const bounds = newLayer.getBounds();
-            if (bounds.isValid()) map.fitBounds(bounds);
+        // Zoom to operations layer (only if there are features with valid bounds)
+        if (geoData.features.length > 0) {
+            const opsLayer = L.geoJSON(geoData.features);
+            const bounds = opsLayer.getBounds();
+            if (bounds.isValid()) map.fitBounds(bounds, { padding: [10, 10] });
         }
 
         // Cleanup
@@ -110,7 +131,7 @@
                 path.setStyle({ weight: 7, color: "#FFD4B8", opacity: 1 });
                 path.bringToFront();
             } else {
-                path.setStyle({ color: COLOR_TEAL, weight: 3.5 });
+                path.setStyle(getWayStyle(wayId));
             }
         });
     });

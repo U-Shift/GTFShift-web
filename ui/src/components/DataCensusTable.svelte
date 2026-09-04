@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { StatisticsBundle } from "../types/GeoPrioritization";
+    import type { StatisticsBundle } from "../types/GeoPrioritisation";
 
     let {
         census_1,

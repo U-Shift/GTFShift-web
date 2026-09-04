@@ -1,5 +1,5 @@
 ### 1. Aggregate JSONs (one per minute) by trip_id, with record of all updates per trip
-gtfs_rt_gather <- function(FOLDER_PATH, OUTPUT_FOLDER, process_json) {
+gtfs_rt_gather <- function(FOLDER_PATH, OUTPUT_FOLDER, process_json, agency_id = NULL) {
   print("\n1. Starting aggregation of GTSF-RT files...")
   if (!dir.exists(FOLDER_PATH)) {
     stop(sprintf("Folder '%s' does not exist.", FOLDER_PATH))
@@ -10,15 +10,15 @@ gtfs_rt_gather <- function(FOLDER_PATH, OUTPUT_FOLDER, process_json) {
 
   json_files <- list.files(FOLDER_PATH, pattern = "\\.json$", full.names = TRUE)
   json_files_dates <- sort(unique(substr(basename(json_files), 1, 8)))
-  for (date in json_files_dates) {
+  for (date in json_files_dates) { # date = json_files_dates[[1]]
     RECORDS_LIST <- list()
     message(sprintf("Processing date: %s", date))
     date_files <- json_files[substr(basename(json_files), 1, 8) == date]
-    for (file_path in date_files) {
+    for (file_path in date_files) { # file_path = date_files[[1]]
       filename <- basename(file_path)
       tryCatch({
         data <- jsonlite::fromJSON(file_path, simplifyVector = FALSE)
-        RECORDS_LIST <- process_json(data, filename, RECORDS_LIST)
+        RECORDS_LIST <- process_json(data, filename, RECORDS_LIST, agency_id)
       }, error = function(e) {
         message(sprintf("Unexpected error processing file %s: %s", filename, e$message))
       })

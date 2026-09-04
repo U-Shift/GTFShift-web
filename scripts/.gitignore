@@ -16,3 +16,4 @@ gtfs_external/*
 */*_files/*
 **/html*
 *.html
+*.log

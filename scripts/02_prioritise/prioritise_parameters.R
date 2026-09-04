@@ -1,0 +1,556 @@
+# Initialization -------------------------------------------------------
+output <- "web_data"
+GTFShiftVersion <- "0.10 (dev version)" # as.character(packageVersion("GTFShift"))
+
+# GTFS-RT commercial speed computation parameters
+THRESHOLD_MIN_UPDATES_PER_ROAD_SEGMENT_FOR_SPEED <- 3 # number of updates per road segment to compute speed
+THRESHOLD_TIME_BETWEEN_UPDATES_MAX <- 90 # seconds, maximum time between updates to consider them valid for speed computation
+THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN <- 0.7 # minimum ratio of updates per trip (against planned updates) to consider the trip valid for speed computation
+THRESHOLD_DISTANCE_TO_GEOMETRY_MAX <- 50 # meters, maximum distance to closest shape point to consider the update valid for speed computation
+THRESHOLD_EDGE_DISTANCE_DISCARD <- 100 # meters, distance from first and last shape point to discard updates for speed computation (to avoid initial and final updates, where updates are usually not accurate due to pings before/after the vehicle is travelling)
+THRESHOLD_SPEED_MAX <- 140 # km/h, maximum speed to consider the update valid for speed computation (to avoid outliers)
+
+# Define regions to analyse
+regions <- data.frame(
+  name = character(),
+  name_long = character(),
+  gtfs = character(),
+  query = I(list()),
+  rt_interval = character(),
+  rt_collection = I(list()),
+  rt_collection_manipulate = character()
+)
+data <- read.csv(system.file("extdata", "gtfs_sources_pt.csv", package = "GTFShift"))
+
+
+# Lisbon Metro Area -------------------------------------------------------
+## Carris, Lisboa -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "lisboa_rt",
+    name_long = "Lisboa, Portugal",
+    gtfs_url = "web_data/lisboa_rt/gtfs_20260520/run_20260520_082954/gtfs_lisboa_rt_2026-05-20.zip", # data[data$ID == "lisboa", ]$URL,
+    gtfs_day = "2026-05-20", # as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_manipulate = "manipulate_carris_lx",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Carris", key_exact = TRUE)
+    ))),
+    rt_interval = "13-30/04/2026 (Business Days)",
+    rt_collection = I(list(as.character(list.files(
+      "data/cm_20260413_220260430_business/osm_multiline_to_line_circular_fix_2",
+      pattern = "^updates_with_speed_.*\\.csv$",
+      full.names = TRUE
+    )))),
+    rt_collection_manipulate = "rt_collection_speed_from_shape_distance_progression",
+    rt_collection_manipulate_extra_params = I(list(list(
+      osm_shapes_length_file = "data/cm_20260413_220260430_business/osm_multiline_to_line_circular_fix_2/osm_shapes_linestring.gpkg",
+      gtfs_url = "https://github.com/U-Shift/busclar/releases/download/0.9/gtfs_carris.zip", # MobilityDatabase Snapshot for 11/04/2026
+      gtfs_date = NA,
+      gtfs_manipulate = NA
+    ))),
+    rt_collection_per_hour = TRUE,
+    geofabrik_region = "europe/portugal",
+    metric_crs = 3763
+  )
+)
+
+## Carris Metropolitana -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "aml_rt",
+    name_long = "Lisboa Metro Area, Portugal",
+    gtfs_url = data[data$ID == "AML", ]$URL,
+    gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_manipulate = "manipulate_carris_met",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
+    ))),
+    rt_interval = "13-30/04/2026 (Business Days)",
+    rt_collection = I(list("data/cmet_20260413_220260430_business/updates.csv")),
+    # rt_collection_manipulate = I(list(function(df) {
+    geofabrik_region = "europe/portugal"
+  )
+)
+
+### Area 1 -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "aml_rt_area_1",
+    name_long = "Lisboa Metro Area, Portugal (Area 1)",
+    gtfs_url = "https://files.mobilitydatabase.org/mdb-2027/mdb-2027-202605190105/mdb-2027-202605190105.zip", # MobilityDatabase Snapshot for 19/05/2026
+    gtfs_day = "2026-05-20", # as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_manipulate = "manipulate_carris_met_area_1",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
+    ))),
+    rt_interval = "13-30/04/2026 (Business Days)",
+    rt_collection = I(list(as.character(list.files(
+      "data/cmet_20260413_220260430_business_a1/processing_speed_shape_distance_2",
+      pattern = "^updates_with_speed_.*\\.csv$",
+      full.names = TRUE
+    )))),
+    rt_collection_manipulate = "rt_collection_speed_from_shape_distance_progression",
+    rt_collection_manipulate_extra_params = I(list(list(
+      osm_shapes_length_file = "data/cmet_20260413_220260430_business_a1/processing_speed_shape_distance_2/osm_shapes_linestring.gpkg",
+      gtfs_url = "https://files.mobilitydatabase.org/mdb-2027/mdb-2027-202604110055/mdb-2027-202604110055.zip", # MobilityDatabase Snapshot for 11/04/2026
+      gtfs_date = "2026-04-13",
+      gtfs_manipulate = "manipulate_carris_met_area_1"
+    ))),
+    rt_collection_per_hour = TRUE,
+    demand_for_route = I(list("data/demand/cm_demand_20260520.csv")),
+    demand_notes = "Demand by route, obtained from <a href='https://api.carrismetropolitana.pt/v2/metrics/demand/by_line/' target='_blank'>Carris Metropolitana API</a> for same representative day as transit services analysed. Segment aggregation considers the sum of all passengers that board each route that passes through the segment for that day, regardless of the direction of travel or stop they boarded or alighted.",
+    geofabrik_region = "europe/portugal",
+    metric_crs = 3763
+  )
+)
+
+### Area 2 -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "aml_rt_area_2",
+    name_long = "Lisboa Metro Area, Portugal (Area 2)",
+    gtfs_url = "https://files.mobilitydatabase.org/mdb-2027/mdb-2027-202605190105/mdb-2027-202605190105.zip", # MobilityDatabase Snapshot for 19/05/2026
+    gtfs_day = "2026-05-20", # as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_manipulate = "manipulate_carris_met_area_2",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
+    ))),
+    rt_interval = "13-30/04/2026 (Business Days)",
+    rt_collection = I(list(as.character(list.files(
+      "data/cmet_20260413_220260430_business_a2/processing_speed_shape_distance_2",
+      pattern = "^updates_with_speed_.*\\.csv$",
+      full.names = TRUE
+    )))),
+    rt_collection_manipulate = "rt_collection_speed_from_shape_distance_progression",
+    rt_collection_manipulate_extra_params = I(list(list(
+      osm_shapes_length_file = "data/cmet_20260413_220260430_business_a2/processing_speed_shape_distance_2/osm_shapes_linestring.gpkg",
+      gtfs_url = "https://files.mobilitydatabase.org/mdb-2027/mdb-2027-202604110055/mdb-2027-202604110055.zip", # MobilityDatabase Snapshot for 11/04/2026
+      gtfs_date = "2026-04-13",
+      gtfs_manipulate = "manipulate_carris_met_area_2"
+    ))),
+    rt_collection_per_hour = TRUE,
+    demand_for_route = I(list("data/demand/cm_demand_20260520.csv")),
+    demand_notes = "Demand by route, obtained from <a href='https://api.carrismetropolitana.pt/v2/metrics/demand/by_line/' target='_blank'>Carris Metropolitana API</a> for same representative day as transit services analysed. Segment aggregation considers the sum of all passengers that board each route that passes through the segment for that day, regardless of the direction of travel or stop they boarded or alighted.",
+    geofabrik_region = "europe/portugal",
+    metric_crs = 3763
+  )
+)
+
+### Area 3 -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "aml_rt_area_3",
+    name_long = "Lisboa Metro Area, Portugal (Area 3)",
+    gtfs_url = "https://files.mobilitydatabase.org/mdb-2027/mdb-2027-202605190105/mdb-2027-202605190105.zip", # MobilityDatabase Snapshot for 19/05/2026
+    gtfs_day = "2026-05-20", # as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_manipulate = "manipulate_carris_met_area_3",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
+    ))),
+    rt_interval = "13-30/04/2026 (Business Days)",
+    rt_collection = I(list(as.character(list.files(
+      "data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance_2",
+      pattern = "^updates_with_speed_.*\\.csv$",
+      full.names = TRUE
+    )))),
+    rt_collection_manipulate = "rt_collection_speed_from_shape_distance_progression",
+    rt_collection_manipulate_extra_params = I(list(list(
+      osm_shapes_length_file = "data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance_2/osm_shapes_linestring.gpkg",
+      gtfs_url = "https://files.mobilitydatabase.org/mdb-2027/mdb-2027-202604110055/mdb-2027-202604110055.zip", # MobilityDatabase Snapshot for 11/04/2026
+      gtfs_date = "2026-04-13",
+      gtfs_manipulate = "manipulate_carris_met_area_3"
+    ))),
+    rt_collection_per_hour = TRUE,
+    demand_for_route = I(list("data/demand/cm_demand_20260520.csv")),
+    demand_notes = "Demand by route, obtained from <a href='https://api.carrismetropolitana.pt/v2/metrics/demand/by_line/' target='_blank'>Carris Metropolitana API</a> for same representative day as transit services analysed. Segment aggregation considers the sum of all passengers that board each route that passes through the segment for that day, regardless of the direction of travel or stop they boarded or alighted.",
+    geofabrik_region = "europe/portugal",
+    metric_crs = 3763
+  )
+)
+
+### Area 4 -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "aml_rt_area_4",
+    name_long = "Lisboa Metro Area, Portugal (Area 4)",
+    gtfs_url = "https://files.mobilitydatabase.org/mdb-2027/mdb-2027-202605190105/mdb-2027-202605190105.zip", # MobilityDatabase Snapshot for 19/05/2026
+    gtfs_day = "2026-05-20", # as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_manipulate = "manipulate_carris_met_area_4",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Carris Metropolitana", key_exact = TRUE)
+    ))),
+    rt_collection = I(list(as.character(list.files(
+      "data/cmet_20260413_220260430_business_a4/processing_speed_shape_distance_2",
+      pattern = "^updates_with_speed_.*\\.csv$",
+      full.names = TRUE
+    )))),
+    rt_collection_manipulate = "rt_collection_speed_from_shape_distance_progression",
+    rt_collection_manipulate_extra_params = I(list(list(
+      osm_shapes_length_file = "data/cmet_20260413_220260430_business_a4/processing_speed_shape_distance_2/osm_shapes_linestring.gpkg",
+      gtfs_url = "https://files.mobilitydatabase.org/mdb-2027/mdb-2027-202604110055/mdb-2027-202604110055.zip", # MobilityDatabase Snapshot for 11/04/2026
+      gtfs_date = NA,
+      gtfs_manipulate = "manipulate_carris_met_area_4"
+    ))),
+    rt_collection_per_hour = TRUE,
+    demand_for_route = I(list("data/demand/cm_demand_20260520.csv")),
+    demand_notes = "Demand by route, obtained from <a href='https://api.carrismetropolitana.pt/v2/metrics/demand/by_line/' target='_blank'>Carris Metropolitana API</a> for same representative day as transit services analysed. Segment aggregation considers the sum of all passengers that board each route that passes through the segment for that day, regardless of the direction of travel or stop they boarded or alighted.",
+    geofabrik_region = "europe/portugal",
+    metric_crs = 3763
+  )
+)
+
+## MobiCascais, Cascais -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "cascais",
+    name_long = "Cascais, Portugal",
+    # gtfs_url = "https://drive.google.com/uc?export=download&id=13ucYiAJRtu-gXsLa02qKJrGOgDjbnUWX",
+    # gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_url = "web_data/cascais/gtfs_20260520/run_20260519_071746/gtfs_cascais_2026-05-20.zip",
+    gtfs_day = "2026-05-20",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "MobiCascais", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/portugal",
+    metric_crs = 3763
+  )
+)
+
+## TCB, Barreiro -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "barreiro",
+    name_long = "Barreiro, Portugal",
+    # gtfs_url = data$URL[data$ID == "barreiro"],
+    gtfs_url = "web_data/barreiro/gtfs_20260520/run_20260519_110700/gtfs_barreiro_2026-05-20.zip",
+    # gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_day = "2026-05-20",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = c("TCB", "Transportes Coletivos do Barreiro", "Transportes Colectivos do Barreiro"), key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/portugal",
+    metric_crs = 3763
+  )
+)
+
+# Portugal, Others -----------------------------------
+## STCP, Porto -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "stcp",
+    name_long = "Porto, Portugal",
+    # gtfs_url = "https://api.stcp.pt:8443/v1/ficheiros/estatico/ficheirozip",
+    # gtfs_url_headers = I(list(list(
+    #  "X-App-Id" = Sys.getenv("GTFS_STCP_KEY"),
+    #  "X-Api-Key" = Sys.getenv("GTFS_STCP_SECRET")
+    # ))),
+    # gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_url = "web_data/stcp/gtfs_20260520/run_20260519_073433/gtfs_stcp_2026-05-20.zip",
+    gtfs_day = "2026-05-20",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "STCP", key_exact = TRUE)
+    ))),
+    rt_interval = "13-30/04/2026 (Business Days)",
+    rt_collection = I(list(as.character(list.files(
+      "data/stcp_20260413_220260430_business/processing_speed_shape_distance_2",
+      pattern = "^updates_with_speed_.*\\.csv$",
+      full.names = TRUE
+    )))),
+    rt_collection_manipulate = "rt_collection_speed_from_shape_distance_progression",
+    rt_collection_manipulate_extra_params = I(list(list(
+      osm_shapes_length_file = "data/stcp_20260413_220260430_business/processing_speed_shape_distance_2/osm_shapes_linestring.gpkg",
+      gtfs_url = "https://github.com/U-Shift/GTFShift/releases/download/v0.9/gtfs_stcp_2026-05-07.zip",
+      gtfs_date = "2026-05-20",
+      gtfs_manipulate = "manipulate_gtfs_stcp"
+    ))),
+    geofabrik_region = "europe/portugal",
+    metric_crs = 3763
+  )
+)
+
+# International -----------------------------------
+## MTA, NYC, USA -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "nyc_mta",
+    gtfs_url = "https://rrgtfsfeeds.s3.amazonaws.com/gtfs_busco.zip",
+    gtfs_day = as.character(Sys.Date()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "Metropolitan Transportation Authority", key_exact = TRUE)
+    )))
+  )
+)
+
+## Guelph, CANADA -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "guelph",
+    name_long = "Guelph, CA",
+    gtfs_url = "https://gismaps.guelph.ca/Pages/GTFS/google_transit.zip",
+    gtfs_day = "2026-04-29",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Guelph Transit", key_exact = TRUE)
+    ))),
+    geofabrik_region = "north-america/canada/ontario"
+  )
+)
+
+## EMT, Madrid, SPAIN -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "madrid",
+    name_long = "Madrid, ES",
+    # gtfs_url = "https://servicios.emtmadrid.es:8443/gtfs/transitemt.zip",
+    # gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_url = "web_data/madrid/gtfs_20260520/run_20260519_072338/gtfs_madrid_2026-05-20.zip",
+    gtfs_day = "2026-05-20",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = c("Empresa Municipal de Transportes de Madrid", "EMT Madrid"), key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/spain/madrid",
+    metric_crs = 2062
+  )
+)
+
+## Fuenlabrada, SPAIN -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "fuenlabrada",
+    name_long = "Fuenlabrada, ES",
+    gtfs_url = "https://api.control.optibus.co/opendata/v1/gtfs?uid=c-5cfcd2d1",
+    gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
+    gtfs_manipulate = "manipulate_gtfs_fuenlabrada",
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "operator", value = "EMT Fuenlabrada", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/spain/madrid"
+  )
+)
+
+## Tisseo, Toulouse, FRANCE -----------------------------------
+regions <- bind_rows(
+  regions,
+  data.frame(
+    name = "toulouse",
+    name_long = "Toulouse, FR",
+    gtfs_url = "https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
+    gtfs_day = as.character(GTFShift::calendar_nextBusinessWednesday()),
+    query = I(list(list(
+      list(key = "route", value = c("bus"), key_exact = TRUE),
+      list(key = "network", value = "Tisséo", key_exact = TRUE)
+    ))),
+    geofabrik_region = "europe/france/midi-pyrenees"
+  )
+)
+
+# Helpers -----------------------------------
+rt_collection_speed_from_shape_distance_progression <- function(df, osm_shapes_length_file, gtfs_url, gtfs_date, gtfs_manipulate) {
+  message("rt_collection_speed_from_shape_distance_progression() kick-of...")
+  # Load and manipulate GTFS
+  gtfs <- GTFShift::load_feed(gtfs_url)
+  if (!is.na(gtfs_date) && !is.null(gtfs_date)) {
+    message("Getting GTFS for date: ", gtfs_date)
+    gtfs <- tidytransit::filter_feed_by_date(gtfs, extract_date = gtfs_date)
+  }
+  if (!is.null(gtfs_manipulate) && !is.na(gtfs_manipulate)) {
+    message("Manipulating GTFS with function: ", gtfs_manipulate)
+    message("Manipulating gtfs...")
+    gtfs <- get(gtfs_manipulate)(gtfs)
+  }
+  # Get GTFS planned trip duration
+  gtfs_trip_duration <- gtfs$stop_times |>
+    arrange(trip_id, stop_sequence) |>
+    mutate(
+      # Convert "HH:MM:SS" to ephoch time (seconds since 1970-01-01)
+      departure_time = as.numeric(as.POSIXct(departure_time, format = "%H:%M:%S", tz = "UTC")),
+      arrival_time = as.numeric(as.POSIXct(arrival_time, format = "%H:%M:%S", tz = "UTC"))
+    ) |>
+    group_by(trip_id) |>
+    summarise(
+      departure_time = min(departure_time),
+      arrival_time = max(arrival_time),
+      trip_duration = as.numeric(difftime(arrival_time, departure_time, units = "secs")), # Seconds
+      .groups = "drop"
+    ) |> # Get route_short_name and route_long_name from gtfs$trips and gtfs$routes
+    left_join(gtfs$trips |> select(trip_id, route_id), by = "trip_id") |>
+    left_join(gtfs$routes |> select(route_id, route_short_name, route_long_name), by = "route_id") |>
+    # Get shape_id from gtfs$trips
+    left_join(gtfs$trips |> select(trip_id, shape_id), by = "trip_id") |>
+    mutate(shape_id = as.character(shape_id))
+
+  # Getting OSM shapes length
+  osm_shapes_length <- sf::st_read(osm_shapes_length_file) |>
+    st_transform(crs = 3763) |>
+    mutate(
+      length_m = as.numeric(st_length(geom)),
+      shape_id = as.character(shape_id)
+    )
+
+  # Remove trips from trams, ascensors (end with "E") and neighbourhood buses (end with "B")
+  message("Filtering out tram and neighbourhood bus trips from GTFS trip duration data...")
+  gtfs_trip_duration <- gtfs_trip_duration |> filter(!stringr::str_detect(route_short_name, "E$|B$"))
+  message(sprintf("> Manipulating RT collection, with %d records", nrow(df)))
+
+  # Remove column closest_on_geometry, if exists (occupies unnecessary space in memory)
+  df <- df |>
+    select(-any_of("closest_on_geometry")) |>
+    mutate(shape_id = as.character(shape_id))
+
+  # 1st validation: time between and distance to geometry
+  message(sprintf("> Validating updates, with %d records", nrow(df)))
+  message("> 1st validation: time between updates and distance to geometry")
+  df <- df |>
+    mutate(
+      valid_time = ifelse(time_since_prev_sec < THRESHOLD_TIME_BETWEEN_UPDATES_MAX, TRUE, FALSE),
+      valid_distance_to_geometry = ifelse(!is.na(distance_to_closest_on_geometry) & distance_to_closest_on_geometry <= THRESHOLD_DISTANCE_TO_GEOMETRY_MAX, TRUE, FALSE),
+      valid_speed = ifelse(!is.na(speed_kmh) & speed_kmh <= THRESHOLD_SPEED_MAX, TRUE, FALSE),
+      valid_trip = valid_time & valid_distance_to_geometry & valid_speed
+    )
+  message(sprintf("> After 1st validation, %d (%.2f%%) records are valid for speed computation", nrow(df |> filter(valid_trip)), nrow(df |> filter(valid_trip)) / nrow(df) * 100))
+  message(sprintf("> %d (%.2f%%) records are invalid due to time between updates > %d seconds", nrow(df |> filter(!valid_time)), nrow(df |> filter(!valid_time)) / nrow(df) * 100, THRESHOLD_TIME_BETWEEN_UPDATES_MAX))
+  message(sprintf("> %d (%.2f%%) records are invalid due to distance to geometry > %d meters", nrow(df |> filter(!valid_distance_to_geometry)), nrow(df |> filter(!valid_distance_to_geometry)) / nrow(df) * 100, THRESHOLD_DISTANCE_TO_GEOMETRY_MAX))
+  message(sprintf("> %d (%.2f%%) records are invalid due to speed > %d km/h", nrow(df |> filter(!valid_speed)), nrow(df |> filter(!valid_speed)) / nrow(df) * 100, THRESHOLD_SPEED_MAX))
+  # 2nd validation: valid updates ratio
+  message("> 2nd validation: valid updates ratio per trip")
+  trips_per_day <- df |>
+    filter(valid_trip) |>
+    group_by(trip_id, day) |>
+    summarise(updates_count = n(), .groups = "drop") |>
+    left_join(
+      gtfs_trip_duration |> select(trip_id, trip_duration),
+      by = c("trip_id" = "trip_id"), multiple = "first"
+    ) |>
+    mutate(
+      planned_updates_count = round(trip_duration / THRESHOLD_TIME_BETWEEN_UPDATES_MAX),
+      updates_ratio = updates_count / planned_updates_count
+    )
+  message(sprintf("> Found %d trips", nrow(trips_per_day)))
+  n_at_least_ratio <- nrow(trips_per_day |> filter(updates_ratio >= THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN))
+  message(sprintf("> %d (%.2f%%) have at least %.2f%% of updates ratio (updates_count / planned_updates_count)", n_at_least_ratio, n_at_least_ratio / nrow(trips_per_day) * 100, THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN * 100))
+  df <- df |>
+    left_join(
+      trips_per_day |> select(trip_id, day, updates_count, planned_updates_count, updates_ratio),
+      by = c("trip_id" = "trip_id", "day" = "day")
+    ) |>
+    mutate(
+      valid_updates_ratio = ifelse(updates_ratio >= THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN, TRUE, FALSE),
+      valid_trip = valid_time & valid_distance_to_geometry & valid_speed & valid_updates_ratio
+    )
+  message(sprintf("> After 2nd validation, %d (%.2f%%) records are valid for speed computation", nrow(df |> filter(valid_trip)), nrow(df |> filter(valid_trip)) / nrow(df) * 100))
+  message(sprintf("> %d (%.2f%%) records do not have a GTFS match (no planned_updates_count)", nrow(df |> filter(is.na(planned_updates_count))), nrow(df |> filter(is.na(planned_updates_count))) / nrow(df) * 100))
+  message(sprintf("> %d (%.2f%%) records are invalid due to updates_ratio < %.2f%%", nrow(df |> filter(!valid_updates_ratio)), nrow(df |> filter(!valid_updates_ratio)) / nrow(df) * 100, THRESHOLD_UPDATES_PER_TRIP_MIN_MARGIN * 100))
+  # 3r validation: distance_along_geometry must be between 100 and the shape length -100
+  # (To avoid initial and final updates, where updates are usually not accurate due to pings before/after the vehicle is travelling)
+  message("> 3rd validation: distance_along_geometry must be between 100 and the shape length -100")
+  df <- df |>
+    left_join(
+      osm_shapes_length |> select(shape_id, length_m) |> st_drop_geometry(),
+      by = c("shape_id" = "shape_id")
+    ) |>
+    mutate(
+      valid_distance_along_geometry = ifelse(!is.na(distance_along_geometry) & distance_along_geometry >= THRESHOLD_EDGE_DISTANCE_DISCARD & distance_along_geometry <= (length_m - THRESHOLD_EDGE_DISTANCE_DISCARD), TRUE, FALSE),
+      valid_trip = valid_time & valid_distance_to_geometry & valid_speed & valid_updates_ratio & valid_distance_along_geometry
+    )
+  message(sprintf("> After 3rd validation, %d (%.2f%%) records are valid for speed computation", nrow(df |> filter(valid_trip)), nrow(df |> filter(valid_trip)) / nrow(df) * 100))
+  message(sprintf("> %d (%.2f%%) records are invalid due to distance_along_geometry outside [%.2f, max - %.2f] meters", nrow(df |> filter(!valid_distance_along_geometry)), nrow(df |> filter(!valid_distance_along_geometry)) / nrow(df) * 100, THRESHOLD_EDGE_DISTANCE_DISCARD, THRESHOLD_EDGE_DISTANCE_DISCARD))
+  return(
+    df |>
+      filter(valid_trip) |>
+      mutate(
+        speed = as.numeric(speed_kmh),
+        # Extract HH from epoch, in local time (Europe/Lisbon)
+        # For instance, 1778737681, which is 2026-05-14 05:48:01 UTC, should return 6, as in 06:48:01 in Europe/Lisbon timezone
+        hh = as.integer(format(as.POSIXct(timestamp, origin = "1970-01-01", tz = "Europe/Lisbon"), "%H"))
+      ) |>
+      st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+  )
+}
+
+manipulate_carris_met <- function(gtfs) {
+  # Remove all text from [ to ] from gtfs$shape_ids, which are present in Carris Metropolitana feed and cause issues in matching with OSM shapes
+  gtfs$shapes$shape_id <- stringr::str_replace_all(gtfs$shapes$shape_id, "\\[.*\\]", "")
+  gtfs$trips$shape_id <- stringr::str_replace_all(gtfs$trips$shape_id, "\\[.*\\]", "")
+  gtfs$trips$trip_id <- stringr::str_replace_all(gtfs$trips$trip_id, "\\[.*\\]", "")
+  gtfs$stop_times$trip_id <- stringr::str_replace_all(gtfs$stop_times$trip_id, "\\[.*\\]", "")
+  return(gtfs)
+}
+
+manipulate_carris_met_area_1 <- function(gtfs) {
+  gtfs <- manipulate_carris_met(gtfs)
+  gtfs <- GTFShift::filter_by_agency(gtfs, id = 41)
+  return(gtfs)
+}
+
+manipulate_carris_met_area_2 <- function(gtfs) {
+  gtfs <- manipulate_carris_met(gtfs)
+  gtfs <- GTFShift::filter_by_agency(gtfs, id = 42)
+  return(gtfs)
+}
+
+manipulate_carris_met_area_3 <- function(gtfs) {
+  gtfs <- manipulate_carris_met(gtfs)
+  gtfs <- GTFShift::filter_by_agency(gtfs, id = 43)
+  return(gtfs)
+}
+
+manipulate_carris_met_area_4 <- function(gtfs) {
+  gtfs <- manipulate_carris_met(gtfs)
+  gtfs <- GTFShift::filter_by_agency(gtfs, id = 44)
+  return(gtfs)
+}
+
+manipulate_carris_lx <- function(gtfs) {
+  colors <- read.csv("data_useful/carris_colors.csv")
+
+  gtfs$routes <- gtfs$routes |>
+    select(-c(route_color, route_text_color)) |>
+    left_join(colors, by = "route_short_name")
+
+  # Filter tram routes (route_short_name contains "E")
+  routes_bus <- gtfs$routes |>
+    filter(!stringr::str_detect(route_short_name, "E"))
+  trips_routes_bus <- gtfs$trips |>
+    filter(route_id %in% routes_bus$route_id)
+  gtfs <- tidytransit::filter_feed_by_trips(gtfs, trips_routes_bus$trip_id)
+
+  return(gtfs)
+}
+
+manipulate_gtfs_stcp <- function(gtfs) {
+  # Rename trip_id to remove offer plan id from second number between || (e.g. 504_0_2|220|D3|T1|N26 > 504_0_2|D3|T1|N26)
+  gtfs$trips$trip_id <- stringr::str_replace_all(gtfs$trips$trip_id, "\\|[0-9]+\\|", "|")
+  gtfs$stop_times$trip_id <- stringr::str_replace_all(gtfs$stop_times$trip_id, "\\|[0-9]+\\|", "|")
+  return(gtfs)
+}
+
+manipulate_gtfs_fuenlabrada <- function(gtfs) {
+  # Append "L" suffix to route_short_name
+  gtfs$routes$route_short_name <- paste0("L", gtfs$routes$route_short_name)
+  return(gtfs)
+}

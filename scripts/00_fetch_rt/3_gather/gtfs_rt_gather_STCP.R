@@ -10,12 +10,12 @@ library(sf)
 
 ## Parameters
 FOLDER_PATH <- "data/stcp_20260413_220260430_business/updates"
-OUTPUT_FOLDER <- "data/stcp_20260413_220260430_business/processing_speed_shape_distance"
+OUTPUT_FOLDER <- "data/stcp_20260413_220260430_business/processing_speed_shape_distance_2"
 
 ## Methods
 process_json <- function(data, filename, RECORDS_LIST, agency_id = NULL) {
   # Get timestamp from file name (Eg. 'data/barreiro_20260511_20260515/updates/20260511_000002.json')
-  day <- strsplit(filename, "_", fixed = TRUE)[[1]][2]
+  day <- strsplit(filename, "_", fixed = TRUE)[[1]][1]
 
   for (e in data$entities) {
     vehicle <- e$vehicle

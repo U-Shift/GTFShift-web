@@ -57,6 +57,7 @@ gtfs_shapes_sf = tidytransit::shapes_as_sf(gtfs$shapes)
 shape_case_study = gtfs_shapes_sf |> 
   filter(shape_id==trip_shape_id)
 
+
 # Get updates for TRIP
 updates = read.csv(UPDATES_RAW)
 names(updates)
@@ -73,3 +74,17 @@ mapview(shape_case_study, color="navyblue", lwd=3, layer.name="GTFS Shape", alph
   
 ## Store sample 
 write.csv(updates_case_study, paste0("data/samples/updates_case_study_", OPERATOR,"_", TRIP_ID_UPDATES, ".csv"), row.names=FALSE)
+
+# Get updates for Route
+updates = read.csv(UPDATES_RAW)
+ROUTE_ID="4_4-CS-TERM"
+updates_route = updates |> filter(route_id == ROUTE_ID) |>
+  rename(
+    latitude = lat,
+    longitude = lon
+  ) |> select(-timestamp_formatted) |>
+  mutate(speed = round(speed, digits=2)) |>
+  sample_n(100)
+names(updates_route)
+
+write.csv(updates_route, paste0("data/samples/updates_case_study_", OPERATOR,"_", ROUTE_ID, ".csv"), row.names=FALSE)

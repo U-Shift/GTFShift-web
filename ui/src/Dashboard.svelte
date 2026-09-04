@@ -2,11 +2,12 @@
     import { untrack } from "svelte";
     import * as L from "leaflet";
     import type { Feature } from "geojson";
-    import type { GeoPrioritization } from "./types/GeoPrioritization";
+    import type { GeoPrioritisation } from "./types/GeoPrioritisation";
     import type { DataRegion, RegionLayer } from "./types/DataRegion";
+    import type { LineWeightMetric } from "./types/LineWeightMetric";
 
     import ModalAbout from "./modals/ModalAbout.svelte";
-    import LayerBusLanePrioritization from "./layers/LayerBusLanePrioritization.svelte";
+    import LayerBusLanePrioritisation from "./layers/LayerBusLanePrioritisation.svelte";
     import LayerBusLanes from "./layers/LayerBusLanes.svelte";
     import LayerTransitFrequency from "./layers/LayerTransitFrequency.svelte";
     import LayerNumberOfLanes from "./layers/LayerNumberOfLanes.svelte";
@@ -45,14 +46,14 @@
     // Map
     let { map, light_mode = $bindable() }: { map: L.Map; light_mode: boolean } =
         $props();
-    let geoData: GeoPrioritization | null = $state(null);
+    let geoData: GeoPrioritisation | null = $state(null);
 
     // User feedback
     let loading: string | undefined = $state(undefined);
 
     // Dashboard state
     enum DisplayOptions {
-        PRIORITIZATION,
+        PRIORITISATION,
         BUS_LANES,
         FREQUENCY,
         N_LANES,
@@ -97,6 +98,30 @@
     let criteria_avg_speed_enabled: boolean = $state(true);
     let criteria_demand_enabled: boolean = $state(false);
     let visible_way_ids: string[] = $state([]);
+    let line_weight_by: LineWeightMetric = $state("frequency");
+
+    const lineWeightOptions = $derived.by(() => {
+        const hourLabel = `${criteria_hour.toString().padStart(2, "0")}:00`;
+        const options: Array<{ value: LineWeightMetric; label: string }> = [
+            { value: "none", label: "None (uniform width)" },
+            { value: "frequency", label: `Bus frequency (at ${hourLabel})` },
+            { value: "lanes", label: "Number of lanes" },
+        ];
+        if (display_rt) {
+            options.push({
+                value: "speed_min",
+                label: "Speed (slower roads thicker)",
+            });
+            options.push({
+                value: "speed_max",
+                label: "Speed (faster roads thicker)",
+            });
+        }
+        if (display_demand) {
+            options.push({ value: "demand", label: "Demand" });
+        }
+        return options;
+    });
 
     let action_hide_form: boolean = $state(false);
     let action_modal_about_open: boolean = $state(false);
@@ -196,37 +221,42 @@
                 metadata: metadata,
                 routes: routeData,
                 shapes: shapeData,
-            } as GeoPrioritization;
+            } as GeoPrioritisation;
             console.log("geoData", geoData);
 
             display_rt = Object.values(geoData.wayData).some(
                 (data: any) =>
                     data.speed_avg !== undefined && data.speed_avg !== null,
             );
-            display_demand = Object.values(geoData.wayData).some((data: any) => {
-                const demandValue = Number(data.demand);
-                return data.demand!==null && !Number.isNaN(demandValue);
-            });
+            display_demand = Object.values(geoData.wayData).some(
+                (data: any) => {
+                    const demandValue = Number(data.demand);
+                    return data.demand !== null && !Number.isNaN(demandValue);
+                },
+            );
 
             // Set criteria base values
             criteria_hour = 8;
             criteria_n_lanes_direction = 2;
             criteria_n_lanes_parking = 1;
             criteria_bus_frequency =
-                geoData.metadata.data_census.frequency.median;
+                geoData.metadata.data_census.frequency.median_below_p85;
             criteria_avg_speed = Math.floor(
-                geoData.metadata.data_census.speed_avg_length?.median ?? 0,
+                geoData.metadata.data_census.speed_avg_length
+                    ?.median_below_p85 ?? 0,
             );
             criteria_demand = Math.floor(
-                geoData.metadata.data_census.demand_length?.median ?? 0,
+                geoData.metadata.data_census.demand_length?.median_below_p85 ??
+                    0,
             );
             criteria_bus_frequency_enabled = true;
             criteria_n_lanes_direction_enabled = true;
             criteria_n_lanes_parking_enabled = false;
             criteria_avg_speed_enabled = display_rt;
             criteria_demand_enabled = display_demand;
-            active_layer = DisplayOptions.PRIORITIZATION;
-            open_accordion = DisplayOptions.PRIORITIZATION.toString();
+            line_weight_by = "frequency";
+            active_layer = DisplayOptions.PRIORITISATION;
+            open_accordion = DisplayOptions.PRIORITISATION.toString();
 
             console.log("Loaded GeoJSON for layer:", selected_layer.id);
         } catch (error) {
@@ -267,7 +297,7 @@
 
         console.log("Filtering by shape:", selected_shape_id);
 
-        // Deselect prioritization filters when a specific route is selected
+        // Deselect prioritisation filters when a specific route is selected
         if (selected_shape_id && selected_shape_id !== "all") {
             untrack(() => {
                 criteria_bus_frequency_enabled = false;
@@ -285,6 +315,11 @@
                 if (display_demand) criteria_demand_enabled = true;
             });
         }
+    });
+
+    $effect(() => {
+        if (lineWeightOptions.find((o) => o.value === line_weight_by)) return;
+        line_weight_by = "frequency";
     });
 
     const routeOptions = $derived.by(() => {
@@ -347,7 +382,7 @@
             </Tooltip.Provider>
         </div>
         <p class="text-sm text-muted-foreground">
-            Bus lane prioritization tool
+            Bus lane prioritisation tool
         </p>
         {#if loading}
             <p
@@ -470,6 +505,16 @@
                                         <i class="fas fa-road mr-1"></i> Static analysis
                                     </p>
                                 {/if}
+
+                                {#if r.demand_data}
+                                    <p
+                                        class="text-xs text-muted-foreground mt-0.5"
+                                    >
+                                        <i class="fas fa-people-group mr-1"></i>
+                                        With passenger demand data
+                                    </p>
+                                {/if}
+
                                 {#if peak !== undefined}
                                     <p
                                         class="text-xs text-muted-foreground mt-0.5"
@@ -584,6 +629,14 @@
                                         class="text-xs text-muted-foreground mt-0.5"
                                     >
                                         <i class="fas fa-road mr-1"></i> Static analysis
+                                    </p>
+                                {/if}
+                                {#if layer.demand_data}
+                                    <p
+                                        class="text-xs text-muted-foreground mt-0.5"
+                                    >
+                                        <i class="fas fa-people-group mr-1"></i>
+                                        With passenger demand data
                                     </p>
                                 {/if}
                                 {#if layer.matched_frequencies_peak}
@@ -879,6 +932,33 @@
                 </Popover.Root>
             </div>
 
+            <div class="w-full mb-6">
+                <h5
+                    class="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider"
+                >
+                    Line Weight
+                </h5>
+                <Select.Root type="single" bind:value={line_weight_by}>
+                    <Select.Trigger
+                        class="w-full justify-between bg-background/50 hover:bg-accent transition-colors border text-left"
+                    >
+                        <span class="truncate"
+                            >{lineWeightOptions.find(
+                                (o) => o.value === line_weight_by,
+                            )?.label ?? "Bus frequency"}</span
+                        >
+                    </Select.Trigger>
+                    <Select.Content class="z-[1100]">
+                        {#each lineWeightOptions as option}
+                            <Select.Item
+                                value={option.value}
+                                label={option.label}>{option.label}</Select.Item
+                            >
+                        {/each}
+                    </Select.Content>
+                </Select.Root>
+            </div>
+
             <p class="text-xs font-medium text-muted-foreground mb-2">
                 Explore the different layers below
             </p>
@@ -893,11 +973,11 @@
                 class="w-full"
             >
                 <Accordion.Item
-                    value={DisplayOptions.PRIORITIZATION.toString()}
+                    value={DisplayOptions.PRIORITISATION.toString()}
                 >
                     <Accordion.Trigger
                         class="text-sm font-medium hover:no-underline"
-                        >Bus lane prioritization</Accordion.Trigger
+                        >Bus lane prioritisation</Accordion.Trigger
                     >
                     <Accordion.Content>
                         <div
@@ -905,7 +985,7 @@
                         >
                             <p>
                                 Display road segments coloured by bus lane
-                                prioritization criteria:
+                                prioritisation criteria:
                                 <Tooltip.Provider delayDuration={0}>
                                     <Tooltip.Root>
                                         <Tooltip.Trigger>
@@ -917,8 +997,9 @@
                                             {/snippet}
                                         </Tooltip.Trigger>
                                         <Tooltip.Content class="z-[1100]"
-                                            >Frequency and speed initially set
-                                            to median values</Tooltip.Content
+                                            >Frequency, speed and demand
+                                            initially set to median values below
+                                            the 85th percentile</Tooltip.Content
                                         >
                                     </Tooltip.Root>
                                 </Tooltip.Provider>
@@ -1039,7 +1120,7 @@
                                     onclick={() => {
                                         criteria_bus_frequency_enabled = true;
                                         criteria_n_lanes_direction_enabled = true;
-                                        criteria_n_lanes_parking_enabled = true;
+                                        // criteria_n_lanes_parking_enabled = true;
                                         if (display_rt)
                                             criteria_avg_speed_enabled = true;
                                         if (display_demand)
@@ -1053,7 +1134,7 @@
                                     onclick={() => {
                                         criteria_bus_frequency_enabled = false;
                                         criteria_n_lanes_direction_enabled = false;
-                                        criteria_n_lanes_parking_enabled = false;
+                                        // criteria_n_lanes_parking_enabled = false;
                                         if (display_rt)
                                             criteria_avg_speed_enabled = false;
                                         if (display_demand)
@@ -1072,7 +1153,12 @@
                     >
                     <Accordion.Content>
                         <p class="text-xs text-muted-foreground pt-2">
-                            Bus lanes obtained from OSM data, using <a href="https://u-shift.github.io/GTFShift/reference/osm_bus_lanes.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::osm_bus_lanes()</a>.
+                            Bus lanes obtained from OSM data, using <a
+                                href="https://u-shift.github.io/GTFShift/reference/osm_bus_lanes.html"
+                                target="_blank"
+                                class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline"
+                                >GTFShift::osm_bus_lanes()</a
+                            >.
                         </p>
                         <p class="text-xs text-muted-foreground pt-2">
                             Road segments with bus lanes are shown in <span
@@ -1080,24 +1166,24 @@
                                 class="font-bold">green</span
                             >
                         </p>
-                        {#if geoData.metadata.data_census.prioritization_stats_length}
+                        {#if geoData.metadata.data_census.prioritisation_stats_length}
                             <p class="text-xs text-muted-foreground pt-2">
                                 There are {(
                                     geoData.metadata.data_census
-                                        .prioritization_stats_length
+                                        .prioritisation_stats_length
                                         .extension_bus_lane / 1000
                                 ).toFixed(2)} km of bus lanes, accounting for
                                 {(
                                     (geoData.metadata.data_census
-                                        .prioritization_stats_length
+                                        .prioritisation_stats_length
                                         .extension_bus_lane /
                                         geoData.metadata.data_census
-                                            .prioritization_stats_length
+                                            .prioritisation_stats_length
                                             .extension) *
                                     100
                                 ).toFixed(2)}% of the {(
                                     geoData.metadata.data_census
-                                        .prioritization_stats_length.extension /
+                                        .prioritisation_stats_length.extension /
                                     1000
                                 ).toFixed(2)} km bus network
                             </p>
@@ -1115,7 +1201,13 @@
                             class="text-xs text-muted-foreground space-y-3 pt-2"
                         >
                             <p>
-                                Bus frequency determined associating GTFS static data with OSM road segments using <a href="https://u-shift.github.io/GTFShift/reference/get_way_frequency_hourly.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::get_way_frequency_hourly()</a>.
+                                Bus frequency determined associating GTFS static
+                                data with OSM road segments using <a
+                                    href="https://u-shift.github.io/GTFShift/reference/get_way_frequency_hourly.html"
+                                    target="_blank"
+                                    class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline"
+                                    >GTFShift::get_way_frequency_hourly()</a
+                                >.
                             </p>
                             <p>
                                 Road segments with bus service are colored by
@@ -1169,7 +1261,12 @@
                             class="text-xs text-muted-foreground space-y-3 pt-2"
                         >
                             <p>
-                                Number of lanes obtained from OSM data, using <a href="https://u-shift.github.io/GTFShift/reference/prioritize_lanes.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::prioritize_lanes()</a>.
+                                Number of lanes obtained from OSM data, using <a
+                                    href="https://u-shift.github.io/GTFShift/reference/prioritise_lanes.html"
+                                    target="_blank"
+                                    class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline"
+                                    >GTFShift::prioritise_lanes()</a
+                                >.
                             </p>
                             <p>
                                 Road segments with bus service are colored by
@@ -1234,14 +1331,20 @@
                                 class="text-xs text-muted-foreground space-y-3 pt-2"
                             >
                                 <p>
-                                    Speed computed based on GTFS-RT updates with <a href="https://u-shift.github.io/GTFShift/reference/rt_average_speed.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::rt_average_speed()</a>, considering 
-                                    the distance traversed along the route geometry and the time between consecutive updates. 
-
+                                    Speed computed based on GTFS-RT updates with <a
+                                        href="https://u-shift.github.io/GTFShift/reference/rt_average_speed.html"
+                                        target="_blank"
+                                        class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline"
+                                        >GTFShift::rt_average_speed()</a
+                                    >, considering the distance traversed along
+                                    the route geometry and the time between
+                                    consecutive updates.
                                 </p>
                                 <p>
                                     Road segments with bus service are colored
-                                    by the average speed measured (for the full days of the real-time data 
-                                    collection interval), from the <span
+                                    by the average speed measured (for the full
+                                    days of the real-time data collection
+                                    interval), from the <span
                                         style="color: {COLOR_GRADIENT_RED.slice().reverse()[0]}"
                                         class="font-bold"
                                         >P5 ({geoData.metadata.data_census.speed_avg_length?.p5?.toFixed(
@@ -1284,16 +1387,17 @@
                             <div
                                 class="text-xs text-muted-foreground space-y-3 pt-2"
                             >
-
                                 {#if geoData.metadata.demand && geoData.metadata.demand.notes}
-                                    <p class="text-xs text-muted-foreground pt-2">
-                                        {geoData.metadata.demand.notes}
+                                    <p
+                                        class="text-xs text-muted-foreground pt-2"
+                                    >
+                                        {@html geoData.metadata.demand.notes}
                                     </p>
                                 {/if}
                                 <p>
                                     Road segments with bus service are colored
-                                    by passenger demand (cumulative for the representative day in study), 
-                                    from the <span
+                                    by passenger demand (cumulative for the
+                                    representative day in study), from the <span
                                         style="color: {COLOR_GRADIENT[0]}"
                                         class="bg-black/50 font-bold px-1 rounded"
                                         >P5 ({geoData.metadata.data_census.demand_length?.p5?.toFixed(
@@ -1397,7 +1501,7 @@
         id="caption"
         class="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 z-[1000] flex flex-col gap-3 p-4 bg-background/95 backdrop-blur shadow-lg border rounded-xl text-sm w-[calc(100vw-2rem)] sm:w-[350px] max-h-[30vh] sm:max-h-[40vh] overflow-y-auto"
     >
-        {#if active_layer === DisplayOptions.PRIORITIZATION}
+        {#if active_layer === DisplayOptions.PRIORITISATION}
             <p class="flex items-start text-muted-foreground leading-tight">
                 <span
                     class="inline-block w-3 h-3 rounded-sm mr-2 mt-0.5 align-middle shadow-sm shrink-0"
@@ -1633,11 +1737,12 @@
         <LayerBoundaries {map} {boundaryGeoJSON} color={region.color} />
     {/if}
 
-    {#if active_layer === DisplayOptions.PRIORITIZATION}
-        <LayerBusLanePrioritization
+    {#if active_layer === DisplayOptions.PRIORITISATION}
+        <LayerBusLanePrioritisation
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             criteriaBusFrequency={criteria_bus_frequency}
             criteriaBusFrequencyEnabled={criteria_bus_frequency_enabled}
             criteriaNLanesDirection={criteria_n_lanes_direction}
@@ -1659,6 +1764,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
@@ -1670,6 +1776,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
@@ -1681,6 +1788,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
@@ -1691,6 +1799,8 @@
         <LayerParkingLanes
             {map}
             {geoData}
+            criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
@@ -1702,6 +1812,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
@@ -1713,6 +1824,7 @@
             {map}
             {geoData}
             criteriaHour={criteria_hour}
+            lineWeightBy={line_weight_by}
             {selectedWayId}
             selectedShapeId={selected_shape_id}
             onWaySelect={(id) => (selectedWayId = id)}
@@ -1732,7 +1844,7 @@
         hour={criteria_hour}
         rt_data={display_rt}
         demand_data={display_demand}
-        visible_way_ids={visible_way_ids}
+        {visible_way_ids}
         onRouteSelect={(shapeId) => {
             selected_shape_id = shapeId;
             selectedWayId = undefined;

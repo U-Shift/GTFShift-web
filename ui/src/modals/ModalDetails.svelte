@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { GeoPrioritization } from "../types/GeoPrioritization";
+    import type { GeoPrioritisation } from "../types/GeoPrioritisation";
     import { Button } from "$lib/components/ui/button/index.js";
     import * as Tooltip from "$lib/components/ui/tooltip/index.js";
     import hljs from "highlight.js/lib/core";
@@ -41,7 +41,7 @@
         geoData,
     }: {
         open: boolean;
-        geoData: GeoPrioritization | null;
+        geoData: GeoPrioritisation | null;
     } = $props();
 </script>
 
@@ -124,16 +124,16 @@
                                             <kbd
                                                 class="px-1.5 py-0.5 rounded text-xs font-mono bg-muted"
                                             >
-                                                {geoData.metadata.prioritization
+                                                {geoData.metadata.prioritisation
                                                     .shapes_found_n} of {geoData
-                                                    .metadata.prioritization
+                                                    .metadata.prioritisation
                                                     .shapes_total}
                                                 ({(
                                                     (geoData.metadata
-                                                        .prioritization
+                                                        .prioritisation
                                                         .shapes_found_n /
                                                         geoData.metadata
-                                                            .prioritization
+                                                            .prioritisation
                                                             .shapes_total) *
                                                     100
                                                 ).toFixed(2)}%)
@@ -174,7 +174,7 @@
                                                                     missing:
                                                                 </p>
                                                                 <p class="mt-1">
-                                                                    {geoData.metadata.prioritization.shapes_missing.join(
+                                                                    {geoData.metadata.prioritisation.shapes_missing.join(
                                                                         ", ",
                                                                     )}
                                                                 </p>
@@ -190,7 +190,7 @@
                                                                     {@html Object.keys(
                                                                         geoData
                                                                             .metadata
-                                                                            .prioritization
+                                                                            .prioritisation
                                                                             .routes_missing,
                                                                     )
                                                                         .map(
@@ -200,7 +200,7 @@
                                                                                 const route =
                                                                                     geoData
                                                                                         .metadata
-                                                                                        .prioritization
+                                                                                        .prioritisation
                                                                                         .routes_missing[
                                                                                         key
                                                                                     ];
@@ -216,7 +216,7 @@
                                                     </Tooltip.Content>
                                                 </Tooltip.Root>
                                             </Tooltip.Provider>
-                                            {#if geoData.metadata?.prioritization_hour}
+                                            {#if geoData.metadata?.prioritisation_hour}
                                                 <Tooltip.Provider
                                                     delayDuration={0}
                                                 >
@@ -247,34 +247,34 @@
                                                                     Hour
                                                                     distribution:
                                                                 </p>
-                                                                {#each Object.keys(geoData.metadata.prioritization_hour) as hh}
+                                                                {#each Object.keys(geoData.metadata.prioritisation_hour) as hh}
                                                                     <p>
                                                                         <b
                                                                             >{hh}h:</b
                                                                         >{" "}
                                                                         {geoData
                                                                             .metadata
-                                                                            .prioritization_hour[
+                                                                            .prioritisation_hour[
                                                                             hh
                                                                         ]
                                                                             .shapes_found_n}{" "}
                                                                         of {" "}
                                                                         {geoData
                                                                             .metadata
-                                                                            .prioritization_hour[
+                                                                            .prioritisation_hour[
                                                                             hh
                                                                         ]
                                                                             .shapes_total}{" "}
                                                                         ({(
                                                                             (geoData
                                                                                 .metadata
-                                                                                .prioritization_hour[
+                                                                                .prioritisation_hour[
                                                                                 hh
                                                                             ]
                                                                                 .shapes_found_n /
                                                                                 geoData
                                                                                     .metadata
-                                                                                    .prioritization_hour[
+                                                                                    .prioritisation_hour[
                                                                                     hh
                                                                                 ]
                                                                                     .shapes_total) *
@@ -302,21 +302,21 @@
                                             <kbd
                                                 class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
                                             >
-                                                {geoData.metadata.prioritization
+                                                {geoData.metadata.prioritisation
                                                     .shapes_found_frequency} of {geoData
-                                                    .metadata.prioritization
+                                                    .metadata.prioritisation
                                                     .shapes_total_frequency}
                                                 ({(
                                                     (geoData.metadata
-                                                        .prioritization
+                                                        .prioritisation
                                                         .shapes_found_frequency /
                                                         geoData.metadata
-                                                            .prioritization
+                                                            .prioritisation
                                                             .shapes_total_frequency) *
                                                     100
                                                 ).toFixed(2)}%)
                                             </kbd>
-                                            {#if geoData.metadata?.prioritization_hour}
+                                            {#if geoData.metadata?.prioritisation_hour}
                                                 <Tooltip.Provider
                                                     delayDuration={0}
                                                 >
@@ -347,34 +347,34 @@
                                                                     Hour
                                                                     distribution:
                                                                 </p>
-                                                                {#each Object.keys(geoData.metadata.prioritization_hour) as hh}
+                                                                {#each Object.keys(geoData.metadata.prioritisation_hour) as hh}
                                                                     <p>
                                                                         <b
                                                                             >{hh}h:</b
                                                                         >{" "}
                                                                         {geoData
                                                                             .metadata
-                                                                            .prioritization_hour[
+                                                                            .prioritisation_hour[
                                                                             hh
                                                                         ]
                                                                             .shapes_found_frequency}{" "}
                                                                         of {" "}
                                                                         {geoData
                                                                             .metadata
-                                                                            .prioritization_hour[
+                                                                            .prioritisation_hour[
                                                                             hh
                                                                         ]
                                                                             .shapes_total_frequency}{" "}
                                                                         ({(
                                                                             (geoData
                                                                                 .metadata
-                                                                                .prioritization_hour[
+                                                                                .prioritisation_hour[
                                                                                 hh
                                                                             ]
                                                                                 .shapes_found_frequency /
                                                                                 geoData
                                                                                     .metadata
-                                                                                    .prioritization_hour[
+                                                                                    .prioritisation_hour[
                                                                                     hh
                                                                                 ]
                                                                                     .shapes_total_frequency) *
@@ -428,29 +428,113 @@
                                             >Speed calculation methodology</th
                                         >
                                         <td class="px-4 py-2 text-xs">
-                                            Speed was computed based on GTFS-RT updates with 
-                                            <a href="https://u-shift.github.io/GTFShift/reference/rt_average_speed.html" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift::rt_average_speed()</a>, considering 
-                                            the distance traversed along the route geometry and the time between consecutive updates. 
-                                            
-                                            <br/><br/>
-                                            Aggregation was performed at the segment level (for all routes that go through each), so the speed 
-                                            must be interpreted as the average speed of all vehicles that traversed the segment during the time period considered.
+                                            Speed was computed based on GTFS-RT
+                                            updates with
+                                            <a
+                                                href="https://u-shift.github.io/GTFShift/reference/rt_average_speed.html"
+                                                target="_blank"
+                                                class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline"
+                                                >GTFShift::rt_average_speed()</a
+                                            >, considering the distance
+                                            traversed along the route geometry
+                                            and the time between consecutive
+                                            updates.
 
-                                            <br/><br/>
-                                            The aggregation was performed using a script available at <a href="https://github.com/U-Shift/GTFShift-web/tree/main/scripts/02_prioritize" target="_blank" class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline">GTFShift-web/scripts/02_prioritize</a>.
-                                            
-                                            The following thresholds were used to consider an update valid for speed calculation:
+                                            <br /><br />
+                                            Aggregation was performed at the segment
+                                            level (for all routes that go through
+                                            each), so the speed must be interpreted
+                                            as the average speed of all vehicles
+                                            that traversed the segment during the
+                                            time period considered.
+
+                                            <br /><br />
+                                            The aggregation was performed using a
+                                            script available at
+                                            <a
+                                                href="https://github.com/U-Shift/GTFShift-web/tree/main/scripts/02_prioritise"
+                                                target="_blank"
+                                                class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono hover:underline"
+                                                >GTFShift-web/scripts/02_prioritise</a
+                                            >. The following thresholds were
+                                            used to consider an update valid for
+                                            speed calculation:
                                             <ul class="list-disc pl-5 mt-1">
-                                                <li>A maximum speed of <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.max_speed} km/h</span></li>
-                                                <li>A maximum time between updates of <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.max_time_between_updates} seconds</span></li>
-                                                <li>A maximum distance to trip geometry of <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.max_distance_to_geometry} meters</span></li>
-                                                <li>Discard updates in the first and last <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.edge_distance_discard} meters</span> of trip geometry (to avoid initial and final updates, where updates are usually not accurate due to pings before/after the vehicle is travelling)</li>
-                                                <li>Considering the planned trip duration and the <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.max_time_between_updates} seconds</span> threshold, 
-                                                    the number of expected updates per trip is computed, and only trips with a minimum of <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.min_updates_per_trip_margin*100}%</span>  of expected updates received are considered for speed calculation</li>
+                                                <li>
+                                                    A maximum speed of <span
+                                                        class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
+                                                        >{geoData.metadata.rt
+                                                            .thresholds
+                                                            .max_speed} km/h</span
+                                                    >
+                                                </li>
+                                                <li>
+                                                    A maximum time between
+                                                    updates of <span
+                                                        class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
+                                                        >{geoData.metadata.rt
+                                                            .thresholds
+                                                            .max_time_between_updates}
+                                                        seconds</span
+                                                    >
+                                                </li>
+                                                <li>
+                                                    A maximum distance to trip
+                                                    geometry of <span
+                                                        class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
+                                                        >{geoData.metadata.rt
+                                                            .thresholds
+                                                            .max_distance_to_geometry}
+                                                        meters</span
+                                                    >
+                                                </li>
+                                                <li>
+                                                    Discard updates in the first
+                                                    and last <span
+                                                        class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
+                                                        >{geoData.metadata.rt
+                                                            .thresholds
+                                                            .edge_distance_discard}
+                                                        meters</span
+                                                    > of trip geometry (to avoid
+                                                    initial and final updates, where
+                                                    updates are usually not accurate
+                                                    due to pings before/after the
+                                                    vehicle is travelling)
+                                                </li>
+                                                <li>
+                                                    Considering the planned trip
+                                                    duration and the <span
+                                                        class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
+                                                        >{geoData.metadata.rt
+                                                            .thresholds
+                                                            .max_time_between_updates}
+                                                        seconds</span
+                                                    >
+                                                    threshold, the number of expected
+                                                    updates per trip is computed,
+                                                    and only trips with a minimum
+                                                    of
+                                                    <span
+                                                        class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
+                                                        >{geoData.metadata.rt
+                                                            .thresholds
+                                                            .min_updates_per_trip_margin *
+                                                            100}%</span
+                                                    > of expected updates received
+                                                    are considered for speed calculation
+                                                </li>
                                             </ul>
 
-                                            <br/>
-                                            Speed is only displayed for segments with a minimum of <span class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">{geoData.metadata.rt.thresholds.min_updates_per_road_segment_for_speed} updates</span>.
+                                            <br />
+                                            Speed is only displayed for segments
+                                            with a minimum of
+                                            <span
+                                                class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono"
+                                                >{geoData.metadata.rt.thresholds
+                                                    .min_updates_per_road_segment_for_speed}
+                                                updates</span
+                                            >.
                                         </td>
                                     </tr>
                                 {/if}
@@ -548,10 +632,10 @@
                 <p>¹ Transit frequency computed for representative day</p>
                 <p>
                     ² <a
-                        href="https://u-shift.github.io/GTFShift/reference/prioritize_lanes.html"
+                        href="https://u-shift.github.io/GTFShift/reference/prioritise_lanes.html"
                         target="_blank"
                         class="text-primary hover:underline"
-                        >GTFShift::prioritize_lanes()</a
+                        >GTFShift::prioritise_lanes()</a
                     >
                     uses
                     <a
@@ -574,7 +658,7 @@
                     </h5>
 
                     <a
-                        href="https://u-shift.github.io/GTFShift/articles/prioritize.html"
+                        href="https://u-shift.github.io/GTFShift/articles/prioritise.html"
                         target="_blank"
                         class="text-[10px] text-primary hover:underline"
                     >
@@ -585,7 +669,7 @@
                     Below is a simplified version of the R script used to
                     generate the analysis presented in this dashboard. Refer to
                     the <a
-                        href="https://u-shift.github.io/GTFShift/articles/prioritize.html"
+                        href="https://u-shift.github.io/GTFShift/articles/prioritise.html"
                         target="_blank"
                         class="text-primary hover:underline">tutorial</a
                     >
@@ -605,17 +689,19 @@
                     <div
                         class="rounded-lg overflow-hidden border border-border/50"
                     >
-<pre class="p-4 text-xs overflow-x-auto"><code>{@html hljs.highlight(`library(GTFShift)
+                        <pre class="p-4 text-xs overflow-x-auto"><code
+                                >{@html hljs.highlight(
+                                    `library(GTFShift)
 library(tidytransit)
 library(osmdata)
 library(sf)
 
-# Prioritize based on planned operation and infrastructure characteristics
+# Prioritise based on planned operation and infrastructure characteristics
 gtfs = GTFShift::load_feed("gtfs.zip", create_transfers=FALSE)
 osm_q = opq(bbox=sf::st_bbox(tidytransit::shapes_as_sf(gtfs$shapes)))  |>
   ${geoData.metadata.osm_query.map((q) => `add_osm_feature(key = "${q.key}", value = ${Array.isArray(q.value) ? `c(${q.value.map((v) => `"${v}"`).join(", ")})` : `"${q.value}"`}, key_exact = ${q.key_exact ? "TRUE" : "FALSE"})`).join(" |> \n  ")}
 
-lane_prioritization = prioritize_lanes(gtfs, osm_q)
+lane_prioritisation = prioritise_lanes(gtfs, osm_q)
 ` +
                                         (geoData.metadata.rt
                                             ? `
@@ -624,7 +710,11 @@ rt_collection <- read.csv("updates_collected.csv") |> sf::st_as_sf(coords = c("l
 trips_geometries <- GTFShift::osm_shapes_to_routes(gtfs, osm_q)
 speeds <- GTFShift::rt_average_speed(rt_collection, trips_geometries)
 # ... filtering omitted ...
-lane_prioritization <- GTFShift::rt_extend_prioritization(lane_prioritization, speeds)`: ""),{ language: "r" },).value}</code></pre>
+lane_prioritisation <- GTFShift::rt_extend_prioritisation(lane_prioritisation, speeds)`
+                                            : ""),
+                                    { language: "r" },
+                                ).value}</code
+                            ></pre>
                     </div>
                 {/if}
             </section>
