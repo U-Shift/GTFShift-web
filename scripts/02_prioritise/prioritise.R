@@ -17,9 +17,9 @@ source("02_prioritise/prioritise_parameters.R")
 
 regions <- regions |>
   # filter(name %in% c("lisboa_rt", "aml_rt", "barreiro", "stcp"))
-  # filter(name %in% c("stcp"))
-# filter(name %in% c("barreiro"))
-  filter(name %in% c("lisboa_rt", "aml_rt_area_1", "aml_rt_area_2", "aml_rt_area_3", "aml_rt_area_4", "stcp"))
+  filter(name %in% c("stcp"))
+#  filter(name %in% c("cascais", "barreiro", "madrid"))
+# filter(name %in% c("lisboa_rt")) # , "aml_rt_area_1", "aml_rt_area_2", "aml_rt_area_3", "aml_rt_area_4", "stcp"))
 
 # main()
 if (!dir.exists(output)) {
@@ -443,7 +443,7 @@ for (i in 1:nrow(regions)) { # i =1
         hms::as_hms(sec)
       })
     )
-  gtfs_hour_fix = gtfs
+  gtfs_hour_fix <- gtfs
   gtfs_hour_fix$stop_times <- stop_times_fix
   for (i in 0:23) {
     gtfs_hour <- NULL
@@ -643,4 +643,3 @@ for (i in 1:nrow(regions)) { # i =1
     digits = NA
   )
 }
-
