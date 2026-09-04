@@ -138,9 +138,10 @@
             onVisibleWayIdsChange(visibleWayIds);
         });
 
-        if (filteredFeatures.length > 0) {
-            const bounds = newLayer.getBounds();
-            if (bounds.isValid()) map.fitBounds(bounds);
+        if (geoData.features.length > 0) {
+            const opsLayer = L.geoJSON(geoData.features);
+            const bounds = opsLayer.getBounds();
+            if (bounds.isValid()) map.fitBounds(bounds, { padding: [10, 10] });
         }
 
         return () => {
