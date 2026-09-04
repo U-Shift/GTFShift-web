@@ -199,7 +199,7 @@ For each update, find the closest point on the shape and compute the distance al
 
 ```{r, warning=FALSE, shapes-speed-gtfs}
 timestamp_shape_distance_start <- Sys.time()
-trips_processed_shape_gtfs_distance <- GTFShift::rt_commercial_speed(
+trips_processed_shape_gtfs_distance <- GTFShift::rt_average_speed(
   rt_collection = updates_case_study,
   trips_geometries = shape_case_study |> mutate(trip_id = updates_case_study$trip_id[[1]]), # Add trip_id to shape_case_study for compatibility,
   rt_collection_trips_geometries_match_col = "trip_id",
@@ -227,7 +227,7 @@ mapview(shape_case_study, color="blue", lwd=3, layer.name="GTFS Shape", alpha=0.
 
 ```{r, warning=FALSE, shapes-speed-osm}
 timestamp_shape_distance_start <- Sys.time()
-trips_processed_shape_distance <- GTFShift::rt_commercial_speed(
+trips_processed_shape_distance <- GTFShift::rt_average_speed(
   rt_collection = updates_case_study,
   trips_geometries = osm_shape |> mutate(trip_id = updates_case_study$trip_id[[1]]), # Add trip_id to shape_case_study for compatibility,
   geometry_sample_meters = SHAPE_SAMPLE_METERS,
