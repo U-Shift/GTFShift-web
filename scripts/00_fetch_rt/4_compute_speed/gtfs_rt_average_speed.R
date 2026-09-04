@@ -1,5 +1,5 @@
 # GTFS RT commercial speed computation
-# Run with: $ Rscript 00_fetch_rt/4_compute_speed/gtfs_rt_commercial_speed.R > data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance/gtfs_rt_commercial_speed.log 2>&1
+# Run with: $ Rscript 00_fetch_rt/4_compute_speed/gtfs_rt_average_speed.R > data/cmet_20260413_220260430_business_a3/processing_speed_shape_distance/gtfs_rt_average_speed.log 2>&1
 
 library(jsonlite)
 library(lubridate)
@@ -13,7 +13,7 @@ METRIC_CRS <- 3763 # Portugal
 THRESHOLD_GEOMETRY_DISTANCE_DIFF <- 1000
 THRESHOLD_GEOMETRY_POINTS_DIFF <- 500
 
-gtfs_rt_commercial_speed <- function(UPDATES_RAW_FOLDER, OUTPUT_FOLDER, GTFS_FEED_URL, GTFS_MANIPULATE, OSM_SHAPES, UPDATES_MANIPULATE=NULL) {
+gtfs_rt_average_speed <- function(UPDATES_RAW_FOLDER, OUTPUT_FOLDER, GTFS_FEED_URL, GTFS_MANIPULATE, OSM_SHAPES, UPDATES_MANIPULATE=NULL) {
     
   if (!dir.exists(OUTPUT_FOLDER)) {
     dir.create(OUTPUT_FOLDER, recursive = TRUE)
@@ -164,7 +164,7 @@ gtfs_rt_commercial_speed <- function(UPDATES_RAW_FOLDER, OUTPUT_FOLDER, GTFS_FEE
     message(sprintf("> Number of records with GTFS and OSM match: %d (%.2f%%)", nrow(RECORDS_WITH_GTFS_AND_OSM_MATCH), nrow(RECORDS_WITH_GTFS_AND_OSM_MATCH) / nrow(RECORDS) * 100))
 
     start_time = Sys.time()
-    result <- GTFShift::rt_commercial_speed(
+    result <- GTFShift::rt_average_speed(
       rt_collection = RECORDS_WITH_GTFS_AND_OSM_MATCH |> st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE),
       trips_geometries = osm_shapes_linestring,
       rt_collection_trips_geometries_match_col = "osm_id",
