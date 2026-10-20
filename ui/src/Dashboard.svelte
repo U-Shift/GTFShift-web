@@ -1711,6 +1711,7 @@
                     ></i>
                     Operations Area
                 </span>
+                <!--
                 <button
                     class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 outline-none {show_boundaries
                         ? 'bg-primary'
@@ -1727,6 +1728,7 @@
                             : 'translate-x-0.5'}"
                     ></span>
                 </button>
+            -->
             </div>
         {/if}
     </div>
