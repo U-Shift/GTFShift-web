@@ -34,7 +34,7 @@
 
   const createMap = (container: HTMLElement) => {
     let m = L.map(container, {
-      zoomControl: false,
+      zoomControl: true,
       zoomSnap: 0.1,
       zoomDelta: 0.1,
     }).setView(MAP_INIT_CENTER, MAP_INIT_ZOOM);

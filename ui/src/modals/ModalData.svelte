@@ -59,6 +59,34 @@
             }
         });
     });
+
+    let total_km = $derived(
+        data_filtered.reduce(
+            (acc, row) =>
+                acc + (Number((row as any).properties?.length_m) || 0),
+            0,
+        ) / 1000,
+    );
+
+    let total_km_all = $derived(
+        geoData
+            ? Object.values(geoData.wayData).reduce(
+                  (acc: number, w: any) => acc + (Number(w?.length_m) || 0),
+                  0,
+              ) / 1000
+            : 0,
+    );
+
+    let total_km_bus_lanes = $derived(
+        data_filtered.reduce(
+            (acc, row) =>
+                acc +
+                ((row as any).properties?.is_bus_lane
+                    ? Number((row as any).properties?.length_m) || 0
+                    : 0),
+            0,
+        ) / 1000,
+    );
 </script>
 
 {#if open}
@@ -82,10 +110,13 @@
                 <i class="fas fa-table text-primary"></i>
                 Attribute table
                 <span class="text-muted-foreground font-normal text-sm"
-                    >at {hour}:00 (Showing {data_filtered.length} rows displayed
-                    in current layer, out of {geoData
+                    >at {hour}:00 (Showing {data_filtered.length} rows of {total_km.toFixed(
+                        1,
+                    )} km displayed in current layer, out of {geoData
                         ? Object.keys(geoData.wayData).length
-                        : 0})</span
+                        : 0} of {total_km_all.toFixed(1)} km, of which {total_km_bus_lanes.toFixed(
+                        1,
+                    )} km are already bus lanes)</span
                 >
             </h2>
             <Button
